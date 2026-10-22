@@ -92,21 +92,27 @@ func TestASaveTheEditorWouldRefuseIsAProblem(t *testing.T) {
 	}
 }
 
-func TestThePromptShowsTheLatestVersionsAndAnExampleThatDecodes(t *testing.T) {
+func TestThePromptIndexesTheLatestVersionsAndHasAnExampleThatDecodes(t *testing.T) {
 	t.Parallel()
+	first, second := assistantHelper(1), assistantHelper(2)
+	first.Brief, second.Brief = "first helper brief", "second helper brief"
+	second.Name = "Second helper"
 	library := map[string][]byte{
-		"agents/helper/v1.md":    []byte("first helper"),
-		"agents/helper/v2.md":    []byte("second helper"),
-		"belts/tasks/state.json": []byte(`{"paused":true}`),
+		"agents/helper/v1.md":    []byte(core.AgentFileWrite(first)),
+		"agents/helper/v2.md":    []byte(core.AgentFileWrite(second)),
+		"belts/tasks/v1.json":    encodeFor(t, assistantBelt(t, 1)),
+		"belts/tasks/state.json": []byte(`{"paused":true,"lastFired":"2026-01-01T00:00:00Z"}`),
 	}
 	prompt := core.AssistantPromptPrompt(library, "Rename it", nil, nil)
-	for _, text := range []string{"second helper", `{"paused":true}`, "- agents/helper/v1.md", "Rename it", "never rewrite, move or delete one"} {
+	for _, text := range []string{"- agents/helper/v2.md: \"Second helper\"", "Earlier: v1.", "- belts/tasks/v1.json: ", "(helper v1)", "Paused.", "Rename it", "never rewrite, move or delete one"} {
 		if !strings.Contains(prompt, text) {
 			t.Errorf("the prompt lacks %q", text)
 		}
 	}
-	if strings.Contains(prompt, "first helper") {
-		t.Error("the prompt shows the older version")
+	for _, text := range []string{"first helper brief", "second helper brief", "2026-01-01T00:00:00Z"} {
+		if strings.Contains(prompt, text) {
+			t.Errorf("the prompt carries %q from a file", text)
+		}
 	}
 	const marker = "Example belts/tasks/v1.json:\n```json\n"
 	index := strings.LastIndex(prompt, marker)
