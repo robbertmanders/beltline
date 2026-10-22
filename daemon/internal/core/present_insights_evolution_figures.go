@@ -455,12 +455,14 @@ func insightsEdges(unit insightsUnit, low, high float64, log bool) []InsightsBin
 	if high <= low {
 		high = low + 1
 	}
+	// Each product is converted on its own so it is rounded before the sum: Go may fuse a*b+c into
+	// one instruction on arm64 but not on amd64, which would move the edges by a bit between them.
 	edge := func(i int) float64 {
 		t := float64(i) / insightsSpreadBins
 		if log {
-			return math.Pow(10, math.Log10(low)+(math.Log10(high)-math.Log10(low))*t)
+			return math.Pow(10, math.Log10(low)+float64((math.Log10(high)-math.Log10(low))*t))
 		}
-		return low + (high-low)*t
+		return low + float64((high-low)*t)
 	}
 	out := make([]InsightsBin, 0, insightsSpreadBins)
 	for i := range insightsSpreadBins {
