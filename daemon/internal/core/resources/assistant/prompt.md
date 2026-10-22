@@ -58,9 +58,9 @@ unique within the belt, and its `then` is an object such as {"do": "next"} or
 stores its own `key`; that is the only name for its output, and the stage writes `<key>.md`. Use
 `{output}` for the current stage's file. Agent keys are legacy metadata, not a placeholder namespace. The same stage key may be used
 on fork routes that one run cannot take together. Agent ids stay unique. Brief placeholders must
-name fixed names or those stage keys, and stages need compatible needs and produces. Read the definitions
-below, and the files themselves, to learn the full format this library uses, including every
-stage type, watch, action and trigger.
+name fixed names or those stage keys, and stages need compatible needs and produces. The library below
+is an index, not the files: read the definitions you change, and ones like them, to learn the
+full format this library uses, including every stage type, watch, action and trigger.
 
 A belt or agent whose newest version cannot be read drops out of the app until it is fixed.
 The problems Beltline finds in the library now are listed below: fix the ones in what the

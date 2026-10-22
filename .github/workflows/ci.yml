@@ -73,6 +73,10 @@ jobs:
       # tmux runs the agent sessions; the stand-in agent and the tmux tests' helpers are zsh scripts.
       - name: Install tmux and zsh
         run: sudo apt-get update && sudo apt-get install -y tmux zsh
+      # The join's merge commits need an identity, which git can't guess on a runner without a domain
+      # name; macOS guesses one from the host name. A real machine has one configured.
+      - name: Set a git identity
+        run: git config --global user.name "Beltline CI" && git config --global user.email "ci@beltline.invalid"
       - name: go vet
         working-directory: daemon
         run: go vet -tags integration ./...

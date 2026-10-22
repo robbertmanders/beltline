@@ -4,11 +4,11 @@
 
 Please don't open a public issue for a security problem. Report it privately through GitHub instead: on the repository's **Security** tab, choose **Report a vulnerability** ([GitHub's guide](https://docs.github.com/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)).
 
-Please include the version (`beltlined --version`), what you did, what happened and, if you can, a minimal way to reproduce it. You should hear back within a week. Once a fix is released, the advisory is published, and you are credited unless you'd rather not be.
+Please include the version (`beltlined --version`), what you did, what happened and, if you can, a minimal way to reproduce it. You should hear back within a week. Once a fix is on `main`, the advisory is published, and you are credited unless you'd rather not be.
 
 ## Supported versions
 
-Before 1.0, only the latest release gets fixes.
+Beltline installs from `main`, and only `main` gets fixes.
 
 ## Scope
 

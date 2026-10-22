@@ -238,7 +238,7 @@ func TestItWorksInTheDataFolderAndKeepsItsPromptApart(t *testing.T) {
 					t.Errorf("the prompt file %q sits in the data folder", spec.PromptFile)
 				}
 				hasText(t, "the prompt", spec.Prompt, "Add a belt for small tasks")
-				hasText(t, "the prompt", spec.Prompt, "### agents/helper/v1.md")
+				hasText(t, "the prompt", spec.Prompt, "- agents/helper/v1.md: ")
 				if !c.assistant.running || c.assistant.command == nil {
 					t.Errorf("running %v, command %v", c.assistant.running, c.assistant.command)
 				}

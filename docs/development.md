@@ -1,6 +1,15 @@
-# Development
+---
+title: Development
+nav_order: 13
+---
 
-[CONTRIBUTING.md](../CONTRIBUTING.md) covers setting up and which checks to run. [AGENTS.md](../AGENTS.md) is the full map of the code and its rules.
+# Development
+{: .no_toc }
+
+1. TOC
+{:toc}
+
+[CONTRIBUTING.md](https://github.com/robbertmanders/beltline/blob/main/CONTRIBUTING.md) covers setting up and which checks to run. [AGENTS.md](https://github.com/robbertmanders/beltline/blob/main/AGENTS.md) is the full map of the code and its rules.
 
 ## Build and run
 

@@ -455,12 +455,14 @@ func insightsEdges(unit insightsUnit, low, high float64, log bool) []InsightsBin
 	if high <= low {
 		high = low + 1
 	}
+	// Each edge is rounded to a thousandth, so the last bits, where arm64 and amd64 differ (a fused
+	// multiply-add, math.Pow), never reach the bins or the wire.
 	edge := func(i int) float64 {
 		t := float64(i) / insightsSpreadBins
 		if log {
-			return math.Pow(10, math.Log10(low)+(math.Log10(high)-math.Log10(low))*t)
+			return math.Round(math.Pow(10, math.Log10(low)+(math.Log10(high)-math.Log10(low))*t)*1000) / 1000
 		}
-		return low + (high-low)*t
+		return math.Round((low+(high-low)*t)*1000) / 1000
 	}
 	out := make([]InsightsBin, 0, insightsSpreadBins)
 	for i := range insightsSpreadBins {

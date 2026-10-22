@@ -1,6 +1,15 @@
-# Security model
+---
+title: Security model
+nav_order: 12
+---
 
-Beltline runs coding agents on your machine, as you, with your GitHub and Jira sign-ins. This page explains what it protects, what it can't protect, and how to run it safely. To report a vulnerability, see [SECURITY.md](../SECURITY.md).
+# Security model
+{: .no_toc }
+
+1. TOC
+{:toc}
+
+Beltline runs coding agents on your machine, as you, with your GitHub and Jira sign-ins. This page explains what it protects, what it can't protect, and how to run it safely. To report a vulnerability, see [SECURITY.md](https://github.com/robbertmanders/beltline/blob/main/SECURITY.md): use GitHub's private vulnerability reporting, not a public issue.
 
 ## Agents run with full permissions
 

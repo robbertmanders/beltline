@@ -4,7 +4,7 @@ Beltline turns GitHub issues, pull request reviews and Jira tickets into pull re
 
 It runs on your own machine, macOS or Linux: `beltlined` is a small daemon that runs your belts whether or not a window is open, and you work with it in your browser.
 
-![The Overview: spend, sessions, what's running, what shipped, and the runs that need you](docs/images/overview.png)
+![A run on its belt: Triage chose the Complex route, Spec is done, and the approval waits for you with the spec and what approving will do next](docs/images/run.png)
 
 > [!WARNING]
 > Beltline runs coding agents (Claude Code, Codex, Copilot, Cursor, Pi) **with their approval prompts turned off**, as your user and with your `gh` and `acli` sign-ins. Agents read issue and ticket text that other people may have written. Read [docs/security.md](docs/security.md) before you point a belt at a repository, and start with a label only you can apply.
@@ -54,9 +54,14 @@ If your team keeps belts and agents in a git repository, add it in **Settings â†
 
 ## Documentation
 
-- [Concepts](docs/concepts.md): belts, triggers, stages, outcomes, forks, runs and what each page shows
+The documentation is at **[robbertmanders.github.io/beltline](https://robbertmanders.github.io/beltline/)**, and in [`docs/`](docs/) in this repository:
+
+- [Your first belt](docs/first-belt.md): set up a belt for your own repository
+- [Concepts](docs/concepts.md): belts and triggers, stages, outcomes and forks, watches, and working with runs
+- [Agents](docs/agents.md): the agent file, briefs and placeholders, and the built-in agents
 - [Runners and models](docs/runners.md): the agent CLIs, allowed models and thinking levels
-- [Configuration](docs/configuration.md): the data folder, environment variables, running at login, uninstalling, the configuration assistant and library repositories
+- [AFK mode](docs/afk.md), [Library](docs/library.md), [Shadow tests](docs/shadow-tests.md) and [Insights](docs/insights.md)
+- [Configuration](docs/configuration.md): the data folder, environment variables, running at login and the configuration assistant
 - [Security model](docs/security.md): what agents can do, the local server's checks and how to run Beltline safely
 - [Development](docs/development.md) and [CONTRIBUTING.md](CONTRIBUTING.md): building from source, the tests and the architecture
 
