@@ -1,0 +1,53 @@
+// The app's fonts, served from assets/fonts (SIL Open Font License, beside them).
+@font-face {
+  font-family: Archivo;
+  src: url("../fonts/Archivo.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter Tight";
+  src: url("../fonts/InterTight.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("../fonts/IBMPlexMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+h1,
+h2,
+h3,
+.site-title {
+  font-family: Archivo, "Inter Tight", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.site-title {
+  font-weight: 700;
+}
+
+.main-content h1:first-of-type {
+  font-weight: 700;
+}
+
+.main-content img {
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(27, 42, 62, 0.08);
+}
+
+.main-content table {
+  min-width: 100%;
+}
+
+// The lead paragraph under a page title.
+.lead {
+  font-size: 1.15rem;
+  color: #4a5566;
+}

@@ -1,4 +1,13 @@
+---
+title: Configuration
+nav_order: 11
+---
+
 # Configuration
+{: .no_toc }
+
+1. TOC
+{:toc}
 
 ## The data folder
 
@@ -31,9 +40,7 @@ On Linux, desktop actions use `xdg-open` (reveal a folder, open a file or link),
 
 ## Uninstalling
 
-1. `beltlined uninstall` removes the LaunchAgent or systemd service and stops the daemon. It leaves your data and agent sessions alone.
-2. `tmux -L beltline kill-server` ends any agent sessions still running.
-3. Remove the data folder to delete all your belts, agents and runs: `rm -rf ~/Library/Application\ Support/Beltline` on macOS, `rm -rf ~/.local/share/Beltline` on Linux. Back them up to a library repository first if you might want them again.
+See [Install](install.md#uninstall).
 
 ## Configure with an agent
 
@@ -45,9 +52,7 @@ Save your edits before you start: with unsaved changes on the page, **Agent** an
 
 ## Library repositories
 
-Settings → Library repositories lists git repositories laid out like your library: `belts/<id>/v<n>.json` and `agents/<id>/v<n>.md`, optionally under a folder. A **backup** repository holds your own library. Library → Back up copies every belt and agent version to it and pushes to its default branch; Restore moves the current belts and agents into `library-backups/<time>/` and copies the backup into place. Your paused and archived state stays on this Mac, and runs keep their own copies. A **shared** repository holds a team's. Library → Install writes an item's version, and the agent versions it uses, with the repository recorded as its origin; Update takes a newer version the same way. Share, from the Belts and Agents pages, sends one of your items to a shared repository as a pull request, or as a push when that repository's setting says so.
-
-Clones live in `library-repos/`. Nothing else is sent to GitHub. To move an old factory or marketplace repository to this layout, run `scripts/migrate-library-repo.sh <path-to-a-clone>` inside a clone and commit what it copies.
+**Settings → Library repositories** lists the git repositories that back up your library or share a team's. See [Library](library.md).
 
 ## The local server
 

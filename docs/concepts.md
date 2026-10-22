@@ -1,32 +1,62 @@
+---
+title: Concepts
+nav_order: 4
+has_children: true
+---
+
 # Concepts
 
-Beltline turns work items into pull requests by running them along **belts**. This page explains the parts and how a run moves along one. For the agent CLIs and models, see [runners.md](runners.md). For settings, the data folder and library repositories, see [configuration.md](configuration.md).
+Beltline turns work items into pull requests by running them along **belts**. This section explains the parts and how a run moves along one.
+{: .lead }
 
 ## The parts
 
-- A **belt** is a trigger plus stages. Belts are saved as numbered versions, and a run finishes on the version it started on.
-- A **trigger** starts runs. It can be GitHub issues with a label, pull requests that ask for your review, Jira tickets from a JQL query, a schedule, or tasks you start yourself.
-- A **stage** is one step. An *agent* stage runs a coding agent CLI with a brief. An *approval* waits for you. A *watch* waits on the run's pull request, issue or ticket.
-- An **outcome** is the named result a stage ends with, such as *ready to spec*, *needs info* or *merged*. Each outcome says what happens next: the next stage, go to another stage, run again, hold for you, park, done or drop.
-- A **fork** splits the belt into **routes**. The stage before a fork chooses a route by its outcome, for example a route straight to Build for a small change and one through Spec first for a larger one.
-- A **run** is one work item travelling along a belt. It keeps every attempt at every stage: the brief, the output, the transcript and your decisions.
-- An **agent** is a reusable definition in your library: a runner, a model, a brief and its outcomes. Stages pin an agent version, and runs keep copies of the versions they use.
+**Belt**
+: A trigger plus stages. Belts are saved as numbered versions, and a run finishes on the version it started on. See [Belts and triggers](belts.md).
 
-Agents make every outward change themselves, with `gh` and `acli`: pushes, pull requests, comments, labels, reviews and ticket moves. Beltline only reads GitHub and Jira, so what an agent may do is what its brief and your belt allow. [security.md](security.md) explains what that means.
+**Trigger**
+: What starts runs: GitHub issues with a label, pull requests that ask for your review, Jira tickets from a JQL query, a schedule, or tasks you start yourself.
 
-## How it works
+**Stage**
+: One step. An *agent* stage runs a coding agent CLI with a brief. An *approval* waits for you. A *watch* waits on the run's pull request, issue or ticket. See [Stages, outcomes and forks](stages.md).
 
-- **Belts and Agents** open as searchable card grids, like the Library page. Belts can be filtered to running, paused or archived; agents to used, unused or archived. Open a card to edit its definition, then use **Back to Belts** or **Back to Agents** to return to your search. Unsent drafts stay available while you navigate within the app and are only stored when you choose Save; reloading the browser clears them.
-- A **belt** is a trigger plus stages. The trigger watches one or more repositories for issues with a label. Belts are saved as numbered versions; a run finishes on the version it started on. **Copy** a belt from its lane on the Floor, or from the belt editor, to start a new one named `Copy of …`: it comes with the same stages, forks, trigger, policies and repositories, and stays unsaved, so it takes no issues until you save it.
-- **Jira belts** can list a project's application and infrastructure repositories. Each ticket starts one run with that repository list frozen. Agent working folders contain one checkout per repository (single-repository runs keep their original layout); agents choose where to work and open their own pull requests on the shared run branch. A watch waits for every repository's pull request: all merged advances, any closed without merging holds. Missing pull requests hold after ten minutes, measured from the first pull request found (or the watch's start if none appear).
-- **Stages** come in three groups. *Agents* run Copilot CLI, Pi, Claude Code, Codex CLI or Cursor CLI in tmux with a brief; they do everything outward themselves, such as opening the pull request, commenting, or moving a ticket. *Approvals* wait for you and show the latest available agent output leading into that approval's most recent visit, not always the spec or an output from a later stage. A *watch* reacts to the run's pull request being merged, closed, having failing checks or merge conflicts, falling behind its base branch, approvals, comment reviews or changes requested. Only submitted reviews on the current head count, not plain pull request comments.
-- **Watch outcomes**: a new watch moves on when merged, holds on closure, conflicts, approvals, comment reviews or changes requested, and retries the nearest earlier agent at most twice for failing checks or a branch behind. An approval holds rather than moving on, since the stages after a watch expect a merged pull request; run the watch again to keep waiting for the merge, and the same approval is not reported twice. A new issue or Jira belt instead ends in a fork after its watch: a merged pull request goes on to Wrap up, conflicts or a branch behind go to **Resolve conflicts**, which merges the base branch in and pushes, and failing checks go to **Fix checks**, which reads the failing logs, fixes them and pushes. Both go back to the watch, at most twice for each event, and hold when they need you. Existing belts gain the missing watch outcomes once, as a new version; runs in progress keep the outcomes of the version they started on. A branch behind its base is reported only after two checks, so a base branch that is merely catching up is left alone, and behind counts are measured once per run and head commit.
-- **Outcomes** are named results of a stage, each with a tone and what happens next: the next stage, go to a stage (optionally with the output as a note, at most N times), run again, hold for you, park, done, or drop. Route choices belong to the fork immediately after the stage; stale saved selections appear as **unavailable here** and can be unchecked. Every agent brief, including continued sessions on existing belts, lists copyable `Outcome: <name>` final lines separately from their descriptions. Agents must copy one into their output file, not only their reply; descriptions are not accepted as outcome names.
-- **Brief placeholders**: saving a belt checks the effective brief of each pinned agent stage. Unknown `{names}` and stage ids shadowed by another stage's agent key block Save; fix the name or choose Discard. Fixed names, agent keys and agent stage ids on that belt are accepted. Only lowercase letters, digits, `-` and `_` count as placeholder names, and fenced code examples are ignored. Existing belts still load and run unchanged.
-- **Run-scoped outputs**: specs and other stage outputs live in each run's attempt folders, not in repository checkouts. Every stage prompt, including reruns and answered sessions with older pinned agents, tells the agent to use only the supplied output paths and never create or commit a repository-root stage output. `(no <filename> yet)` means that run did not produce the output; it is not a checkout fallback. When Spec is skipped, Build and Verify use the run's subject and supplied notes instead, rather than another run's spec.
-- **HTML artifacts**: include `{artifacts}` in an agent or stage brief to request optional standalone `.html` files in the current attempt's `artifacts/` folder, outside the checkout. The stage panel lists files for the selected attempt and offers **Open in browser** and **Show in Finder**. Nothing opens automatically. Agent-generated HTML may run scripts and reach the network when opened; self-contained authoring instructions are not a sandbox. Artifacts never replace the normal Markdown output or its final `Outcome:` line.
-- **Adjust a run's stage**: select an agent machine on an active run and choose **Adjust** to change only its Harness, Model, Effort and Brief. Each opening starts from the selected stage's saved effective settings for this run; Cancel discards unsent adjustments. Model uses a searchable dropdown of the choices allowed when this run started; the runner's default Effort leaves effort to the runner; **Use the agent's brief** restores the pinned agent version's text. Changes and their history are saved on this run only and used on the next attempt, without restarting a running session or changing earlier output. Shipped and dropped runs, approvals and watches cannot be adjusted.
-- **Send a run**: on a held or parked run, **Send to…**, **Run … again** and **Unpark** open a sheet with an optional multi-line message. Cancel keeps your draft; Send clears the run's drafts. The message is saved on that attempt and shown in its stage panel. Agents read it before starting; gates and watches only record it. Later attempts do not inherit it as their own note. Sending to an agent stage includes that stage's earlier attempts by default: the sheet shows their count and lets you turn this off. The fresh session reads their starting notes and output paths, writes into a new attempt folder, and uses the run's current stage model and thinking level, including adjustments. Answering a held session instead continues with its recorded settings. Outcome-driven retries and redirects do not include earlier work.
-- **Abort** on the run page stops the working agent and holds the run at its stage, keeping its branch, checkouts and drafts and changing nothing outward. Answer it to continue the same agent session, or choose **Run … again** for a fresh session.
-- The **Overview** has a Summary and a Floor with every belt as a lane, drawn as boxes, machines or a metro map, as Settings chooses. **Work** lists every run, with the ones that need you highlighted. A **Run** shows one issue's belt, each stage's output, your decisions, and its agent sessions live. **Insights** shows each belt's first-try rate, time and cost per stage, and how they change across versions; it is off until you turn on **Show the Insights page** in Settings → General.
-- **Spend** on the Overview totals agent attempts that ended today. Copilot costs come from its cumulative usage checkpoints or shutdown report (older versions report them on task completion); resumed attempts contribute only usage since their start. Saved historical attempts are not backfilled.
+**Outcome**
+: The named result a stage ends with, such as *ready to spec*, *needs info* or *merged*. Each outcome says what happens next: the next stage, another stage, a route, run again, hold for you, park, done, ship or drop.
+
+**Fork**
+: A split of the belt into **routes**. The stage before a fork picks a route by its outcome, for example straight to Build for a small change, or through Spec first for a larger one.
+
+**Run**
+: One work item travelling along a belt. It keeps every attempt at every stage: the brief, the output, the transcript and your decisions. See [Working with runs](runs.md).
+
+**Agent**
+: A reusable definition in your library: a runner, a model, a brief and its outcomes, as one Markdown file. Stages pin an agent version, and runs keep copies of the versions they use. See [Agents](agents.md).
+
+## How a run moves
+
+1. **Intake.** The trigger finds a new work item, such as an issue that got the label, and starts a run on the belt's current version. The run copies that version's stages and policies, and the agent versions its stages pin, so later edits never change it.
+2. **Stages.** The run enters the first stage. An agent stage starts a session in tmux, in a checkout the stage's *workspace* chooses. The agent writes its output file and ends it with an `Outcome:` line.
+3. **Outcomes.** The engine reads the outcome and does what it says: move on, go back, take a fork's route, run again, or stop and hold for you.
+4. **You.** A held run, an approval or a failed stage waits under **Needs you** until you decide. [AFK mode](afk.md) can decide for you while you're away.
+5. **The end.** A watch waits for the pull request to merge. The run ends shipped, done, parked or dropped.
+
+## Who does what
+
+Agents make every outward change themselves, with `gh` and `acli`: pushes, pull requests, comments, labels, reviews and ticket moves. The built-in Ship, Post review and Wrap up agents do the usual ones. Beltline itself only reads GitHub and Jira, apart from a comment when a run is held (a [belt policy](belts.md#policies)) and the library repositories you configure. What an agent may do is what its brief and your belt allow; the [security model](security.md) explains what that means.
+
+The daemon owns every fact and decision: which actions a run allows, whether a belt can be saved, every status and cost. The browser only shows what it's given, so two browsers on the same daemon never disagree.
+
+## The pages
+
+- **Overview**: a Summary (spend today, sessions, what's running, what shipped, what needs you) and a Floor with every belt as a lane, drawn as boxes, machines or a metro map, as **Settings → General** chooses.
+- **Work**: every run, grouped and filtered, with the ones that need you highlighted.
+- **Run**: one run's belt, each stage's output and your decisions, and its agent sessions live.
+- **Belts** and **Agents**: searchable card grids of your library, each opening its editor.
+- **Library**: your library repositories, to back up, restore, install and share. See [Library](library.md).
+- **AFK**: the decisions AFK mode made, to check. See [AFK mode](afk.md).
+- **Insights**: first-try rates, time and cost per stage. It's off until you turn on **Show the Insights page** in Settings → General. See [Insights](insights.md).
+- **Settings**: tools, allowed models, AFK, library repositories, appearance and notifications.
+
+![Work: every run with its stage and status, and the ones that need you on top](images/work.png)
+
+**Spend** on the Overview totals the agent attempts that ended today. Copilot costs come from its cumulative usage checkpoints or shutdown report; a resumed attempt counts only the usage since it started. Cursor reports no usage.

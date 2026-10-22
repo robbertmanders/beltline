@@ -54,9 +54,14 @@ If your team keeps belts and agents in a git repository, add it in **Settings â†
 
 ## Documentation
 
-- [Concepts](docs/concepts.md): belts, triggers, stages, outcomes, forks, runs and what each page shows
+The documentation is at **[robbertmanders.github.io/beltline](https://robbertmanders.github.io/beltline/)**, and in [`docs/`](docs/) in this repository:
+
+- [Your first belt](docs/first-belt.md): set up a belt for your own repository
+- [Concepts](docs/concepts.md): belts and triggers, stages, outcomes and forks, watches, and working with runs
+- [Agents](docs/agents.md): the agent file, briefs and placeholders, and the built-in agents
 - [Runners and models](docs/runners.md): the agent CLIs, allowed models and thinking levels
-- [Configuration](docs/configuration.md): the data folder, environment variables, running at login, uninstalling, the configuration assistant and library repositories
+- [AFK mode](docs/afk.md), [Library](docs/library.md), [Shadow tests](docs/shadow-tests.md) and [Insights](docs/insights.md)
+- [Configuration](docs/configuration.md): the data folder, environment variables, running at login and the configuration assistant
 - [Security model](docs/security.md): what agents can do, the local server's checks and how to run Beltline safely
 - [Development](docs/development.md) and [CONTRIBUTING.md](CONTRIBUTING.md): building from source, the tests and the architecture
 
