@@ -593,14 +593,18 @@ func TestUnchangedIdleTickEmitsNothing(t *testing.T) {
 	}()
 	requireEventMessages(t, client, helloMessage)
 
-	// The first tick settles the fixture (its last check); the next one changes nothing.
+	// The first tick settles the fixture (its last check); the next one changes nothing. Idle waits
+	// for the work each tick spawns and the hub's flush, so a change the first tick started can't
+	// arrive after the drain and look like the second tick's.
 	c.Tick(context.Background())
+	c.Idle()
 	for {
 		if _, ok := client.TakePendingForTesting(); !ok {
 			break
 		}
 	}
 	c.Tick(context.Background())
+	c.Idle()
 	if data, ok := client.TakePendingForTesting(); ok {
 		t.Fatalf("an unchanged idle tick emitted %s", data)
 	}
