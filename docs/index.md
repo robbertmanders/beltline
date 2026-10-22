@@ -20,7 +20,7 @@ Each work item rides a **belt** of small stages. Agents triage, spec, build, ver
 
 Beltline runs on your own machine, macOS or Linux. `beltlined` is a small daemon that runs your belts whether or not a window is open, and you work with it in your browser.
 
-![The Overview's Floor: every belt as a lane, with each stage's runs and the ones that need you](images/overview.png)
+![A run on its belt: Triage chose the Complex route, Spec is done, and the approval waits for you with the spec and what approving will do next](images/run.png)
 
 {: .warning }
 Beltline runs coding agents **with their approval prompts turned off**, as your user and with your `gh` and `acli` sign-ins. Agents read issue and ticket text that other people may have written. Read the [security model](security.md) before you point a belt at a repository, and start with a label only you can apply.
