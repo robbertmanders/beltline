@@ -74,7 +74,7 @@ func compactNames(list []nameJSON, name bool) []string {
 }
 
 // reviewFields is the --json list a review request read asks for.
-const reviewFields = "number,title,body,labels,url,state,baseRefName"
+const reviewFields = "number,title,body,labels,url,state,baseRefName,isCrossRepository"
 
 // reviewJSON is gh's pull request object in a review request list.
 type reviewJSON struct {
@@ -84,6 +84,15 @@ type reviewJSON struct {
 	Labels      []nameJSON `json:"labels,omitzero"`
 	URL         *string    `json:"url,omitzero"`
 	BaseRefName *string    `json:"baseRefName,omitzero"`
+	// IsCrossRepository is a pull request from another repository, such as a fork.
+	IsCrossRepository *bool `json:"isCrossRepository,omitzero"`
+}
+
+// fromThisRepository reports whether the pull request's branch lives in the
+// repository itself. A fork's, or one gh did not say, is not: its checkout is
+// code anyone can write, and the agents run it with your sign-ins.
+func (j reviewJSON) fromThisRepository() bool {
+	return j.IsCrossRepository != nil && !*j.IsCrossRepository
 }
 
 func (j reviewJSON) subject(repo string) core.Subject {
@@ -161,7 +170,8 @@ func (g GHCLI) Comment(ctx context.Context, repo string, number int, body string
 }
 
 // ReviewRequests lists the open pull requests that ask for your review, and with
-// teams, the ones that ask a team you are on.
+// teams, the ones that ask a team you are on. Pull requests from forks are left
+// out (see fromThisRepository).
 func (g GHCLI) ReviewRequests(ctx context.Context, repo string, teams bool) ([]core.Subject, error) {
 	// `review-requested` also matches requests to your teams; `user-review-requested` only you by name.
 	query := "user-review-requested:@me"
@@ -179,7 +189,9 @@ func (g GHCLI) ReviewRequests(ctx context.Context, repo string, teams bool) ([]c
 	}
 	out := []core.Subject{}
 	for _, j := range list {
-		out = append(out, j.subject(repo))
+		if j.fromThisRepository() {
+			out = append(out, j.subject(repo))
+		}
 	}
 	return out, nil
 }

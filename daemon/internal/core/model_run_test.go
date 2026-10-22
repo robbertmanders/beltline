@@ -94,7 +94,7 @@ func TestRunStateActiveAndNeedsYou(t *testing.T) {
 
 // TestRunDecodeLegacyTriggerSuppliesPoliciesAndBase checks that a run saved with
 // a trigger copy and no policies or base reads them from that trigger, with each
-// policy flag missing taken as on.
+// policy flag missing taken as on, the hold comment included, as those runs ran.
 func TestRunDecodeLegacyTriggerSuppliesPoliciesAndBase(t *testing.T) {
 	t.Parallel()
 	obj := testRunObject()
@@ -103,7 +103,7 @@ func TestRunDecodeLegacyTriggerSuppliesPoliciesAndBase(t *testing.T) {
 	if run.Base != "develop" {
 		t.Errorf("base = %q, want develop", run.Base)
 	}
-	want := DefaultPolicies()
+	want := legacyPolicies()
 	want.RetriageOnEdit = false
 	if run.Policies != want {
 		t.Errorf("policies = %+v, want %+v", run.Policies, want)
@@ -111,7 +111,7 @@ func TestRunDecodeLegacyTriggerSuppliesPoliciesAndBase(t *testing.T) {
 	if run.Source != nil {
 		t.Errorf("source = %+v, want nil on a legacy run", run.Source)
 	}
-	if got := testRunFrom(t, testRunObject()); got.Policies != DefaultPolicies() || got.Base != "" {
+	if got := testRunFrom(t, testRunObject()); got.Policies != legacyPolicies() || got.Base != "" {
 		t.Errorf("a run with no trigger read policies %+v and base %q", got.Policies, got.Base)
 	}
 }

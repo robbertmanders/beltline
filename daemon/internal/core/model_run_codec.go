@@ -38,7 +38,7 @@ func (r *Run) UnmarshalJSON(data []byte) error {
 	run.fillEmptyMaps()
 	// Runs saved before belts had policies kept a copy of their trigger.
 	if !f.present("policies") {
-		run.Policies = DefaultPolicies()
+		run.Policies = legacyPolicies()
 		if legacy.Trigger != nil {
 			run.Policies = legacy.Trigger.Policies()
 		}

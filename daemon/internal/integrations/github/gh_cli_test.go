@@ -6,6 +6,7 @@ import (
 	"context"
 	"os"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 
@@ -207,5 +208,25 @@ func TestLiveGitHubReadsReviewRequests(t *testing.T) {
 		if _, err := gh.LatestReviewRequest(ctx, repo, pull.Number, login, true); err != nil {
 			t.Fatal(err)
 		}
+	}
+}
+
+// TestReviewRequestsLeaveOutForks: a pull request from a fork, or one gh does not
+// say the origin of, starts no review; one from the repository's own branch does.
+func TestReviewRequestsLeaveOutForks(t *testing.T) {
+	t.Parallel()
+	list := `[{"number":1,"title":"Own branch","baseRefName":"main","isCrossRepository":false},` +
+		`{"number":2,"title":"From a fork","baseRefName":"main","isCrossRepository":true},` +
+		`{"number":3,"title":"Unknown","baseRefName":"main"}]`
+	sh := &branchShell{replies: []shell.Result{{Status: 0, Stdout: list}}}
+	pulls, err := NewGHCLI(sh).ReviewRequests(context.Background(), "a/b", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pulls) != 1 || pulls[0].Number != 1 {
+		t.Fatalf("pulls = %+v, want only #1", pulls)
+	}
+	if call := sh.calls[0]; !slices.Contains(call, reviewFields) || !strings.Contains(reviewFields, "isCrossRepository") {
+		t.Fatalf("call %v does not ask whether a pull request is from a fork", call)
 	}
 }

@@ -75,7 +75,7 @@ func TestBeltMarshalExactBytes(t *testing.T) {
 		Triggers: []TriggerEntry{{ID: "1", Trigger: Trigger{Kind: TriggerKindManual}, Repos: []string{"a/b"}}},
 		Policies: DefaultPolicies(), Stages: []Stage{}, Forks: []Fork{}, Afk: AfkModeGlobal,
 	}
-	want := `{"afk":"global","base":"","forks":[],"id":"b","name":"B","policies":{"commentOnHold":true,"retriageOnEdit":true,"stopOnClose":true,"waitForBlockers":true},"stages":[],"triggers":[{"id":"1","repos":["a/b"],"trigger":{"kind":"manual"}}],"version":1}`
+	want := `{"afk":"global","base":"","forks":[],"id":"b","name":"B","policies":{"commentOnHold":false,"retriageOnEdit":true,"stopOnClose":true,"waitForBlockers":true},"stages":[],"triggers":[{"id":"1","repos":["a/b"],"trigger":{"kind":"manual"}}],"version":1}`
 	if got := btEncode(t, belt); got != want {
 		t.Fatalf("belt JSON\n got %s\nwant %s", got, want)
 	}
@@ -287,14 +287,15 @@ func TestBeltAfkEnabledIsReadWhenAfkIsAbsent(t *testing.T) {
 	}
 }
 
-// TestPoliciesMissingKeysDefaultToTrue covers Policies.init(from:).
-func TestPoliciesMissingKeysDefaultToTrue(t *testing.T) {
+// TestPoliciesMissingKeysTakeTheirDefaults covers Policies.init(from:): every
+// missing policy is on except the hold comment, which is off.
+func TestPoliciesMissingKeysTakeTheirDefaults(t *testing.T) {
 	t.Parallel()
 	if got := btDecode[Policies](t, `{}`); testkit.Diff(DefaultPolicies(), got) != "" {
 		t.Errorf("empty policies = %+v", got)
 	}
 	got := btDecode[Policies](t, `{"stopOnClose":false,"waitForBlockers":null}`)
-	want := Policies{RetriageOnEdit: true, StopOnClose: false, CommentOnHold: true, WaitForBlockers: true}
+	want := Policies{RetriageOnEdit: true, StopOnClose: false, CommentOnHold: false, WaitForBlockers: true}
 	if testkit.Diff(want, got) != "" {
 		t.Errorf("partial policies = %+v, want %+v", got, want)
 	}

@@ -18,6 +18,10 @@ An agent can therefore run any command your user can run. It can read and write 
 
 **Issue, pull request and ticket text is untrusted input.** A belt hands the title, body and comments of the issue, pull request or ticket it works on to an agent as part of its brief. Anyone who can write that text can try to steer the agent (prompt injection). That includes anyone who can open an issue on a public repository you watch, or comment on a pull request that asks for your review.
 
+**Pull requests from forks never start a review run.** A review run checks out the pull request's own code, and agents read configuration from the checkout (such as Claude Code's project settings and their hooks) and run its tests, so a fork's code would run as you. A review trigger therefore only takes pull requests whose branch is in the repository itself; one from a fork, which can come from anyone and can ask for your review through `CODEOWNERS`, is skipped.
+
+**The comment when held is off by default.** With the **Comment when held** policy on, Beltline itself posts the held agent's open questions, or its whole output, on the issue, pull request or ticket, without you reading it first. On a public repository anyone can read it. Belts start with it off; belts saved with it on keep it.
+
 Recommendations:
 
 - **Choose triggers carefully.** Only trigger belts from repositories, labels and JQL queries where you trust everyone who can write the text. On a public repository, use a label that only maintainers can apply.

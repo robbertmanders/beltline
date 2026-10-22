@@ -7,6 +7,9 @@ Notable changes to Beltline, newest first. Versions follow [SemVer](https://semv
 - Beltline installs from source on `main` (`make install`); the Homebrew tap, the release builds and Dependabot are gone.
 - Linux support on arm64 and x86-64: a systemd user service for `beltlined install`, `uninstall` and `restart`, the data folder under `$XDG_DATA_HOME`, and `xdg-open`, `code`, `ghostty` and `notify-send` for the desktop actions and notifications. Windows runs the Linux build in WSL2.
 - `GET /api/v1/version` reports the `platform` the daemon runs on, and the reveal buttons read "Show in folder" off macOS.
+- Review triggers skip pull requests from forks, whose code a review run would check out and run as you.
+- New belts start with the **Comment when held** policy off; belts saved with it on keep it.
+- The daemon builds with Go 1.27.3 (`toolchain` in `go.mod`), which fixes GO-2026-6809 in `crypto/x509`.
 
 ## 0.1.0
 

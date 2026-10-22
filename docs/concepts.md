@@ -5,14 +5,14 @@ Beltline turns work items into pull requests by running them along **belts**. Th
 ## The parts
 
 - A **belt** is a trigger plus stages. Belts are saved as numbered versions, and a run finishes on the version it started on.
-- A **trigger** starts runs. It can be GitHub issues with a label, pull requests that ask for your review, Jira tickets from a JQL query, a schedule, or tasks you start yourself.
+- A **trigger** starts runs. It can be GitHub issues with a label, pull requests that ask for your review (from the repository's own branches; pull requests from forks are skipped), Jira tickets from a JQL query, a schedule, or tasks you start yourself.
 - A **stage** is one step. An *agent* stage runs a coding agent CLI with a brief. An *approval* waits for you. A *watch* waits on the run's pull request, issue or ticket.
 - An **outcome** is the named result a stage ends with, such as *ready to spec*, *needs info* or *merged*. Each outcome says what happens next: the next stage, go to another stage, run again, hold for you, park, done or drop.
 - A **fork** splits the belt into **routes**. The stage before a fork chooses a route by its outcome, for example a route straight to Build for a small change and one through Spec first for a larger one.
 - A **run** is one work item travelling along a belt. It keeps every attempt at every stage: the brief, the output, the transcript and your decisions.
 - An **agent** is a reusable definition in your library: a runner, a model, a brief and its outcomes. Stages pin an agent version, and runs keep copies of the versions they use.
 
-Agents make every outward change themselves, with `gh` and `acli`: pushes, pull requests, comments, labels, reviews and ticket moves. Beltline only reads GitHub and Jira, so what an agent may do is what its brief and your belt allow. [security.md](security.md) explains what that means.
+Agents make every outward change themselves, with `gh` and `acli`: pushes, pull requests, comments, labels, reviews and ticket moves. Beltline only reads GitHub and Jira, apart from a comment when a run is held, a belt policy that is off unless you turn it on, so what an agent may do is what its brief and your belt allow. [security.md](security.md) explains what that means.
 
 ## How it works
 

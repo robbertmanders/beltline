@@ -73,11 +73,29 @@ func TestBothReadyVerdictsMoveToSpec(t *testing.T) {
 	}
 }
 
-// TestNeedsInfoHoldsAndCommentsTheQuestions: a hold posts the open questions, not the
-// notes after them, and notifies you.
+// TestNeedsInfoHoldsWithoutACommentByDefault: a new belt's policies keep the hold
+// comment off, so a hold only notifies you.
+func TestNeedsInfoHoldsWithoutACommentByDefault(t *testing.T) {
+	t.Parallel()
+	run := engineSampleRun()
+	effects := engineFinishBody(&run, new("needs info"), "Unclear.\n\n## Open questions\n1. Which page?")
+	if run.State != RunStateHeld {
+		t.Fatalf("state %q", run.State)
+	}
+	if engineHasEffect(effects, EffectKindComment) {
+		t.Errorf("effects = %+v, want no comment", effects)
+	}
+	if !engineHasEffect(effects, EffectKindNotify) {
+		t.Error("no notification")
+	}
+}
+
+// TestNeedsInfoHoldsAndCommentsTheQuestions: with the hold comment on, a hold posts
+// the open questions, not the notes after them, and notifies you.
 func TestNeedsInfoHoldsAndCommentsTheQuestions(t *testing.T) {
 	t.Parallel()
 	run := engineSampleRun()
+	run.Policies.CommentOnHold = true
 	effects := engineFinishBody(&run, new("needs info"), "Unclear.\n\n## Open questions\n1. Which page?\n\n## Notes\nx")
 	if run.State != RunStateHeld || engineStr(run.Reason) != "needs info" {
 		t.Fatalf("state %q reason %q", run.State, engineStr(run.Reason))

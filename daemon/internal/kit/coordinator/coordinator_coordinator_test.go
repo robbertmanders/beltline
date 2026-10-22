@@ -416,10 +416,13 @@ func TestAnIssueGoesFromLabelToPullRequestWithOneApproval(t *testing.T) {
 	}
 }
 
-// TestNeedsInfoCommentsTheQuestionsAndHolds: needs info comments the questions on the issue and holds.
+// TestNeedsInfoCommentsTheQuestionsAndHolds: with the hold comment on, needs info
+// comments the questions on the issue and holds.
 func TestNeedsInfoCommentsTheQuestionsAndHolds(t *testing.T) {
 	t.Parallel()
-	h := newHarness(t, harnessOptions{})
+	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt.Policies.CommentOnHold = true
+	h := newHarness(t, harnessOptions{Belts: []core.Belt{belt}})
 	h.Script.add("triage", "needs info")
 	h.Until("r := h.nowRun(); return r != nil && r.State == core.RunStateHeld", func() bool { r := h.nowRun(); return r != nil && r.State == core.RunStateHeld })
 	// The held run's comment is posted by a tick, so let the whole budget run.

@@ -450,11 +450,14 @@ func TestATicketStaysOnItsBeltUntilDone(t *testing.T) {
 	}
 }
 
-// TestAHeldTicketGetsTheQuestions
+// TestAHeldTicketGetsTheQuestions: with the hold comment on, a held ticket gets
+// the questions as a comment.
 func TestAHeldTicketGetsTheQuestions(t *testing.T) {
 	t.Parallel()
+	belt := flowDefaultJiraBelt()
+	belt.Policies.CommentOnHold = true
 	h := newFlowHarness(t, flowOptions{
-		belts:   []core.Belt{flowDefaultJiraBelt()},
+		belts:   []core.Belt{belt},
 		tickets: []core.Subject{flowUnassigned()},
 	})
 	h.Script.add("triage", "needs info")

@@ -114,7 +114,7 @@ type legacyTrigger struct {
 // Policies are the policies the legacy trigger keys give: each missing one is
 // true, and waitForBlockers is always true.
 func (l legacyTrigger) Policies() Policies {
-	p := DefaultPolicies()
+	p := legacyPolicies()
 	if l.RetriageOnEdit != nil {
 		p.RetriageOnEdit = *l.RetriageOnEdit
 	}
