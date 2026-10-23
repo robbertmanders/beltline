@@ -19,7 +19,7 @@ type MapLane struct {
 	Joins bool
 }
 
-// MapLaneArgs are the parameters of NewMapLane. Opens nil is Swift's default (true).
+// MapLaneArgs are the parameters of NewMapLane. Opens nil is true.
 type MapLaneArgs struct {
 	Start     float64
 	End       float64

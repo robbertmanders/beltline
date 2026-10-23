@@ -51,8 +51,6 @@ func StageLookTrigger(kind *TriggerKind) StageIcon {
 }
 
 // MapPoint is one point of a path, in points.
-//
-// Encoding: synthesized: x, y.
 type MapPoint struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
@@ -60,8 +58,6 @@ type MapPoint struct {
 
 // MapPath is one renderer-independent path. A radius of zero keeps every segment sharp;
 // otherwise each interior point is rounded by that radius.
-//
-// Encoding: synthesized: subpaths, cornerRadius.
 type MapPath struct {
 	Subpaths     [][]MapPoint `json:"subpaths"`
 	CornerRadius float64      `json:"cornerRadius"`

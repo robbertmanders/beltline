@@ -32,8 +32,8 @@ type Fate struct {
 
 // Source is a trigger that checks somewhere for work every so often: GitHub
 // issues with a label, review requests, or a Jira query. Intake runs the same
-// loop over each; what differs between them lives here (a Source, a
-// @MainActor protocol). Implementations are called with c.mu held by Intake,
+// loop over each; what differs between them lives here, in a Source.
+// Implementations are called with c.mu held by Intake,
 // which suspends around each call that awaits.
 type Source interface {
 	// scopes lists the places it checks, each on its own so one that fails leaves

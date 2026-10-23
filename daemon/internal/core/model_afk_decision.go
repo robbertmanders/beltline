@@ -133,8 +133,6 @@ const (
 )
 
 // AfkDecision is one decision the AFK assistant made, or is making, for a run that waited for you.
-//
-// Encoding: synthesized: every key below; the optional ones are omitted when nil.
 type AfkDecision struct {
 	ID       string `json:"id"`
 	RunID    string `json:"runId"`

@@ -12,8 +12,6 @@ import (
 
 // WorkFilter is Work's state filter; never part of a saved run or belt. Its raw values are
 // the query contract of `GET /api/v1/views/work`.
-//
-// Encoding: a string (its raw value).
 type WorkFilter string
 
 const (
@@ -371,8 +369,6 @@ func workRowsOfGroups(groups []WorkGroupPresentation) []WorkRowPresentation {
 }
 
 // WorkStage is a machine the Work query selected, as the page names it.
-//
-// Encoding: synthesized: id, name.
 type WorkStage struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

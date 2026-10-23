@@ -4,8 +4,6 @@ import { describe, expect, it } from "vitest";
 import { parseSnapshotSize, selectCases, snapshotCases, snapshotPageFiles, snapshotSizes } from "./cases";
 import { validateSnapshotCase, type SnapshotCase } from "./caseTypes";
 import { matchesRun, resolveRunSelector, type DemoRun } from "./runSelector";
-import { beltsParity } from "./belts-parity";
-import { overviewParity } from "./overview-parity";
 import { beltsCases } from "./cases/belts";
 
 const runCaseIds = [
@@ -16,7 +14,7 @@ const runCaseIds = [
 ];
 
 describe("snapshot selection", () => {
-  it("defines the page parity cases and three default sizes", () => {
+  it("defines the page cases and three default sizes", () => {
     expect(snapshotCases.length).toBeGreaterThan(80);
     expect(snapshotSizes.map(({ width, height }) => `${width}x${height}`)).toEqual(["1080x680", "1440x900", "2560x1440"]);
   });
@@ -40,13 +38,6 @@ describe("snapshot selection", () => {
     expect(ids).toContain("settings-models-expanded");
     expect(ids).toContain("gallery");
     for (const id of runCaseIds) expect(ids).toContain(id);
-  });
-  it("maps every native Overview case to a registered case id or a specific reason", () => {
-    const ids = new Set(snapshotCases.map(item => item.id));
-    for (const entry of overviewParity) {
-      if (entry.status === "captured") expect(ids.has(entry.caseId), entry.native).toBe(true);
-      else expect(entry.reason.trim().length, entry.native).toBeGreaterThan(20);
-    }
   });
   it("keeps both navigation states of every Overview look", () => {
     const overview = selectCases("overview").map(item => `${item.id}:${item.sidebar?.navigationOpen}`);
@@ -80,26 +71,18 @@ describe("Sessions layout cases", () => {
   });
 });
 
-describe("assistant parity case definitions", () => {
-  it("defines the six native Belts and Agents assistant states at the three default viewport sizes", () => {
+describe("assistant case definitions", () => {
+  it("defines the Belts and Agents assistant states at the three default viewport sizes", () => {
     expect(snapshotSizes.map(({ width, height }) => `${width}x${height}`)).toEqual(["1080x680", "1440x900", "2560x1440"]);
-    const required = new Map([
-      ["6h-belts-agent", "belts-assistant-stopped"],
-      ["6h-cursor-assistant", "belts-cursor-assistant"],
-      ["6i-belts-agent-running", "belts-assistant-running-demo"],
-      ["6j-belts-agent-stage", "belts-assistant-stage-open"],
-      ["6k-agents-agent", "agents-assistant-running"],
-      ["6l-agents-agent-stopped", "agents-assistant-stopped"]
-    ] as const);
+    const required = ["belts-assistant-stopped", "belts-cursor-assistant", "belts-assistant-running-demo", "belts-assistant-stage-open",
+      "agents-assistant-running", "agents-assistant-stopped"];
     const byId = new Map(snapshotCases.map(item => [item.id, item] as const));
-    const parityIds = new Set(beltsParity.map(entry => entry.native));
-    for (const [native, caseId] of required) {
+    for (const caseId of required) {
       const item = byId.get(caseId);
-      expect(parityIds.has(native), `${native} is listed in the parity manifest`).toBe(true);
       expect(item, `${caseId} has a case definition`).toBeDefined();
       expect(item!.sidebar?.assistantOpen).toBe(true);
       expect(item!.visibleColumns).toContain('[data-column="assistant"]');
-      const pageColumns = native.startsWith("6k") || native.startsWith("6l")
+      const pageColumns = caseId.startsWith("agents-")
         ? ['[data-column="agents-browser"]']
         : ['[data-column="belts-editor"]'];
       for (const column of pageColumns) expect(item!.visibleColumns).toContain(column);
@@ -202,14 +185,5 @@ describe("typed pre-capture steps", () => {
     expect(() => validateSnapshotCase({ ...base, id: "run-sample", route: runRoute, run: { beltId: " " } })).toThrow(/non-empty string/);
     expect(() => validateSnapshotCase({ ...base, id: "run-sample", run: { beltId: "issues" } })).toThrow(/needs a route function/);
     expect(() => validateSnapshotCase({ ...base, id: "run-sample", route: runRoute, run: { beltId: "issues", number: 139 } })).not.toThrow();
-  });
-
-  it("names a real case for every captured entry and a reason for every other one", () => {
-    const ids = new Set(snapshotCases.map(item => item.id));
-    for (const entry of beltsParity) {
-      if (entry.status === "captured") expect(ids.has(entry.caseId), `${entry.native} names ${entry.caseId}`).toBe(true);
-      else if (entry.status === "owned") expect(entry.owner.length > 0 && entry.reason.length > 0, entry.native).toBe(true);
-      else expect(entry.reason.length > 0, entry.native).toBe(true);
-    }
   });
 });

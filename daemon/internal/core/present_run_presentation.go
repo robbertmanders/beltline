@@ -1,7 +1,7 @@
 // Pure details the Run page and API give to a client for every stage. Browser
 // selection stays local: this projection always identifies the open or latest
-// attempt as the default without saving a preference. The API carries its own
-// wire form of these values, so the types here are not encoded directly.
+// attempt as the default without saving a preference. The API sends these types
+// as they are.
 
 package core
 

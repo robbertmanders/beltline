@@ -37,7 +37,7 @@ func (f *field) value(v reflect.Value) (reflect.Value, bool) {
 }
 
 // structFields lists the members encoding/json writes for a struct type: the
-// same names, tags, embedding and dominance rules, sorted by name. unexported
+// same names, tags, embedding and dominance rules, in the same order. unexported
 // reports an unexported embedded field, which keeps nil collections null (see
 // encoder.keepNil).
 func structFields(t reflect.Type) (fields []field, unexported bool) {
@@ -148,7 +148,7 @@ func structFields(t reflect.Type) (fields []field, unexported bool) {
 		}
 		i = j
 	}
-	slices.SortFunc(fields, func(a, b field) int { return strings.Compare(a.name, b.name) })
+	slices.SortFunc(fields, func(a, b field) int { return slices.Compare(a.index, b.index) })
 	return fields, unexported
 }
 
@@ -190,7 +190,7 @@ func isValidTag(s string) bool {
 	return true
 }
 
-// structEncoder writes the fields of a struct in name order, as structFields
+// structEncoder writes the fields of a struct in the order structFields
 // lists them. Fields reached through a nil embedded pointer are skipped.
 func (b *builder) structEncoder(t reflect.Type) encodeFunc {
 	fields, unexported := structFields(t)

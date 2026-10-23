@@ -1,5 +1,4 @@
-// BeltState, its
-// custom init(from:), and the pause fields Storage.storedState reads.
+// BeltState, its decoding, and the pause fields Storage.storedState reads.
 
 package store
 
@@ -12,8 +11,7 @@ import (
 )
 
 // beltState is what a belt's state.json holds besides its versions.
-// Encoding is synthesized: lastFired is omitted when nil. Decoding is the
-// custom init(from:) of BeltState, with each field's fallback (see UnmarshalJSON).
+// lastFired is omitted when nil; reading gives each field its fallback (see UnmarshalJSON).
 type beltState struct {
 	Paused    bool        `json:"paused"`
 	Archived  bool        `json:"archived"`

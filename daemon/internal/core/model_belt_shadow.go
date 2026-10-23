@@ -11,8 +11,6 @@ import (
 )
 
 // ShadowArm is the version a run of a shadow test started on.
-//
-// Encoding: a string (its raw value).
 type ShadowArm string
 
 const (

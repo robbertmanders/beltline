@@ -23,8 +23,6 @@ const TriggerEntryLegacyID = "1"
 // TriggerEntry is one configured source on a belt: its kind settings and its
 // own repositories. The id stays put when the entry is edited or reordered. A
 // belt saved with a single trigger reads back as the entry `1`.
-//
-// Encoding: synthesized: id, trigger, repos.
 type TriggerEntry struct {
 	ID      string   `json:"id"`
 	Trigger Trigger  `json:"trigger"`
@@ -56,8 +54,6 @@ func (e TriggerEntry) ScheduledKey(slot time.Time, loc *time.Location) string {
 
 // RunSource is the trigger entry that admitted a run, frozen so a later edit of
 // the belt cannot retarget it. Absent on runs saved before entries existed.
-//
-// Encoding: synthesized: entry, trigger, repos.
 type RunSource struct {
 	Entry   string   `json:"entry"`
 	Trigger Trigger  `json:"trigger"`

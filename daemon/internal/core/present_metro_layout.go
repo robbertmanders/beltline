@@ -6,7 +6,8 @@
 // their own beside the line and come back where they rejoin. Every station
 // has an x of its own, and names and run labels sit over or under each band.
 // Built from a FactoryTrack and the runs the Floor would show; the app only
-// draws it. The API carries its own wire form, so these types are not encoded directly.
+// draws it. The API sends these types as they are, its lines and stations with
+// what they derive (api.MetroLayoutWire).
 
 package core
 

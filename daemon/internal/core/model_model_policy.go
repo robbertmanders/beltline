@@ -17,8 +17,6 @@ import (
 
 // ModelChoice is a model exposed by a runner's own catalog. Identifiers are
 // opaque and runner-scoped; names are presentation only.
-//
-// Encoding: synthesized: id, name, variants (omitted when nil), contextTokens (omitted when nil).
 type ModelChoice struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -255,8 +253,6 @@ func (e ModelCatalogContradiction) ErrorDescription() (string, bool) {
 // ModelCatalogSnapshot is a complete successful discovery result. Failed or
 // partial discovery must not be represented as a snapshot, so callers can
 // retain the previous value.
-//
-// Encoding: synthesized: runner, executable, refreshedAt, models.
 type ModelCatalogSnapshot struct {
 	Runner      Backend       `json:"runner"`
 	Executable  string        `json:"executable"`

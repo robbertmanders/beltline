@@ -10,8 +10,6 @@ import (
 )
 
 // ShadowStageChange is how one stage of the shadow differs from live.
-//
-// Encoding: a string (its raw value).
 type ShadowStageChange string
 
 const (

@@ -1,8 +1,6 @@
 package core
 
 // StageMenuOption is one choice in a stage menu list.
-//
-// Encoding: synthesized: id, label.
 type StageMenuOption struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
@@ -14,8 +12,6 @@ func StageMenuOptionNew(id, label string) StageMenuOption {
 }
 
 // StageMenuPlacement is where the stage sits on its fork, and the routes it can move to.
-//
-// Encoding: synthesized: off, routes.
 type StageMenuPlacement struct {
 	// Off is what choosing no route means: off the fork, onto the line or the enclosing route.
 	Off    string            `json:"off"`
@@ -24,16 +20,12 @@ type StageMenuPlacement struct {
 
 // StageMenuGotoRoute is a route of a fork a jump comes back into, with the stages a run
 // that took it can go to.
-//
-// Encoding: synthesized: route, stages.
 type StageMenuGotoRoute struct {
 	Route  StageMenuOption   `json:"route"`
 	Stages []StageMenuOption `json:"stages"`
 }
 
 // StageMenuGotoTarget is one stage a `goto` can name first, with what choosing it adds.
-//
-// Encoding: synthesized: id, label, counterparts, others.
 type StageMenuGotoTarget struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
@@ -45,8 +37,6 @@ type StageMenuGotoTarget struct {
 }
 
 // StageMenuRunner is one runner in the menu, with the thinking levels it takes.
-//
-// Encoding: synthesized: id, label, thinking, thinkingNote (omitted when nil).
 type StageMenuRunner struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
@@ -57,8 +47,6 @@ type StageMenuRunner struct {
 }
 
 // StageMenuPreview is the preview under the outcomes: a title and its lines.
-//
-// Encoding: synthesized: title, lines.
 type StageMenuPreview struct {
 	Title string   `json:"title"`
 	Lines []string `json:"lines"`
@@ -69,8 +57,6 @@ type StageMenuPreview struct {
 // `goto` can go and which counterparts each jump takes, the routes a `route`
 // outcome can take, the outcome actions, workspaces, watch targets, runners
 // and the preview under the outcomes. The editor renders these and computes none.
-//
-// Encoding: synthesized: every key below; placement, watchNote are omitted when nil.
 type StageMenu struct {
 	Stage string `json:"stage"`
 	// Number is the stage's number on the belt's drawing, from 1.

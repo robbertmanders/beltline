@@ -25,10 +25,10 @@ type EffectTask struct {
 	awaited bool
 }
 
-// trackEffect starts one stop or cleanup effect for run id on the main actor's
-// behalf, and records it until it finishes, so erasure can wait for it.
+// trackEffect starts one stop or cleanup effect for run id, and records it until
+// it finishes, so erasure can wait for it.
 // Lock: runs with c.mu held. Spawns: the work, through c.Spawn. The work runs with
-// c.mu held, as the @MainActor closure does: it suspends (c.Suspend) for its slow calls.
+// c.mu held: it suspends (c.Suspend) for its slow calls.
 func (c *Coordinator) trackEffect(id string, work func(ctx context.Context)) {
 	c.track(id, &EffectTask{wait: make(chan struct{})}, work)
 }

@@ -79,8 +79,8 @@ func decodeStrict[T any](payload []byte) (T, error) {
 
 // bodyFailure is the Failure a body that does not decode becomes. A domain
 // failure a type's decoder raised passes unchanged, an undeclared key is named as
-// the Failure "Unknown field", and a string that is not a case of its enum is the
-// format failure Swift's decoder gives for it.
+// the Failure "Unknown field", and a string that is not a case of its enum is a
+// format failure.
 func bodyFailure(err error) error {
 	var failure core.Failure
 	if errors.As(err, &failure) {

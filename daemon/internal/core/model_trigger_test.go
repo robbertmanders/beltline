@@ -96,11 +96,11 @@ func TestTriggerMarshalExactBytes(t *testing.T) {
 		trigger Trigger
 		want    string
 	}{
-		{"issues", btIssuesOf(DefaultIssueFilter()), `{"assignee":"anyone","kind":"issues","label":"agent","poll":60}`},
-		{"reviews", btReviewsOf(DefaultReviewFilter()), `{"kind":"reviews","poll":60,"reviewers":"me"}`},
-		{"jira", btJiraOf(DefaultJiraQuery()), `{"jql":"","kind":"jira","poll":60}`},
+		{"issues", btIssuesOf(DefaultIssueFilter()), `{"kind":"issues","label":"agent","assignee":"anyone","poll":60}`},
+		{"reviews", btReviewsOf(DefaultReviewFilter()), `{"kind":"reviews","reviewers":"me","poll":60}`},
+		{"jira", btJiraOf(DefaultJiraQuery()), `{"kind":"jira","jql":"","poll":60}`},
 		{"schedule", vtScheduleTrigger(ScheduledTask{Schedule: DefaultSchedule(), Title: "t", Task: "x"}),
-			`{"kind":"schedule","schedule":{"days":"weekdays","hour":9,"minute":0,"weekday":2},"task":"x","title":"t"}`},
+			`{"kind":"schedule","schedule":{"days":"weekdays","weekday":2,"hour":9,"minute":0},"title":"t","task":"x"}`},
 		{"manual", btManual(), `{"kind":"manual"}`},
 	}
 	for _, tc := range cases {

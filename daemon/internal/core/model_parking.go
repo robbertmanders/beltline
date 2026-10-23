@@ -5,9 +5,6 @@ import (
 )
 
 // ParkingRoute is one unfinished route as it was when the button parked the run.
-//
-// Encoding: synthesized: leg, stageId, state, reason, note, continues, replays,
-// interrupted and session; the optional ones are omitted when nil.
 type ParkingRoute struct {
 	Leg       string   `json:"leg"`
 	StageID   *string  `json:"stageId,omitzero"`

@@ -49,7 +49,7 @@ func (g MapGeometry) FilledLanes(routes map[string][]string) []MapGeometryLane {
 	return lanes
 }
 
-// Equal is Swift's MapPath equality: the same subpaths and corner radius.
+// Equal reports whether two paths have the same subpaths and corner radius.
 func (p MapPath) Equal(other MapPath) bool {
 	return p.CornerRadius == other.CornerRadius && slices.EqualFunc(p.Subpaths, other.Subpaths, slices.Equal[[]MapPoint])
 }

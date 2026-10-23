@@ -9,8 +9,6 @@ import (
 )
 
 // GroupBy is Work's presentation dimension; never part of a saved run or belt.
-//
-// Encoding: a string (its raw value).
 type GroupBy string
 
 const (
@@ -99,8 +97,6 @@ func (g GroupBy) Group(run Run) WorkGroupKey {
 }
 
 // WorkGroupKey identifies one group: its dimension and value.
-//
-// Encoding: synthesized: dimension, value.
 type WorkGroupKey struct {
 	Dimension GroupBy `json:"dimension"`
 	Value     string  `json:"value"`

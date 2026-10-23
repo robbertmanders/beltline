@@ -5,8 +5,6 @@ import "strconv"
 // AgentAction is one command the Agents page may offer, with a readable reason when it is
 // unavailable. The daemon re-checks eligibility; the flag is presentation,
 // never permission.
-//
-// Encoding: synthesized: id, label, enabled, reason (omitted when nil).
 type AgentAction struct {
 	ID      string  `json:"id"`
 	Label   string  `json:"label"`
@@ -76,8 +74,6 @@ func AgentActionsForDraft() []AgentAction {
 }
 
 // AgentUsage is a belt pinned to a version of the agent, for the editor's Used by section.
-//
-// Encoding: synthesized: beltId, beltName, version.
 type AgentUsage struct {
 	BeltID   string `json:"beltId"`
 	BeltName string `json:"beltName"`
@@ -85,8 +81,6 @@ type AgentUsage struct {
 }
 
 // AgentOutcomeTarget is an agent an outcome may send a run to, for the editor's agent picker.
-//
-// Encoding: synthesized: id, label.
 type AgentOutcomeTarget struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
@@ -109,8 +103,6 @@ func AgentOutcomeTargets(self string, records []AgentRecord) []AgentOutcomeTarge
 // AgentPresentation is what the editor shows beside an agent or a draft: the daemon's
 // validation warnings, the outcome footer, placeholder help, the belts that pin it,
 // the agents its outcomes may send a run to and whether it can be reset.
-//
-// Encoding: synthesized: every key below; resetReason is omitted when nil.
 type AgentPresentation struct {
 	IsNew          bool                 `json:"isNew"`
 	BuiltIn        bool                 `json:"builtIn"`
@@ -142,8 +134,6 @@ func AgentStatusLine(agent Agent, latest *Agent) string {
 }
 
 // ThinkingChoice is one labelled thinking level a runner accepts. The browser never invents one.
-//
-// Encoding: synthesized: id, label.
 type ThinkingChoice struct {
 	ID    Thinking `json:"id"`
 	Label string   `json:"label"`

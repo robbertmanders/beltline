@@ -26,8 +26,6 @@ type RunActionArgs struct {
 // `enabled`: the daemon checks the same table again when a command arrives.
 // A contextual record names the concrete target it describes: a stage, a
 // route leg, an outcome, a saved attempt or an AFK decision.
-//
-// Encoding: synthesized: id, enabled, and every optional field below, each omitted when nil.
 type RunAction struct {
 	ID      string `json:"id"`
 	Enabled bool   `json:"enabled"`

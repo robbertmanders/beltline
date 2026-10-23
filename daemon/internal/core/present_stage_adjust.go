@@ -33,8 +33,6 @@ func (f AdjustmentField) Label() string {
 }
 
 // Adjustment is a person's change to a stage, in save order. The engine never reads this history.
-//
-// Encoding: synthesized: stageId, date, fields.
 type Adjustment struct {
 	StageID string            `json:"stageId"`
 	Date    jsonx.Date        `json:"date"`

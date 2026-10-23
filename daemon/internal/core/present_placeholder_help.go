@@ -11,8 +11,6 @@ import (
 )
 
 // PlaceholderHelpEntry is one placeholder name and what it means.
-//
-// Encoding: synthesized: name, description.
 type PlaceholderHelpEntry struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -20,8 +18,6 @@ type PlaceholderHelpEntry struct {
 
 // PlaceholderHelpProse is the explanatory prose the help shows around its
 // entries, chosen by the daemon for the help's kind.
-//
-// Encoding: synthesized: every key below.
 type PlaceholderHelpProse struct {
 	Introduction    string `json:"introduction"`
 	Resolution      string `json:"resolution"`
@@ -57,8 +53,6 @@ func PlaceholderHelpProseMake(legacy bool) PlaceholderHelpProse {
 // PlaceholderHelp is the read-only reference of the placeholders a brief can use:
 // their entries in chip order, the qualification that applies, whether the help
 // describes a legacy run, and the prose around them.
-//
-// Encoding: synthesized: entries, prose, legacy, and qualification (omitted when nil).
 type PlaceholderHelp struct {
 	Entries []PlaceholderHelpEntry `json:"entries"`
 	// Qualification is the note on how the entries apply, when there is one.

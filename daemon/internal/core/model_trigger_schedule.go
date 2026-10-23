@@ -37,8 +37,6 @@ func (d ScheduleDays) Label() string {
 }
 
 // Schedule is when a scheduled belt fires: at a time of day, on some days of the week.
-//
-// Encoding: synthesized: days, weekday, hour, minute.
 type Schedule struct {
 	Days ScheduleDays `json:"days"`
 	// Weekday is for ScheduleDaysWeekly: 1 is Sunday, 2 Monday, through 7, Saturday.

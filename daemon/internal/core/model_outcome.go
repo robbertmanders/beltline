@@ -37,8 +37,6 @@ func (t Tone) Label() string {
 }
 
 // Outcome is a named result of a stage, and what it does next.
-//
-// Encoding: synthesized (all keys are written): id, name, when, tone, then.
 type Outcome struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

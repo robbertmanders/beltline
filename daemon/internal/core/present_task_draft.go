@@ -6,8 +6,6 @@ import (
 )
 
 // TaskDraftEntry is a manual entry on a belt, with the position shown on the form.
-//
-// Encoding: synthesized: id, position, repos.
 type TaskDraftEntry struct {
 	ID       string   `json:"id"`
 	Position int      `json:"position"`
@@ -15,8 +13,6 @@ type TaskDraftEntry struct {
 }
 
 // TaskDraftSelection is what the selected entry's form shows and whether Start can be pressed.
-//
-// Encoding: synthesized: entry, repo, canStart, problem; entry and problem are omitted when nil.
 type TaskDraftSelection struct {
 	Entry    *TaskDraftEntry `json:"entry,omitzero"`
 	Repo     string          `json:"repo"`

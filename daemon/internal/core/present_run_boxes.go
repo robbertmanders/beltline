@@ -53,16 +53,12 @@ const (
 )
 
 // RunBoxesChip is the status chip above a box. Look is a StageStatus.Look raw value.
-//
-// Encoding: synthesized: text, look.
 type RunBoxesChip struct {
 	Text string `json:"text"`
 	Look string `json:"look"`
 }
 
 // RunBoxesNode is one box of a run's belt.
-//
-// Encoding: synthesized: id, state, caption, title, details, chip and dot (each omitted when nil).
 type RunBoxesNode struct {
 	// ID is the stage's id, or `trigger`.
 	ID    string        `json:"id"`
@@ -77,8 +73,6 @@ type RunBoxesNode struct {
 }
 
 // RunBoxesEdge is one track of a run's belt.
-//
-// Encoding: synthesized: from, to, state; route is omitted when nil.
 type RunBoxesEdge struct {
 	From  string        `json:"from"`
 	To    string        `json:"to"`
@@ -89,8 +83,6 @@ type RunBoxesEdge struct {
 
 // RunBoxes is a run's belt as boxes for the run page: the map, its nodes and edges, the routes taken
 // and the caption over the belt.
-//
-// Encoding: synthesized: map, nodes, edges, takenRoutes, caption.
 type RunBoxes struct {
 	Map   BoxMap         `json:"map"`
 	Nodes []RunBoxesNode `json:"nodes"`

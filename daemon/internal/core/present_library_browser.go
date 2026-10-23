@@ -6,17 +6,12 @@ import (
 )
 
 // LibraryCardStage is one stage's icon and tint on a library card.
-//
-// Encoding: synthesized: icon, tint.
 type LibraryCardStage struct {
 	Icon StageIcon `json:"icon"`
 	Tint Tint      `json:"tint"`
 }
 
 // LibraryCard is a compact library card whose content and appearance are prepared by the daemon.
-//
-// Encoding: synthesized: id, name, version, summary, detail, status, statusTone, stages;
-// icon and tint are omitted when nil.
 type LibraryCard struct {
 	ID         string                `json:"id"`
 	Name       string                `json:"name"`
@@ -42,8 +37,6 @@ const (
 )
 
 // LibraryFilter is one filter button of a library browser, with how many cards it matches.
-//
-// Encoding: synthesized: id, label, count.
 type LibraryFilter struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
@@ -51,8 +44,6 @@ type LibraryFilter struct {
 }
 
 // LibraryBrowserAction is one command a library browser offers.
-//
-// Encoding: synthesized: id, label, enabled, reason (omitted when nil).
 type LibraryBrowserAction struct {
 	ID      string  `json:"id"`
 	Label   string  `json:"label"`
@@ -61,8 +52,6 @@ type LibraryBrowserAction struct {
 }
 
 // LibraryBrowser is the library's list: its cards, filters, counts and commands.
-//
-// Encoding: synthesized: items, filters, totalCount, matchCount, actions.
 type LibraryBrowser struct {
 	Items      []LibraryCard          `json:"items"`
 	Filters    []LibraryFilter        `json:"filters"`

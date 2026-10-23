@@ -14,7 +14,6 @@ import (
 
 // Result is one tool's row in the Settings tools check: whether it works,
 // what it is for, and what its detail says. Optional tools do not block the app.
-// The result is not encoded directly; the wire keys are set by the server's DTO.
 type Result struct {
 	Name     string `json:"name"`
 	Purpose  string `json:"purpose"`

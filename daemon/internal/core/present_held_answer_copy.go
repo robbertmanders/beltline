@@ -24,8 +24,6 @@ const heldAnswerNoteTail = " again” starts a new session with the same brief a
 // HeldAnswerCopy is what a held run's answer box says beside "Send answer": the button
 // for an answer given in the session itself, its help, and what happens next. Copilot
 // is resumed for a new attempt rather than assumed to have finished.
-//
-// Encoding: synthesized: stage, buttonTitle, buttonHelp, note.
 type HeldAnswerCopy struct {
 	Stage       string `json:"stage"`
 	ButtonTitle string `json:"buttonTitle"`

@@ -42,8 +42,6 @@ type RestartIntent struct {
 // join, whose parent is the split that contains it. When every leg has finished,
 // the join merges their branches and continues once, unless a leg jumped past
 // it, in which case the merge and the continuation are skipped.
-//
-// Encoding: synthesized: every key below, with the optional ones omitted when nil.
 type Join struct {
 	ID      string   `json:"id"`
 	ForkID  string   `json:"forkId"`
@@ -64,9 +62,6 @@ type Join struct {
 // Merge is a join's merge that waits while another join's merge is still under
 // way. It holds what Run.mergeBranches, mergeInto, mergeCheckout, mergeLeg and
 // mergeContext hold for the merge in progress.
-//
-// Encoding: synthesized: branches, and the optional into, checkout, leg and
-// context, omitted when nil.
 type Merge struct {
 	Branches []string `json:"branches"`
 	Into     *string  `json:"into,omitzero"`

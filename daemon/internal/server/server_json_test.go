@@ -30,14 +30,14 @@ var jsonSampleValue = jsonSample{
 	A:     []string{"second", "first"},
 }
 
-// TestSortsKeysAndWritesISO8601Dates
-func TestSortsKeysAndWritesISO8601Dates(t *testing.T) {
+// TestKeepsFieldOrderAndWritesISO8601Dates
+func TestKeepsFieldOrderAndWritesISO8601Dates(t *testing.T) {
 	t.Parallel()
 	data, err := routes.JSONEncode(jsonSampleValue)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := `{"a":["second","first"],"b":true,"inner":{"alpha":"x/y","zeta":2},"when":"2026-10-07T00:00:00Z"}`
+	want := `{"when":"2026-10-07T00:00:00Z","inner":{"zeta":2,"alpha":"x/y"},"b":true,"a":["second","first"]}`
 	if string(data) != want {
 		t.Fatalf("got %s, want %s", data, want)
 	}

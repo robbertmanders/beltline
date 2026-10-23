@@ -23,7 +23,7 @@ func TestRunRequestBodiesEncodeTheirFields(t *testing.T) {
 		want  string
 	}{
 		{"decide", api.RunDecideRequest{Outcome: "approve"}, `{"outcome":"approve"}`},
-		{"decide with note", api.RunDecideRequest{Outcome: "approve", Note: &note}, `{"note":"later","outcome":"approve"}`},
+		{"decide with note", api.RunDecideRequest{Outcome: "approve", Note: &note}, `{"outcome":"approve","note":"later"}`},
 		{"answer acknowledged", api.RunAnswerRequest{}, `{}`},
 		{"answer", api.RunAnswerRequest{Answer: &answer}, `{"answer":"yes"}`},
 		{"resume", api.RunResumeRequest{}, `{}`},
@@ -46,5 +46,5 @@ func TestRunRequestBodiesEncodeTheirFields(t *testing.T) {
 func TestRunTaskRequestEncodesItsFields(t *testing.T) {
 	t.Parallel()
 	task := api.RunTaskRequest{Belt: "tasks", Repo: "acme/web", Title: "Fix the thing", Body: "Details"}
-	same(t, "task", task, []byte(`{"belt":"tasks","body":"Details","repo":"acme/web","title":"Fix the thing"}`))
+	same(t, "task", task, []byte(`{"belt":"tasks","repo":"acme/web","title":"Fix the thing","body":"Details"}`))
 }

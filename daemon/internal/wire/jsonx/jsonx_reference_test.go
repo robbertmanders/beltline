@@ -4,16 +4,13 @@ import (
 	"bytes"
 	"encoding"
 	"encoding/json"
-	"maps"
 	"reflect"
-	"slices"
 	"strings"
 )
 
-// The functions in this file are the encoder this package used before its
-// reflection plans: a copy of the value with nil collections made empty, then
-// encoding/json, then a decode into a tree whose keys are sorted on the way
-// back out. They are the reference the plans must match byte for byte.
+// The functions in this file are the reference the plans must match byte for
+// byte: a copy of the value with nil collections made empty, then encoding/json
+// without HTML escaping.
 
 // refMarshal is Marshal as the reference encoder writes it.
 func refMarshal(v any) ([]byte, error) { return refEncode(v, "") }
@@ -21,80 +18,12 @@ func refMarshal(v any) ([]byte, error) { return refEncode(v, "") }
 // refMarshalStorage is MarshalStorage as the reference encoder writes it.
 func refMarshalStorage(v any) ([]byte, error) { return refEncode(v, "  ") }
 
-// refEncode writes v compactly, or with the given indent in the pretty form.
+// refEncode writes v compactly, or with the given indent.
 func refEncode(v any, indent string) ([]byte, error) {
 	if rv := reflect.ValueOf(v); rv.IsValid() {
 		v = refEmptyCollections(rv).Interface()
 	}
-	compact, err := refWrite(v, "")
-	if err != nil {
-		return nil, err
-	}
-	dec := json.NewDecoder(bytes.NewReader(compact))
-	dec.UseNumber()
-	var tree any
-	if err := dec.Decode(&tree); err != nil {
-		return nil, err
-	}
-	if indent == "" {
-		return refWrite(tree, "")
-	}
-	var buf bytes.Buffer
-	if err := refPretty(&buf, tree, 0); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-// refPretty writes a decoded tree in the pretty form.
-func refPretty(buf *bytes.Buffer, v any, depth int) error {
-	switch x := v.(type) {
-	case map[string]any:
-		if len(x) == 0 {
-			buf.WriteString("{\n\n" + strings.Repeat("  ", depth) + "}")
-			return nil
-		}
-		buf.WriteString("{\n")
-		for i, key := range slices.Sorted(maps.Keys(x)) {
-			if i > 0 {
-				buf.WriteString(",\n")
-			}
-			buf.WriteString(strings.Repeat("  ", depth+1))
-			quoted, err := refWrite(key, "")
-			if err != nil {
-				return err
-			}
-			buf.Write(quoted)
-			buf.WriteString(" : ")
-			if err := refPretty(buf, x[key], depth+1); err != nil {
-				return err
-			}
-		}
-		buf.WriteString("\n" + strings.Repeat("  ", depth) + "}")
-	case []any:
-		if len(x) == 0 {
-			buf.WriteString("[\n\n" + strings.Repeat("  ", depth) + "]")
-			return nil
-		}
-		buf.WriteString("[\n")
-		for i, item := range x {
-			if i > 0 {
-				buf.WriteString(",\n")
-			}
-			buf.WriteString(strings.Repeat("  ", depth+1))
-			if err := refPretty(buf, item, depth+1); err != nil {
-				return err
-			}
-		}
-		buf.WriteString("\n" + strings.Repeat("  ", depth) + "]")
-	default:
-		text, err := refWrite(v, "")
-		if err != nil {
-			return err
-		}
-		buf.Write(text)
-	}
-	return nil
+	return refWrite(v, indent)
 }
 
 // refWrite encodes v with encoding/json, without escaping "<", ">" or "&".

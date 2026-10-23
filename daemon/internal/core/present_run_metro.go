@@ -37,8 +37,6 @@ const (
 )
 
 // RunMetroBox is a rectangle in the map's points.
-//
-// Encoding: synthesized: x, y, width, height.
 type RunMetroBox struct {
 	X      float64 `json:"x"`
 	Y      float64 `json:"y"`
@@ -48,8 +46,6 @@ type RunMetroBox struct {
 
 // RunMetroSegment is one stretch of line with a single travel state. Consecutive stretches that share
 // a state are one path, so its corners turn smoothly.
-//
-// Encoding: synthesized: id, state, path.
 type RunMetroSegment struct {
 	ID    string         `json:"id"`
 	State RunMetroTravel `json:"state"`
@@ -57,8 +53,6 @@ type RunMetroSegment struct {
 }
 
 // RunMetroStation is a stage on the run's metro line.
-//
-// Encoding: synthesized: every key below.
 type RunMetroStation struct {
 	// ID is the stage's id.
 	ID string `json:"id"`
@@ -85,8 +79,6 @@ type RunMetroStation struct {
 }
 
 // RunMetroRouteTag is a route's name, in a pill on its own track just before the route's first station.
-//
-// Encoding: synthesized: id, fork, route, text, x, y, width, height, feeds; taken is omitted when nil.
 type RunMetroRouteTag struct {
 	// ID is "<fork>:<route>".
 	ID    string `json:"id"`
@@ -104,16 +96,12 @@ type RunMetroRouteTag struct {
 }
 
 // RunMetroPill is the belt's name at the start of the line.
-//
-// Encoding: synthesized: text, box.
 type RunMetroPill struct {
 	Text string      `json:"text"`
 	Box  RunMetroBox `json:"box"`
 }
 
 // RunMetro is one belt on the run page as a metro line.
-//
-// Encoding: synthesized: width, height, colour, trigger, segments, stations, routes, ends.
 type RunMetro struct {
 	Width  float64 `json:"width"`
 	Height float64 `json:"height"`

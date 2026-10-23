@@ -112,8 +112,6 @@ type BeltDraftRequest struct {
 
 // StageEdit holds the fields a stage-update may change. An absent (nil) field is
 // left alone; an explicit Watch is a watch-target change with the editor's reset rules.
-//
-// Encoding: synthesized: each field omitted when nil.
 type StageEdit struct {
 	Name      *string      `json:"name,omitzero"`
 	Brief     *string      `json:"brief,omitzero"`
@@ -139,8 +137,6 @@ type StageEdit struct {
 // TriggerStash is what one entry was set to for each kind during an editing
 // session. The daemon never stores this: a client sends it with trigger-kind and
 // gets the restored or fresh kind back in the updated draft.
-//
-// Encoding: synthesized: entry, triggers (a map from kind raw value to trigger).
 type TriggerStash struct {
 	Entry string `json:"entry"`
 	// Triggers maps a kind raw value to the trigger it was set to.

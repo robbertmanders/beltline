@@ -103,7 +103,7 @@ func TestThenMarshalExactBytes(t *testing.T) {
 	}{
 		{"plain next", NewThen(ThenArgs{Action: ThenActionNext}), `{"do":"next"}`},
 		{"goto with flags", NewThen(ThenArgs{Action: ThenActionGoto, To: []string{"build"}, Max: new(2), WithOutput: true, Comment: true}),
-			`{"comment":true,"do":"goto","max":2,"to":"build","withOutput":true}`},
+			`{"do":"goto","to":"build","withOutput":true,"max":2,"comment":true}`},
 		{"route list", NewThen(ThenArgs{Action: ThenActionRoute, Routes: []string{"a", "b"}}), `{"do":"route","route":["a","b"]}`},
 		{"one route", NewThen(ThenArgs{Action: ThenActionRoute, Route: new("complex")}), `{"do":"route","route":"complex"}`},
 		{"several targets", NewThen(ThenArgs{Action: ThenActionGoto, To: []string{"x", "y"}}), `{"do":"goto","to":["x","y"]}`},
@@ -171,7 +171,7 @@ func TestThenSetRouteReplacesTheSelection(t *testing.T) {
 func TestOutcomeMarshalExactBytes(t *testing.T) {
 	t.Parallel()
 	outcome := Outcome{ID: "o", Name: "merged", When: "merged", Tone: ToneGood, Then: NewThen(ThenArgs{Action: ThenActionNext})}
-	want := `{"id":"o","name":"merged","then":{"do":"next"},"tone":"good","when":"merged"}`
+	want := `{"id":"o","name":"merged","when":"merged","tone":"good","then":{"do":"next"}}`
 	if got := btEncode(t, outcome); got != want {
 		t.Fatalf("outcome JSON\n got %s\nwant %s", got, want)
 	}

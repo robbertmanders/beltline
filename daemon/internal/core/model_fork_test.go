@@ -270,7 +270,7 @@ func TestRouteEncodesFeedsOnlyWhenSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(feeding) != `{"feeds":true,"id":"b","name":"B"}` {
+	if string(feeding) != `{"id":"b","name":"B","feeds":true}` {
 		t.Fatalf("feeding route = %s", feeding)
 	}
 }

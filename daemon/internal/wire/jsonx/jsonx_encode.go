@@ -1,6 +1,7 @@
 package jsonx
 
 import (
+	"bytes"
 	"encoding"
 	"encoding/json"
 	"fmt"
@@ -8,8 +9,9 @@ import (
 	"sync"
 )
 
-// encoder writes one value as compact JSON. Object keys come out sorted, and
-// nil slices and maps as [] and {}, with the exceptions keepNil describes.
+// encoder writes one value as compact JSON, as encoding/json does without HTML
+// escaping, but with nil slices and maps as [] and {}, apart from the
+// exceptions keepNil describes.
 type encoder struct {
 	buf []byte
 	// keepNil is set inside a value that encoding/json would have written
@@ -139,7 +141,8 @@ func condAddr(ifAddr, ifNot encodeFunc) encodeFunc {
 	}
 }
 
-// marshalerEncoder calls MarshalJSON and writes its output in canonical form.
+// marshalerEncoder calls MarshalJSON and writes its output compacted, with
+// U+2028 and U+2029 escaped, as encoding/json does.
 // A nil pointer is null. addr calls the method through the value's address.
 func marshalerEncoder(t reflect.Type, addr bool) encodeFunc {
 	return func(e *encoder, v reflect.Value) error {
@@ -156,10 +159,12 @@ func marshalerEncoder(t reflect.Type, addr bool) encodeFunc {
 		if err != nil {
 			return fmt.Errorf("json: error calling MarshalJSON for type %v: %w", t, err)
 		}
-		e.reserve(len(out))
-		if e.buf, err = appendCanonical(e.buf, out); err != nil {
+		var compact bytes.Buffer
+		if err := json.Compact(&compact, out); err != nil {
 			return fmt.Errorf("json: error calling MarshalJSON for type %v: %w", t, err)
 		}
+		out = bytes.ReplaceAll(compact.Bytes(), []byte("\u2028"), []byte(`\u2028`))
+		e.buf = append(e.buf, bytes.ReplaceAll(out, []byte("\u2029"), []byte(`\u2029`))...)
 		return nil
 	}
 }

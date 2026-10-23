@@ -13,10 +13,6 @@ import (
 // settings a new stage starts with. Agents live in the library as numbered
 // versions of a Markdown file; a saved version never changes, so a belt keeps
 // the agent it was saved with.
-//
-// Encoding: synthesized: id, version, name, key, workspace, slots, runner,
-// model, thinking (omitted when nil), alternates, machine, tint, icon (omitted
-// when nil), outcomes, brief.
 type Agent struct {
 	ID      string `json:"id"`
 	Version int    `json:"version"`
@@ -207,8 +203,6 @@ func valuesEqual(x, y reflect.Value) bool {
 var valueTimeType = reflect.TypeFor[time.Time]()
 
 // AgentRef is which version of which agent a stage uses.
-//
-// Encoding: synthesized: id, version.
 type AgentRef struct {
 	ID      string `json:"id"`
 	Version int    `json:"version"`
@@ -217,8 +211,6 @@ type AgentRef struct {
 // AgentSnapshot is an agent version as a run keeps it: its file, copied when the
 // run starts, so the library, or the factory that is live, can change without
 // changing what the run's stages do.
-//
-// Encoding: synthesized: id, version, file.
 type AgentSnapshot struct {
 	ID      string `json:"id"`
 	Version int    `json:"version"`
@@ -250,8 +242,6 @@ func (s AgentSnapshot) Agent() *Agent {
 // AgentOutcome is an outcome a new stage with this agent starts with. A goto
 // names agents, not stages: the nearest earlier stage with one of them is the
 // target, or else the nearest later one.
-//
-// Encoding: synthesized: name, when, tone, then, to.
 type AgentOutcome struct {
 	Name string `json:"name"`
 	When string `json:"when"`

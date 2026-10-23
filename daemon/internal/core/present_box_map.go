@@ -48,8 +48,6 @@ const (
 )
 
 // BoxMapNode is one box of the map: the trigger or a stage.
-//
-// Encoding: synthesized: id, kind, number, x, y, width, height, icon; fork, route and tint are omitted when nil.
 type BoxMapNode struct {
 	// ID is the stage's id, or `trigger`.
 	ID   string     `json:"id"`
@@ -69,8 +67,6 @@ type BoxMapNode struct {
 }
 
 // BoxMapEdge is one track between two boxes.
-//
-// Encoding: synthesized: from, to, path, straight; route is omitted when nil.
 type BoxMapEdge struct {
 	From string  `json:"from"`
 	To   string  `json:"to"`
@@ -82,8 +78,6 @@ type BoxMapEdge struct {
 }
 
 // BoxMapForkArea is a fork's area: the dashed box around its routes in the editor.
-//
-// Encoding: synthesized: id, routes, x, y, width, height.
 type BoxMapForkArea struct {
 	ID     string  `json:"id"`
 	Routes int     `json:"routes"`
@@ -94,8 +88,6 @@ type BoxMapForkArea struct {
 }
 
 // BoxMapRoutePill is a route's name on its row, where it leaves the fork's start.
-//
-// Encoding: synthesized: fork, route, name, x, y, stageIds, feeds.
 type BoxMapRoutePill struct {
 	Fork  string `json:"fork"`
 	Route string `json:"route"`
@@ -111,8 +103,6 @@ type BoxMapRoutePill struct {
 
 // BoxMapInsert is where a + adds a stage: in front of a box (the gap before it, on its row), at the end of a route
 // (the gap after its last box, or in the middle of an empty route's slot) or past the last box of the line.
-//
-// Encoding: synthesized: x, y, addAt; after, before and route are omitted when nil.
 type BoxMapInsert struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
@@ -126,8 +116,6 @@ type BoxMapInsert struct {
 }
 
 // BoxMap is a belt drawn as stage boxes, in points.
-//
-// Encoding: synthesized: width, height, nodes, edges, forks, routes, inserts.
 type BoxMap struct {
 	Width   float64           `json:"width"`
 	Height  float64           `json:"height"`

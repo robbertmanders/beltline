@@ -1,6 +1,5 @@
-// Run's Codable conformance:
-// init(from:), with the legacy trigger and pullRequest keys. The keys are the
-// struct tags, except that the subject is written under "issue".
+// Run's JSON decoding, with the legacy trigger and pullRequest keys. The keys are
+// the struct tags, except that the subject is written under "issue".
 
 package core
 

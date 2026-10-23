@@ -41,7 +41,7 @@ type BeltProblem struct {
 // daemon would accept now, and an opaque revision token. The definition is Draft, the one
 // the editor opens. Belt is the stored definition, sent only when it differs from the draft
 // (when legacy stage keys were filled in); the stored definition is the draft otherwise.
-// LastFired and Origin are written as explicit nulls when absent (custom encode(to:)).
+// LastFired and Origin are written as explicit nulls when absent.
 type BeltSnapshot struct {
 	Belt              *core.Belt  `json:"belt,omitzero"`
 	Paused            bool        `json:"paused"`
@@ -95,7 +95,6 @@ func NewBeltSnapshot(record store.BeltRecord, actions []core.BeltAction, revisio
 
 // NewBeltSnapshotFromCoordinator builds the belt snapshot from coordinator from its arguments:
 // the actions and revision the daemon computes, and the legacy-key-converted draft. The reads are one coordinator turn.
-// @MainActor init reads them.
 // Lock: none held by the caller; takes c.mu through ReadBeltSnapshot.
 func NewBeltSnapshotFromCoordinator(record store.BeltRecord, c *coordinator.Coordinator) BeltSnapshot {
 	return beltSnapshotFromReads(record, c.ReadBeltSnapshot(record))

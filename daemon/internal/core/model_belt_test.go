@@ -75,7 +75,7 @@ func TestBeltMarshalExactBytes(t *testing.T) {
 		Triggers: []TriggerEntry{{ID: "1", Trigger: Trigger{Kind: TriggerKindManual}, Repos: []string{"a/b"}}},
 		Policies: DefaultPolicies(), Stages: []Stage{}, Forks: []Fork{}, Afk: AfkModeGlobal,
 	}
-	want := `{"afk":"global","base":"","forks":[],"id":"b","name":"B","policies":{"commentOnHold":false,"retriageOnEdit":true,"stopOnClose":true,"waitForBlockers":true},"stages":[],"triggers":[{"id":"1","repos":["a/b"],"trigger":{"kind":"manual"}}],"version":1}`
+	want := `{"id":"b","name":"B","version":1,"triggers":[{"id":"1","trigger":{"kind":"manual"},"repos":["a/b"]}],"base":"","policies":{"retriageOnEdit":true,"stopOnClose":true,"commentOnHold":false,"waitForBlockers":true},"stages":[],"forks":[],"afk":"global"}`
 	if got := btEncode(t, belt); got != want {
 		t.Fatalf("belt JSON\n got %s\nwant %s", got, want)
 	}
@@ -305,7 +305,7 @@ func TestPoliciesMissingKeysTakeTheirDefaults(t *testing.T) {
 func TestPoliciesEncodeEveryKey(t *testing.T) {
 	t.Parallel()
 	p := Policies{RetriageOnEdit: false, StopOnClose: true, CommentOnHold: false, WaitForBlockers: true}
-	want := `{"commentOnHold":false,"retriageOnEdit":false,"stopOnClose":true,"waitForBlockers":true}`
+	want := `{"retriageOnEdit":false,"stopOnClose":true,"commentOnHold":false,"waitForBlockers":true}`
 	if got := btEncode(t, p); got != want {
 		t.Fatalf("policies JSON = %s, want %s", got, want)
 	}

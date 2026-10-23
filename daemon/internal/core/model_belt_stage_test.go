@@ -165,8 +165,8 @@ func TestStageMarshalExactBytes(t *testing.T) {
 	workspace := WorkspaceWorktree
 	stage := NewStage(StageArgs{ID: "build", Type: StageTypeAgent, Name: new("Build"), Agent: &AgentRef{ID: "build", Version: 1},
 		Key: new("build"), Runner: &runner, Model: "m", Workspace: &workspace, Slots: new(1)})
-	want := `{"agent":{"id":"build","version":1},"brief":"","fallback":"hold","id":"build","key":"build","model":"m","name":"Build",` +
-		`"outcomes":[],"runner":"pi","slots":1,"type":"agent","workspace":"worktree","writes":"build.md"}`
+	want := `{"id":"build","type":"agent","name":"Build","agent":{"id":"build","version":1},"key":"build","runner":"pi","model":"m",` +
+		`"workspace":"worktree","writes":"build.md","slots":1,"brief":"","outcomes":[],"fallback":"hold"}`
 	if got := btEncode(t, stage); got != want {
 		t.Fatalf("stage JSON\n got %s\nwant %s", got, want)
 	}

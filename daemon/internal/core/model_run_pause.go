@@ -50,8 +50,6 @@ const RunPauseExplanation = "Paused by you. Resume continues interrupted agent s
 const RunPauseGlobalPauseHelp = "Everything is paused. Continue from the toolbar first."
 
 // RunPauseSnapshot is a run's state when a pause started.
-//
-// Encoding: synthesized: id, state, stageId and reason, with the optional ones omitted when nil.
 type RunPauseSnapshot struct {
 	ID      string   `json:"id"`
 	State   RunState `json:"state"`
@@ -60,8 +58,6 @@ type RunPauseSnapshot struct {
 }
 
 // RunPauseInterval is one closed stretch of pause time.
-//
-// Encoding: synthesized: start, end.
 type RunPauseInterval struct {
 	Start jsonx.Date `json:"start"`
 	End   jsonx.Date `json:"end"`

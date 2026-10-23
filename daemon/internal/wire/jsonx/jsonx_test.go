@@ -37,9 +37,9 @@ func TestDateReadsOlderForms(t *testing.T) {
 	}
 }
 
-// TestMarshalSortsKeysAndWritesEmptyCollections checks what the wire form of a
-// value is: sorted keys, [] and {} for nil lists and maps, and omitzero kept.
-func TestMarshalSortsKeysAndWritesEmptyCollections(t *testing.T) {
+// TestMarshalWritesEmptyCollections checks what the wire form of a value is:
+// fields in declaration order, [] and {} for nil lists and maps, and omitzero kept.
+func TestMarshalWritesEmptyCollections(t *testing.T) {
 	t.Parallel()
 	type inner struct {
 		Items []string `json:"items"`
@@ -56,7 +56,7 @@ func TestMarshalSortsKeysAndWritesEmptyCollections(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := `{"alpha":[],"inner":{"items":[]},"map":{},"text":"","zeta":"<&>"}`
+	want := `{"zeta":"<&>","alpha":[],"map":{},"inner":{"items":[]},"text":""}`
 	if string(got) != want {
 		t.Fatalf("got %s\nwant %s", got, want)
 	}
@@ -69,7 +69,7 @@ func TestMarshalStorageWritesTheDataFolderForm(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "{\n  \"a\" : {\n    \"x\" : 1\n  },\n  \"b\" : [\n\n  ]\n}"
+	want := "{\n  \"a\": {\n    \"x\": 1\n  },\n  \"b\": []\n}"
 	if string(got) != want {
 		t.Fatalf("got %q\nwant %q", got, want)
 	}

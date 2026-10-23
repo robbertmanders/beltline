@@ -1,5 +1,4 @@
-// The Codable half of Stage:
-// Stage.init(from:) and Stage.encode(to:). The types are in model_belt_stage.go.
+// Stage's JSON decoding and encoding. The types are in model_belt_stage.go.
 
 package core
 
@@ -61,7 +60,7 @@ type stageWire struct {
 }
 
 // stageLegacyActionNames are the stage types LegacyAction reads: the action stages
-// saved before agents made every outward call. Stage.init(from:) offers each
+// saved before agents made every outward call. Decoding a stage offers each
 // other type to LegacyAction, which returns nothing for it.
 var stageLegacyActionNames = map[string]struct{}{
 	"ship": {}, "comment": {}, "label": {}, "submitReview": {}, "transition": {},

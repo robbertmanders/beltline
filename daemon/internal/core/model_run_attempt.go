@@ -59,8 +59,6 @@ func (r *RouteSet) UnmarshalJSON(data []byte) error {
 }
 
 // SessionSettings are the runner, model and thinking one session starts with.
-//
-// Encoding: synthesized: runner (omitted when nil), model, thinking (omitted when nil).
 type SessionSettings struct {
 	Runner   *Backend  `json:"runner,omitzero"`
 	Model    string    `json:"model"`

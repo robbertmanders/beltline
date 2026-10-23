@@ -1,7 +1,10 @@
 package jsonx
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 	"reflect"
 )
 
@@ -27,12 +30,19 @@ func Canonical(raw []byte) ([]byte, error) {
 	if raw == nil {
 		return []byte("null"), nil
 	}
-	return appendCanonical(nil, raw)
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.UseNumber()
+	var tree any
+	if err := dec.Decode(&tree); err != nil {
+		return nil, err
+	}
+	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
+		return nil, errors.New("jsonx: data after the top-level value")
+	}
+	return Marshal(tree)
 }
 
-// encode writes v compactly, or in the pretty form when pretty is set. Object
-// keys come out sorted, so the output does not depend on the order a struct
-// declares its fields in.
+// encode writes v compactly, or indented by two spaces when pretty is set.
 func encode(v any, pretty bool) ([]byte, error) {
 	e := &encoder{}
 	if rv := reflect.ValueOf(v); rv.IsValid() {
@@ -45,7 +55,12 @@ func encode(v any, pretty bool) ([]byte, error) {
 	if !pretty {
 		return e.buf, nil
 	}
-	return appendIndented(nil, e.buf), nil
+	var out bytes.Buffer
+	out.Grow(2*len(e.buf) + 64)
+	if err := json.Indent(&out, e.buf, "", "  "); err != nil {
+		return nil, err
+	}
+	return out.Bytes(), nil
 }
 
 // Members reads data as a JSON object, keeping each member's value as raw JSON.

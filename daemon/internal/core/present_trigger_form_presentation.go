@@ -7,8 +7,6 @@ import (
 
 // TriggerFormPresentationKind is one kind of trigger as the form shows it: its heading, whether it
 // polls and how many repositories it takes, and its note.
-//
-// Encoding: synthesized: id, title, heading, polls, oneRepo, repositoriesTitle, note (omitted when nil).
 type TriggerFormPresentationKind struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`
@@ -21,8 +19,6 @@ type TriggerFormPresentationKind struct {
 }
 
 // TriggerFormPresentationChoice is one value and its label in a form menu.
-//
-// Encoding: synthesized: value, label.
 type TriggerFormPresentationChoice struct {
 	Value string `json:"value"`
 	Label string `json:"label"`
@@ -32,8 +28,6 @@ type TriggerFormPresentationChoice struct {
 // shows them, so the web editor renders them and makes up none: each kind with its
 // heading, whether it polls and how many repositories it takes, and its note; the poll
 // intervals, assignees, reviewers and the schedule's days, weekdays and times.
-//
-// Encoding: synthesized: every key below.
 type TriggerFormPresentation struct {
 	Kinds []TriggerFormPresentationKind `json:"kinds"`
 	// PollChoices are the poll intervals in seconds.
@@ -58,8 +52,6 @@ type TriggerFormPresentation struct {
 
 // TriggerFormRepositoryBases is the group of repository base branch fields: one
 // field per distinct repository the belt lists, in first-appearance order.
-//
-// Encoding: synthesized: every key below.
 type TriggerFormRepositoryBases struct {
 	Heading     string                           `json:"heading"`
 	Help        string                           `json:"help"`

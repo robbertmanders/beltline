@@ -24,7 +24,7 @@ type wireShaper interface{ WireShape() any }
 // unknownFieldError is a key of a request object that no field of its type takes.
 type unknownFieldError string
 
-// Error is Swift's wording: `Unknown field "<name>"`.
+// Error is `Unknown field "<name>"`.
 func (e unknownFieldError) Error() string {
 	return `Unknown field "` + string(e) + `"`
 }

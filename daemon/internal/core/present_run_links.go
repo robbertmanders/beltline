@@ -3,8 +3,8 @@ package core
 import "strconv"
 
 // RunLinksTarget is one choice in the link menu. Title is the visible row; Detail is
-// the help and accessibility label, so repeated "Open PR" rows stay distinct. Not
-// encoded directly: the API carries its own wire form.
+// the help and accessibility label, so repeated "Open PR" rows stay distinct. The
+// API sends it with its detail (api.RunLinkWire).
 type RunLinksTarget struct {
 	ID        string
 	Title     string

@@ -1,7 +1,7 @@
 //
 // The Overview's floor eligibility and layout inputs, shared by the API.
-// Handlers only hand these functions their coordinator snapshot. The API carries
-// its own wire form of OverviewView, so the types here are not encoded directly.
+// Handlers only hand these functions their coordinator snapshot, and the API sends
+// what they return as it is.
 
 package core
 

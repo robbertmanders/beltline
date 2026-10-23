@@ -40,7 +40,7 @@ func TestReturnsTheCreatorsVersion(t *testing.T) {
 			if string(reply.body) != string(want) {
 				t.Fatalf("body %s, want %s", reply.body, want)
 			}
-			if !strings.HasPrefix(reply.text(), `{"apiVersion":1,"platform":"macos","version":`) {
+			if !strings.HasPrefix(reply.text(), `{"apiVersion":1,"version":`) {
 				t.Fatalf("key order: %s", reply.body)
 			}
 			if strings.Contains(reply.text(), testToken) || strings.Contains(reply.text(), strconv.Itoa(os.Getpid())) {

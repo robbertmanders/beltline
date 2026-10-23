@@ -8,8 +8,6 @@ import (
 // BeltAction is one command a belt resource offers, with whether the daemon would accept
 // it now and why not when it would not. Clients must not trust a supplied
 // `enabled`: the daemon checks the same table again when a command arrives.
-//
-// Encoding: synthesized: id, enabled, reason (omitted when nil).
 type BeltAction struct {
 	ID      string `json:"id"`
 	Enabled bool   `json:"enabled"`

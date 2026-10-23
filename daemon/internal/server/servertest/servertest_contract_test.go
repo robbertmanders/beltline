@@ -81,10 +81,10 @@ func TestNormalizationSubstitutesOnlyTheDocumentedVolatileValues(t *testing.T) {
 	}
 }
 
-// TestNormalizationRejectsUnsortedKeysAndTrailingData checks the canonical-form requirement.
-func TestNormalizationRejectsUnsortedKeysAndTrailingData(t *testing.T) {
+// TestNormalizationRejectsTrailingData checks that a body is one JSON value.
+func TestNormalizationRejectsTrailingData(t *testing.T) {
 	t.Parallel()
-	for _, body := range []string{`{"b":1,"a":2}`, `{"a":1} x`} {
+	for _, body := range []string{`{"a":1} x`} {
 		if _, err := Normalize([]byte(body), "shape", ""); err == nil {
 			t.Errorf("accepted %s", body)
 		}

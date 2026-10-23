@@ -25,8 +25,6 @@ const (
 )
 
 // AttemptInterruptionContinuation is the Continue that resumes an interrupted turn.
-//
-// Encoding: synthesized: operation, status, reason (omitted when nil), prompt.
 type AttemptInterruptionContinuation struct {
 	Operation string                                `json:"operation"`
 	Status    AttemptInterruptionContinuationStatus `json:"status"`
@@ -46,10 +44,6 @@ func NewAttemptInterruptionContinuation(operation string, status AttemptInterrup
 
 // AttemptInterruption is one stage-agent turn a pause stopped, and the Continue
 // that resumes it.
-//
-// Encoding: synthesized: operation, legId, confirmation, and the optional
-// reason, conversation, transcriptMark, usageMark, usageCheckpoint and
-// continuation, each omitted when nil.
 type AttemptInterruption struct {
 	Operation    string                          `json:"operation"`
 	LegID        string                          `json:"legId"`

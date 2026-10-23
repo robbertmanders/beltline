@@ -43,7 +43,7 @@ type MapMetrics struct {
 	MinColumn float64
 }
 
-// MapMetricsArgs are the parameters of NewMapMetrics. A nil optional is Swift's default.
+// MapMetricsArgs are the parameters of NewMapMetrics. A nil optional takes its default.
 type MapMetricsArgs struct {
 	Cell      float64
 	Track     float64
@@ -54,7 +54,7 @@ type MapMetricsArgs struct {
 	MinColumn *float64
 }
 
-// NewMapMetrics is the metrics from their parts, with Swift's defaults for the nil ones.
+// NewMapMetrics is the metrics from their parts, with the defaults for the nil ones.
 func NewMapMetrics(a MapMetricsArgs) MapMetrics {
 	m := MapMetrics{Cell: a.Cell, Track: a.Track, Thickness: 8, Pad: 56, RowGap: 18, Corner: 10, MinColumn: 104}
 	if a.Thickness != nil {
@@ -217,7 +217,7 @@ func mapPlanFlatStages(routes [][]BeltLayoutSegment) ([][]Stage, bool) {
 	return out, true
 }
 
-// mapPlanZip is the routes of a fork that have a sequence as well: Swift's zip stops at the shorter list.
+// mapPlanZip is the routes of a fork that have a sequence as well, up to the shorter of the two.
 func mapPlanZip(routes []Route, count int) []Route {
 	return routes[:min(len(routes), count)]
 }

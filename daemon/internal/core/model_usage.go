@@ -32,8 +32,6 @@ const (
 var AllUsageCoverage = []UsageCoverage{UsageCoverageComplete, UsageCoveragePartial, UsageCoverageUntracked}
 
 // RateProvenance is the rate table revision that produced an estimate. Saved attempts keep theirs.
-//
-// Encoding: synthesized: revision, source, models.
 type RateProvenance struct {
 	Revision string   `json:"revision"`
 	Source   string   `json:"source"`
@@ -42,9 +40,6 @@ type RateProvenance struct {
 
 // TokenTotals are cumulative counters at an attempt boundary. A nil CacheWrite
 // means that counter was not observed.
-//
-// Encoding: synthesized: input, cacheRead, output, reasoning, total, and
-// cacheWrite (omitted when nil).
 type TokenTotals struct {
 	Input     int `json:"input"`
 	CacheRead int `json:"cacheRead"`
@@ -81,8 +76,6 @@ func (t TokenTotals) Delta(baseline TokenTotals) *TokenTotals {
 
 // UsageCheckpoint is where an attempt's usage starts. A missing checkpoint is
 // not a zero baseline.
-//
-// Encoding: synthesized: sessionId, lines, totals and preexisting, each omitted when nil.
 type UsageCheckpoint struct {
 	// SessionID is the native rollout or session id this boundary belongs to.
 	SessionID *string `json:"sessionId,omitzero"`

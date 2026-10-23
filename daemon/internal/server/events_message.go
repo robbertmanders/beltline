@@ -74,7 +74,7 @@ func NewNotificationMessage(title, body string) EventMessage {
 }
 
 // helloWire, changedWire and notificationWire are the encoded shapes, one per
-// case; jsonx writes their keys sorted.
+// case, their keys in the order they have always been sent.
 type helloWire struct {
 	APIVersion int    `json:"apiVersion"`
 	Type       string `json:"type"`

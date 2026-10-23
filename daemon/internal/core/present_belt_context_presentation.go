@@ -8,8 +8,6 @@ import (
 )
 
 // BeltContextPresentationRouteItem is a route in the editor's route menu.
-//
-// Encoding: synthesized: id, name, fork.
 type BeltContextPresentationRouteItem struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -18,16 +16,12 @@ type BeltContextPresentationRouteItem struct {
 }
 
 // BeltContextPresentationStageItem is a stage in the editor's stage menu.
-//
-// Encoding: synthesized: id, name.
 type BeltContextPresentationStageItem struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
 // BeltContextPresentationOutcomePreview is one outcome with what it does.
-//
-// Encoding: synthesized: stage, outcome, label.
 type BeltContextPresentationOutcomePreview struct {
 	Stage   string `json:"stage"`
 	Outcome string `json:"outcome"`
@@ -40,8 +34,6 @@ const SchedulePreviewMissedTimes = "A time missed while the Mac sleeps runs once
 
 // BeltContextPresentationSchedulePreview is a schedule's summary and when it next fires. A
 // value built as a literal takes SchedulePreviewMissedTimes as its note, which is the default.
-//
-// Encoding: synthesized: entry, summary, note; next is omitted when nil.
 type BeltContextPresentationSchedulePreview struct {
 	Entry   string `json:"entry"`
 	Summary string `json:"summary"`
@@ -52,8 +44,6 @@ type BeltContextPresentationSchedulePreview struct {
 }
 
 // BeltContextPresentationPolicyOption is one policy the belt's triggers can use.
-//
-// Encoding: synthesized: key, label, detail, enabled.
 type BeltContextPresentationPolicyOption struct {
 	Key     string `json:"key"`
 	Label   string `json:"label"`
@@ -64,8 +54,6 @@ type BeltContextPresentationPolicyOption struct {
 // BeltContextPresentationPolicySection is the policies the belt's triggers can use, with the section's
 // heading and note. Empty when no trigger watches a subject that can change under it
 // (schedules and manual tasks).
-//
-// Encoding: synthesized: heading, options, note (omitted when nil).
 type BeltContextPresentationPolicySection struct {
 	Heading string                                `json:"heading"`
 	Options []BeltContextPresentationPolicyOption `json:"options"`

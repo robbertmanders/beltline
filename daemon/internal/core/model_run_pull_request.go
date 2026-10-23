@@ -42,9 +42,6 @@ const (
 )
 
 // PullRequestReview is one review of a pull request.
-//
-// Encoding: synthesized: id, author, state, commit and submittedAt, with the
-// optional ones omitted when nil.
 type PullRequestReview struct {
 	ID          *string                `json:"id,omitzero"`
 	Author      string                 `json:"author"`

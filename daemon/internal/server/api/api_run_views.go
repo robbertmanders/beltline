@@ -62,7 +62,7 @@ type RunViewResponse struct {
 	Menu []core.RunMenuRow `json:"menu"`
 }
 
-// NewRunViewResponse ports `RunViewResponse.init(_ snapshot: CoordinatorRunViewSnapshot)`.
+// NewRunViewResponse is the run page for the snapshot.
 func NewRunViewResponse(snapshot coordinator.CoordinatorRunViewSnapshot) RunViewResponse {
 	out := RunViewResponse{
 		Run:            snapshot.Run,
@@ -136,7 +136,7 @@ type RunAfkWire struct {
 	Help  string `json:"help"`
 }
 
-// NewRunAfkWire ports `RunAfkWire.init(run:global:)`; core.RunAfkButtonHelp writes the help.
+// NewRunAfkWire is the run's AFK button; core.RunAfkButtonHelp writes the help.
 func NewRunAfkWire(run core.Run, global bool) RunAfkWire {
 	mode := run.Afk()
 	on := run.AfkEffective(global)
@@ -157,7 +157,7 @@ type RunWorktreeWire struct {
 	Detail string `json:"detail"`
 }
 
-// NewRunWorktreeWire ports `RunWorktreeWire.init(_ target: WorktreeTargets.Target)`.
+// NewRunWorktreeWire is a worktree target as the page offers it.
 func NewRunWorktreeWire(target runner.WorktreeTarget) RunWorktreeWire {
 	return RunWorktreeWire{ID: target.ID, Title: target.Title, Detail: target.Detail()}
 }
@@ -173,7 +173,7 @@ type RunCostWire struct {
 	EstimateExplanation string  `json:"estimateExplanation"`
 }
 
-// NewRunCostWire ports `RunCostWire.init(_ spend: Spend, line:)`.
+// NewRunCostWire is the run's cost from its spend and cost line.
 func NewRunCostWire(spend core.Spend, line *string) RunCostWire {
 	out := RunCostWire{
 		Estimated:           spend.Estimated,
@@ -199,7 +199,7 @@ type RunLinkWire struct {
 	URL       string `json:"url"`
 }
 
-// NewRunLinkWire ports `RunLinkWire.init(_ target: RunLinks.Target)`.
+// NewRunLinkWire is one link target as the page offers it.
 func NewRunLinkWire(target core.RunLinksTarget) RunLinkWire {
 	return RunLinkWire{ID: target.ID, Title: target.Title, Reference: target.Reference, Detail: target.Detail(), URL: target.URL}
 }
@@ -245,7 +245,7 @@ type RunStageAdjustWire struct {
 	FreshSessionNote string `json:"freshSessionNote"`
 }
 
-// NewRunStageAdjustWire ports `RunStageAdjustWire.init(_ help: StageAdjustHelp)`.
+// NewRunStageAdjustWire is the Adjust sheet for a stage's help.
 func NewRunStageAdjustWire(help coordinator.StageAdjustHelp) RunStageAdjustWire {
 	out := RunStageAdjustWire{
 		Placeholders:     help.Placeholders,
@@ -279,7 +279,7 @@ type RunAdjustRunnerWire struct {
 	EmptyNote    *string            `json:"emptyNote,omitzero"`
 }
 
-// NewRunAdjustRunnerWire ports `RunAdjustRunnerWire.init(_ runner: StageAdjustRunner)`.
+// NewRunAdjustRunnerWire is one runner row of the Adjust sheet.
 func NewRunAdjustRunnerWire(rn coordinator.StageAdjustRunner) RunAdjustRunnerWire {
 	out := RunAdjustRunnerWire{
 		Runner:       string(rn.Backend),

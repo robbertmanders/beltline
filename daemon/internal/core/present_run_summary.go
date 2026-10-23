@@ -5,8 +5,6 @@ import "time"
 // RunCounts are the counts shared by the app overview and the daemon's state endpoint.
 // Passive watches stay visible in their own count, while parked runs remain
 // active as they do in the app's work model.
-//
-// Encoding: synthesized: total, active, watching, running, needsYou, shippedToday.
 type RunCounts struct {
 	Total        int `json:"total"`
 	Active       int `json:"active"`

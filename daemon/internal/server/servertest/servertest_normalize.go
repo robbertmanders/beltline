@@ -119,13 +119,12 @@ func isGoldenDelimiter(b byte) bool {
 	return false
 }
 
-// object parses an object, checking that its keys are in sorted order.
+// object parses an object.
 func (n *goldenNormalizer) object(path []string) error {
 	n.index++
 	if n.consume('}') {
 		return nil
 	}
-	previous, hasPrevious := "", false
 	for {
 		if n.index >= len(n.bytes) || n.bytes[n.index] != '"' {
 			return fmt.Errorf("%s: invalid JSON object key", n.endpoint)
@@ -134,10 +133,6 @@ func (n *goldenNormalizer) object(path []string) error {
 		if err != nil {
 			return err
 		}
-		if hasPrevious && previous >= key {
-			return fmt.Errorf("%s: object keys are not sorted at `%s`", n.endpoint, key)
-		}
-		previous, hasPrevious = key, true
 		if !n.consume(':') {
 			return fmt.Errorf("%s: missing colon after JSON key", n.endpoint)
 		}

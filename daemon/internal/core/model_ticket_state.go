@@ -17,8 +17,6 @@ type TicketStateComment struct {
 }
 
 // TicketStateChild is a sub-issue, or a ticket under an epic.
-//
-// Encoding: synthesized: ref, title, status, isOpen, labels.
 type TicketStateChild struct {
 	// Ref is "KAN-14", "#31", or "acme/web#31" for an issue in another repository.
 	Ref    string   `json:"ref"`
@@ -30,8 +28,6 @@ type TicketStateChild struct {
 
 // TicketState is what a ticket watch reads of an issue or Jira ticket: its
 // status, its comments and its children (sub-issues, or the tickets under an epic).
-//
-// Encoding: synthesized: status, isOpen, comments, children.
 type TicketState struct {
 	Status   string               `json:"status"`
 	IsOpen   bool                 `json:"isOpen"`
@@ -40,8 +36,6 @@ type TicketState struct {
 }
 
 // TicketObservationSeen is a child's status as the watch last saw it.
-//
-// Encoding: synthesized: status, isOpen.
 type TicketObservationSeen struct {
 	Status string `json:"status"`
 	IsOpen bool   `json:"isOpen"`

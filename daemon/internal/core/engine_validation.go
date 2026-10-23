@@ -9,8 +9,6 @@ import "strings"
 // ProblemLocation is the belt part a problem belongs to. Kind is one of belt,
 // fork, route, stage, trigger, repository or outcome; ID is that part's stable
 // id; Field names the field when the problem is about one.
-//
-// Encoding: synthesized: kind, id and field, the optional ones omitted when nil.
 type ProblemLocation struct {
 	Kind  string  `json:"kind"`
 	ID    *string `json:"id,omitzero"`

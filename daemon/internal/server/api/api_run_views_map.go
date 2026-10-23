@@ -49,7 +49,7 @@ type AttemptArtifactsResponse struct {
 	Warning   string                `json:"warning"`
 }
 
-// NewAttemptArtifactsResponse ports `AttemptArtifactsResponse.init(runId:attemptId:artifacts:)`;
+// NewAttemptArtifactsResponse is the attempt's artifact list;
 // Warning is `StageCopy.artifactWarning`.
 func NewAttemptArtifactsResponse(runID, attemptID string, artifacts []AttemptArtifactWire) AttemptArtifactsResponse {
 	return AttemptArtifactsResponse{
