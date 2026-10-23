@@ -65,17 +65,17 @@ func OverviewPresentationTrack(belts []OverviewBelt) FactoryTrack {
 // where it is, and the stage a click opens it at. Floor chips, Metro dots and
 // the Summary rows all look their runs up here.
 type OverviewRun struct {
-	ID    string
-	Ref   string
-	Title string
+	ID    string `json:"id"`
+	Ref   string `json:"ref"`
+	Title string `json:"title"`
 	// StageName is the stage the run is at, by name, as the Running post names it.
-	StageName  string
-	Repository string
-	BeltID     string
-	BeltName   string
-	Location   StatusWhere
-	NeedsYou   bool
-	OpenStage  *string
+	StageName  string      `json:"stageName"`
+	Repository string      `json:"repository"`
+	BeltID     string      `json:"beltId"`
+	BeltName   string      `json:"beltName"`
+	Location   StatusWhere `json:"location"`
+	NeedsYou   bool        `json:"needsYou"`
+	OpenStage  *string     `json:"openStage,omitzero"`
 }
 
 // OverviewView is everything the Overview shows for one read: the global counts, the Summary,
@@ -89,8 +89,6 @@ type OverviewView struct {
 	Floor   OverviewFloor
 	// FactoryTrack is the track the Floor was built from.
 	FactoryTrack FactoryTrack
-	// FactoryLayout is the machines' or the boxes' placement; nil for the metro.
-	FactoryLayout *FloorLayout
 	// MetroLayout is the metro's placement; nil for the machines and the boxes.
 	MetroLayout *MetroLayout
 	// Runs is every active run the Overview names, by id.
@@ -183,7 +181,6 @@ func NewOverviewView(a OverviewViewArgs) OverviewView {
 		Agent:    agent,
 	})
 	view.Greeting = OverviewSummaryGreeting(a.Now, loc)
-	view.FactoryLayout = layout
 	if look == BeltLookMetro {
 		metro := NewMetroLayout(MetroLayoutArgs{Track: track, Runs: active, CharWidth: &charWidth, Paused: paused, Pause: a.Pause})
 		view.MetroLayout = &metro

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
-	"github.com/robbertmanders/beltline/daemon/internal/server/api"
 	"github.com/robbertmanders/beltline/daemon/internal/server/routes"
 )
 
@@ -39,7 +38,7 @@ func TestModelsAnswerThePiRunnersResourceAsTheCoordinatorReadsIt(t *testing.T) {
 		t.Fatalf("unavailable models are not sorted: %v", resource.UnavailableModels)
 	}
 
-	source, err := routes.JSONEncode(api.NewModelRunnerResponse(f.Coordinator.ReadModelRunner(core.BackendPi, "")))
+	source, err := routes.JSONEncode(f.Coordinator.ReadModelRunner(core.BackendPi, ""))
 	if err != nil {
 		t.Fatalf("models: %v", err)
 	}

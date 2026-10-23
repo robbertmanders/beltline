@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { OverviewFloorBelt, OverviewFloorBox, OverviewFloorChip, OverviewFloorLayout, OverviewRun, StageIcon, Tint } from "../../api/wire.gen";
+import type { OverviewFloorBelt, OverviewFloorBox, OverviewFloorChip, FloorLayout, OverviewRun, StageIcon, Tint } from "../../api/wire.gen";
 import { Chip, NeedChip, type Look } from "../../components/Paper";
 import { StageBox, type BoxState } from "../../theme/stages/StageBox";
 import { focusOpacity } from "./focus";
@@ -7,7 +7,7 @@ import { FactoryTracks, nodeKey } from "./FactoryTracks";
 import { chipLabel, runCardText } from "./Stations";
 
 export interface BoxFloorProps {
-  layout: OverviewFloorLayout;
+  layout: FloorLayout;
   belts: readonly OverviewFloorBelt[];
   boxes: readonly OverviewFloorBox[];
   runs: ReadonlyMap<string, OverviewRun>;

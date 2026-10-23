@@ -82,16 +82,16 @@ func MetroLayoutColours(ids []string) map[string]int {
 
 // MetroLayoutPoint is a point on the map, in points.
 type MetroLayoutPoint struct {
-	X float64
-	Y float64
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
 }
 
 // MetroLayoutBox is a rectangle on the map, in points.
 type MetroLayoutBox struct {
-	X      float64
-	Y      float64
-	Width  float64
-	Height float64
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
 }
 
 // Intersects reports whether two boxes overlap.
@@ -116,31 +116,31 @@ func (b MetroLayoutBox) MaxY() float64 {
 
 // MetroLayoutBranch is a fork's branch of a belt's line.
 type MetroLayoutBranch struct {
-	Points []MetroLayoutPoint
-	From   *string
+	Points []MetroLayoutPoint `json:"points"`
+	From   *string            `json:"from,omitzero"`
 	// To is the machine it rejoins; nil when it ends on its own, at End.
-	To    *string
-	Stops []string
-	End   *MetroLayoutPoint
+	To    *string           `json:"to,omitzero"`
+	Stops []string          `json:"stops"`
+	End   *MetroLayoutPoint `json:"end,omitzero"`
 	// Back is set when it goes back to an earlier stage when done, so it has no terminus.
-	Back bool
+	Back bool `json:"back"`
 }
 
 // MetroLayoutLine is one belt's line on the map: its name pill, its main line, branches and return lanes.
 // Its ID is the belt id.
 type MetroLayoutLine struct {
-	BeltID  string
-	Name    string
-	Colour  int
-	NameBox MetroLayoutBox
+	BeltID  string         `json:"beltId"`
+	Name    string         `json:"name"`
+	Colour  int            `json:"colour"`
+	NameBox MetroLayoutBox `json:"nameBox"`
 	// Points is the main line, from the name pill through its stations to the terminus.
-	Points   []MetroLayoutPoint
-	Branches []MetroLayoutBranch
+	Points   []MetroLayoutPoint  `json:"points"`
+	Branches []MetroLayoutBranch `json:"branches"`
 	// Returns are dotted lanes back to a machine the belt passed further left.
-	Returns  [][]MetroLayoutPoint
-	Terminus MetroLayoutPoint
+	Returns  [][]MetroLayoutPoint `json:"returns"`
+	Terminus MetroLayoutPoint     `json:"terminus"`
 	// Pills are the names of the routes the belt takes, each on its track before its first stop.
-	Pills []MetroLayoutRoutePill
+	Pills []MetroLayoutRoutePill `json:"routes"`
 }
 
 // ID is the line's identity: its belt id.
@@ -203,7 +203,7 @@ func (l MetroLayoutLine) EndBars() []MetroLayoutBar {
 
 // MetroLayoutBar is a terminus bar drawn across a track: its x and the y it runs from and to.
 type MetroLayoutBar struct {
-	X      float64
-	Top    float64
-	Bottom float64
+	X      float64 `json:"x"`
+	Top    float64 `json:"top"`
+	Bottom float64 `json:"bottom"`
 }

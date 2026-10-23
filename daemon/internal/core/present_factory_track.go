@@ -13,6 +13,8 @@ package core
 import (
 	"slices"
 	"strings"
+
+	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
 
 // FactoryTrackBelt is a belt as the floor needs it: identity, name and layout.
@@ -103,10 +105,26 @@ const (
 
 // FactoryTrackNode is something placed in a layer: a belt's entrance, a machine, or a waypoint
 // a longer track passes through. It is comparable, so it can key a map.
+//
+// Encoding: {"kind": ..., "value": ...}, the value being the id, or the waypoint's number.
 type FactoryTrackNode struct {
 	Kind     FactoryTrackNodeKind
 	ID       string
 	Waypoint int
+}
+
+// MarshalJSON writes the node as its kind and value.
+func (n FactoryTrackNode) MarshalJSON() ([]byte, error) {
+	if n.Kind == FactoryTrackNodeWaypoint {
+		return jsonx.Marshal(struct {
+			Kind  FactoryTrackNodeKind `json:"kind"`
+			Value int                  `json:"value"`
+		}{n.Kind, n.Waypoint})
+	}
+	return jsonx.Marshal(struct {
+		Kind  FactoryTrackNodeKind `json:"kind"`
+		Value string               `json:"value"`
+	}{n.Kind, n.ID})
 }
 
 // FactoryTrackEntrance is the node of a belt's entrance.

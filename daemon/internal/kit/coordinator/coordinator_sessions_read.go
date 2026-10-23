@@ -14,32 +14,32 @@ import (
 // SessionsView is the Run page's Sessions read: the rows and the chosen attempt,
 // its saved log, the terminal the daemon can attach now and the offers it permits.
 type SessionsView struct {
-	RunID string
-	Rows  []SessionSidebarProjectionRow
+	RunID string                        `json:"runId"`
+	Rows  []SessionSidebarProjectionRow `json:"rows"`
 	// Selection is the attempt the terminal shows.
-	Selection SessionSidebarProjectionSelection
+	Selection SessionSidebarProjectionSelection `json:"selection"`
 	// EmptyMessage is the copy an empty list shows.
-	EmptyMessage *string
+	EmptyMessage *string `json:"emptyMessage,omitzero"`
 	// Terminal is the session the daemon can attach now, nil when none.
-	Terminal *SessionsViewTerminal
+	Terminal *SessionsViewTerminal `json:"terminal,omitzero"`
 	// Log is the selected attempt's saved transcript; nil when no attempt is selected.
-	Log *string
+	Log *string `json:"log,omitzero"`
 	// Usage is the selected attempt's token and estimate detail.
-	Usage *SessionUsage
+	Usage *SessionUsage `json:"usage,omitzero"`
 	// TakeOver is nil when Take over is not offered for the selection.
-	TakeOver *SessionOffer
+	TakeOver *SessionOffer `json:"takeOver,omitzero"`
 	// Ghostty is the offer to open the session in Ghostty.
-	Ghostty SessionOffer
+	Ghostty SessionOffer `json:"ghostty"`
 	// ContinueSession is nil for an open attempt or one the run does not offer Continue for.
-	ContinueSession *SessionOffer
+	ContinueSession *SessionOffer `json:"continueSession,omitzero"`
 }
 
 // SessionsViewTerminal is a terminal the daemon can attach: the attempt's own
 // session while it runs, or its Continue conversation once it has ended.
 type SessionsViewTerminal struct {
-	Target    string
-	ReadOnly  bool
-	Continued bool
+	Target    string `json:"target"`
+	ReadOnly  bool   `json:"readOnly"`
+	Continued bool   `json:"continued"`
 }
 
 // ReadSessionsView is the Sessions read gathered on the main actor. It reads only

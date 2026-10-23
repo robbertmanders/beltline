@@ -13,7 +13,7 @@ import (
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 	"github.com/robbertmanders/beltline/daemon/internal/integrations/runner"
-	"github.com/robbertmanders/beltline/daemon/internal/server/api"
+	"github.com/robbertmanders/beltline/daemon/internal/kit/coordinator"
 	"github.com/robbertmanders/beltline/daemon/internal/server/routes"
 )
 
@@ -50,9 +50,9 @@ func sessionsPath(run core.Run, attempt core.Attempt) string {
 }
 
 // decodeSessions decodes a Sessions read's reply body.
-func decodeSessions(t *testing.T, reply Reply) api.RunSessionsResponse {
+func decodeSessions(t *testing.T, reply Reply) coordinator.SessionsView {
 	t.Helper()
-	var response api.RunSessionsResponse
+	var response coordinator.SessionsView
 	if err := routes.JSONDecode(reply.Body, &response); err != nil {
 		t.Fatalf("sessions: %v", err)
 	}
@@ -141,7 +141,7 @@ func TestAttachableContinuationReportsItsTargetAsAWritableConversation(t *testin
 	if attempt.Session == nil {
 		t.Fatal("the attempt has no session")
 	}
-	want := api.SessionTerminalWire{Target: runner.TmuxContinueName(*attempt.Session), ReadOnly: false, Continued: true}
+	want := coordinator.SessionsViewTerminal{Target: runner.TmuxContinueName(*attempt.Session), ReadOnly: false, Continued: true}
 	if response.Terminal == nil || *response.Terminal != want {
 		t.Fatalf("terminal %+v, want %+v", response.Terminal, want)
 	}
@@ -151,7 +151,7 @@ func TestAttachableContinuationReportsItsTargetAsAWritableConversation(t *testin
 	if !response.Ghostty.Enabled {
 		t.Fatal("an attached terminal may open in Ghostty when the run is not paused")
 	}
-	found := slices.ContainsFunc(response.Rows, func(row api.SessionRowWire) bool {
+	found := slices.ContainsFunc(response.Rows, func(row coordinator.SessionSidebarProjectionRow) bool {
 		return row.AttemptID == attempt.ID && row.Selected
 	})
 	if !found {

@@ -17,7 +17,7 @@ func AddModelsList(mux *http.ServeMux, c *coordinator.Coordinator) {
 			return nil, err
 		}
 		text, _ := HummingbirdQueryParameter("q", r.URL.RawQuery)
-		return api.NewModelRunnerResponse(c.ReadModelRunner(runner, text)), nil
+		return c.ReadModelRunner(runner, text), nil
 	}))
 }
 
@@ -32,7 +32,7 @@ func AddModelsRefresh(mux *http.ServeMux, c *coordinator.Coordinator) {
 		if err != nil {
 			return nil, err
 		}
-		return api.NewModelRunnerResponse(c.RefreshModelCatalog(r.Context(), runner)), nil
+		return c.RefreshModelCatalog(r.Context(), runner), nil
 	}))
 }
 
@@ -52,7 +52,7 @@ func AddModelsAllow(mux *http.ServeMux, c *coordinator.Coordinator) {
 		if err != nil {
 			return nil, err
 		}
-		return api.NewModelRunnerResponse(resource), nil
+		return resource, nil
 	}))
 }
 

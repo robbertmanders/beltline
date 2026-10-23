@@ -99,7 +99,7 @@ func exerciseViewsArea(f *Fixture, t testing.TB, contractCase string) bool {
 		reply := f.Do(Request{Method: "GET", Path: "/api/v1/views/insights", Token: ContractToken})
 		CheckGolden(t, "viewsInsights", "views-insights.json", reply, f.Root)
 		view, ok := f.Coordinator.ReadInsightsView(core.InsightsQuery{Period: core.InsightsPeriodAll}, nil, nil)
-		if !ok || !bytes.Equal(reply.Body, mustMarshal(t, api.NewInsightsResponse(view))) {
+		if !ok || !bytes.Equal(reply.Body, mustMarshal(t, view)) {
 			t.Fatalf("viewsInsights: the response is not the coordinator's insights view")
 		}
 		runs := f.Coordinator.ReadRuns()
@@ -110,7 +110,7 @@ func exerciseViewsArea(f *Fixture, t testing.TB, contractCase string) bool {
 		reply = f.Do(Request{Method: "GET", Path: "/api/v1/views/insights?belt=" + EncodeSegment(belt) + "&period=90d", Token: ContractToken})
 		CheckGolden(t, "viewsInsights belt", "views-insights-belt.json", reply, f.Root)
 		view, ok = f.Coordinator.ReadInsightsView(core.InsightsQuery{Belt: belt, Period: core.InsightsPeriodQuarter}, nil, nil)
-		if !ok || !bytes.Equal(reply.Body, mustMarshal(t, api.NewInsightsResponse(view))) || len(view.Stages) == 0 {
+		if !ok || !bytes.Equal(reply.Body, mustMarshal(t, view)) || len(view.Stages) == 0 {
 			t.Fatalf("viewsInsights: the belt response is not the coordinator's view of %s, or has no stages", belt)
 		}
 	case "viewsInsightsEvolution":
@@ -119,7 +119,7 @@ func exerciseViewsArea(f *Fixture, t testing.TB, contractCase string) bool {
 		reply := f.Do(Request{Method: "GET", Path: "/api/v1/views/insights/evolution?belt=" + EncodeSegment(belt), Token: ContractToken})
 		CheckGolden(t, "viewsInsightsEvolution", "views-insights-evolution.json", reply, f.Root)
 		view, ok := f.Coordinator.ReadInsightsEvolution(core.InsightsEvolutionQuery{Belt: belt}, nil)
-		if !ok || !bytes.Equal(reply.Body, mustMarshal(t, api.NewInsightsEvolutionResponse(view))) || len(view.Figures) == 0 {
+		if !ok || !bytes.Equal(reply.Body, mustMarshal(t, view)) || len(view.Figures) == 0 {
 			t.Fatalf("viewsInsightsEvolution: the response is not the coordinator's evolution view of %s", belt)
 		}
 		if missing := f.Do(Request{Method: "GET", Path: "/api/v1/views/insights/evolution", Token: ContractToken}); missing.Status != 422 {
@@ -147,7 +147,7 @@ func exerciseViewsArea(f *Fixture, t testing.TB, contractCase string) bool {
 		if view == nil {
 			t.Fatalf("viewsRunSessions: the action run has no sessions view")
 		}
-		if !bytes.Equal(reply.Body, mustMarshal(t, api.NewRunSessionsResponse(*view))) {
+		if !bytes.Equal(reply.Body, mustMarshal(t, *view)) {
 			t.Fatalf("viewsRunSessions: the response is not the coordinator's sessions view")
 		}
 	case "waiting":

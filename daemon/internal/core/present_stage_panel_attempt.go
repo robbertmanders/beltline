@@ -3,50 +3,54 @@
 
 package core
 
-import "time"
+import (
+	"time"
+
+	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
+)
 
 // StagePanelAttempt is one attempt's line in a stage panel (StagePanelFacts.Attempt).
 type StagePanelAttempt struct {
-	ID string
+	ID string `json:"id"`
 	// RanOn is the runner and model the attempt ran on.
-	RanOn string
+	RanOn string `json:"ranOn"`
 	// File is the output file, relative to the data folder.
-	File     *string
-	Duration *string
+	File     *string `json:"file,omitzero"`
+	Duration *string `json:"duration,omitzero"`
 	// Decision is a gate's decision: what was chosen, or "Not decided yet".
-	Decision  *string
-	DecidedBy *string
-	DecidedAt *time.Time
+	Decision  *string     `json:"decision,omitzero"`
+	DecidedBy *string     `json:"decidedBy,omitzero"`
+	DecidedAt *jsonx.Date `json:"decidedAt,omitzero"`
 	// DecisionLine is a gate's line under the decision: "You decided 4 min ago.", or "This stage waits for you.".
-	DecisionLine *string
-	Result       *StagePanelAttemptResult
+	DecisionLine *string                  `json:"decisionLine,omitzero"`
+	Result       *StagePanelAttemptResult `json:"result,omitzero"`
 	// Afk is the AFK decision that ended this attempt's wait for you.
-	Afk *StagePanelAfkNote
+	Afk *StagePanelAfkNote `json:"afk,omitzero"`
 }
 
 // StagePanelAttemptResult is what an attempt ended with: the outcome row, the route it took, and the note or detail that went with it.
 type StagePanelAttemptResult struct {
 	// Outcome is the outcome's chip text; "failed" for a failure without one. Nil shows no outcome row.
-	Outcome *string
+	Outcome *string `json:"outcome,omitzero"`
 	// Tone is the outcome's tone, as Tone names it.
-	Tone  *string
-	Route *string
+	Tone  *string `json:"tone,omitzero"`
+	Route *string `json:"route,omitzero"`
 	// Note is "Your message: …", for an agent's note.
-	Note *string
+	Note *string `json:"note,omitzero"`
 	// Detail is the detail, as the stage words it ("Your note: …" on a gate).
-	Detail  *string
-	Problem bool
+	Detail  *string `json:"detail,omitzero"`
+	Problem bool    `json:"problem"`
 }
 
 // StagePanelAfkNote is an AFK decision as the AFK log presents it, for the panel's note.
 type StagePanelAfkNote struct {
 	// Title is the headline, such as "AFK assistant · Chose “approved” at Approve".
-	Title        string
-	OverruleLine *string
-	Comments     *string
-	Why          *string
+	Title        string  `json:"title"`
+	OverruleLine *string `json:"overruleLine,omitzero"`
+	Comments     *string `json:"comments,omitzero"`
+	Why          *string `json:"why,omitzero"`
 	// Deciding is set while the decision is still being made: the note offers a working bar instead of See on AFK.
-	Deciding bool
+	Deciding bool `json:"deciding"`
 }
 
 // StagePanelAttemptOf is one attempt's line in a stage panel. label is the catalog's display label of a model
@@ -90,14 +94,14 @@ func StagePanelAttemptOf(attempt Attempt, run Run, stage Stage, label func(model
 		}
 	}
 	var decisionLine *string
-	var decidedAt *time.Time
+	var decidedAt *jsonx.Date
 	var decision *string
 	if isGate {
 		line := StageCopyWaitsForYou
 		if attempt.EndedAt != nil {
 			by := ValueOr(decidedBy, "You")
 			line = StageCopyDecidedLine(by, attempt.EndedAt.Time, now)
-			at := attempt.EndedAt.Time
+			at := *attempt.EndedAt
 			decidedAt = &at
 		}
 		decisionLine = &line

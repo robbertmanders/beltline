@@ -14,8 +14,8 @@ type SessionOffer = core.SessionOffer
 
 // SessionUsage is the token and estimate facts of a finished agent attempt.
 type SessionUsage struct {
-	Tokens   *string
-	Estimate *string
+	Tokens   *string `json:"tokens,omitzero"`
+	Estimate *string `json:"estimate,omitzero"`
 }
 
 // SessionSidebarProjectionStatus is a sidebar row's state:
@@ -30,22 +30,22 @@ const (
 
 // SessionSidebarProjectionRow is one row of the Sessions sidebar.
 type SessionSidebarProjectionRow struct {
-	AttemptID string
-	StageID   string
-	Title     string
-	Caption   string
-	Status    SessionSidebarProjectionStatus
-	Session   string
-	Selected  bool
+	AttemptID string                         `json:"attemptId"`
+	StageID   string                         `json:"stageId"`
+	Title     string                         `json:"title"`
+	Caption   string                         `json:"caption"`
+	Status    SessionSidebarProjectionStatus `json:"status"`
+	Session   string                         `json:"session"`
+	Selected  bool                           `json:"selected"`
 }
 
 // SessionSidebarProjectionSelection is the attempt the terminal shows. AttemptID
 // is nil only when the run has no session at all. Fallback explains why the
 // chosen stage's own session is not the one shown.
 type SessionSidebarProjectionSelection struct {
-	StageID   string
-	AttemptID *string
-	Fallback  *string
+	StageID   string  `json:"stageId"`
+	AttemptID *string `json:"attemptId,omitzero"`
+	Fallback  *string `json:"fallback,omitzero"`
 }
 
 // SessionSidebarProjectionRows returns every session-bearing attempt of run, in

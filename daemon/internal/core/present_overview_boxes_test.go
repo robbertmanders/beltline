@@ -209,7 +209,7 @@ func TestTheMachinesLookKeepsItsFiveChipsAndSendsNoBoxes(t *testing.T) {
 	if machine.More != 6-(OverviewFloorChipLimit-1) {
 		t.Errorf("more = %d, want %d", machine.More, 6-(OverviewFloorChipLimit-1))
 	}
-	if view.FactoryLayout == nil {
+	if view.Floor.Layout == nil {
 		t.Error("the machines look draws a layout")
 	}
 	if view.MetroLayout != nil {
@@ -225,7 +225,7 @@ func TestTheMetroLookBuildsOnlyTheMetro(t *testing.T) {
 	if metro.MetroLayout == nil {
 		t.Error("the metro look draws the metro")
 	}
-	if metro.FactoryLayout != nil {
+	if metro.Floor.Layout != nil {
 		t.Error("the metro look draws no factory layout")
 	}
 	if len(metro.Floor.Machines) != 0 || len(metro.Floor.Boxes) != 0 {
@@ -235,7 +235,7 @@ func TestTheMetroLookBuildsOnlyTheMetro(t *testing.T) {
 	if boxes.MetroLayout != nil {
 		t.Error("the boxes look draws no metro")
 	}
-	if boxes.FactoryLayout == nil {
+	if boxes.Floor.Layout == nil {
 		t.Error("the boxes look draws a factory layout")
 	}
 }
@@ -246,7 +246,7 @@ func TestBoxFramesSitInTheirCellsAndInsideTheLayout(t *testing.T) {
 	belts := []OverviewBelt{obOverviewBelt("issues"), obOverviewBelt("docs")}
 	runs := []Run{obRun("one", "issues", RunStateHeld), obRun("two", "docs", RunStateWaiting)}
 	view := obView(belts, runs, BeltLookBoxes)
-	layout := view.FactoryLayout
+	layout := view.Floor.Layout
 	if layout == nil {
 		t.Fatal("the boxes look draws a layout")
 	}
@@ -261,36 +261,36 @@ func TestBoxFramesSitInTheirCellsAndInsideTheLayout(t *testing.T) {
 		if placed == nil {
 			t.Fatalf("box %s is not placed", box.ID)
 		}
-		if box.Frame.X != placed.X-OverviewBoxesBoxWidth/2 {
-			t.Errorf("box %s x = %v, want %v", box.ID, box.Frame.X, placed.X-OverviewBoxesBoxWidth/2)
+		if box.X != placed.X-OverviewBoxesBoxWidth/2 {
+			t.Errorf("box %s x = %v, want %v", box.ID, box.X, placed.X-OverviewBoxesBoxWidth/2)
 		}
-		if box.Frame.Y != placed.Top {
-			t.Errorf("box %s y = %v, want %v", box.ID, box.Frame.Y, placed.Top)
+		if box.Y != placed.Top {
+			t.Errorf("box %s y = %v, want %v", box.ID, box.Y, placed.Top)
 		}
-		if box.Frame.Width != OverviewBoxesBoxWidth {
-			t.Errorf("box %s width = %v, want %v", box.ID, box.Frame.Width, OverviewBoxesBoxWidth)
+		if box.Width != OverviewBoxesBoxWidth {
+			t.Errorf("box %s width = %v, want %v", box.ID, box.Width, OverviewBoxesBoxWidth)
 		}
-		if box.Frame.Height != placed.Height {
-			t.Errorf("box %s height = %v, want %v", box.ID, box.Frame.Height, placed.Height)
+		if box.Height != placed.Height {
+			t.Errorf("box %s height = %v, want %v", box.ID, box.Height, placed.Height)
 		}
 		// The box's centre is the track's anchor: the status sits above it, then the box.
 		if placed.Anchor != placed.Top+OverviewBoxesStatusHeight+OverviewBoxesBoxHeight/2 {
 			t.Errorf("box %s anchor = %v, want the box's centre", box.ID, placed.Anchor)
 		}
-		if box.Frame.X+box.Frame.Width > layout.Width || box.Frame.Y+box.Frame.Height > layout.Height {
+		if box.X+box.Width > layout.Width || box.Y+box.Height > layout.Height {
 			t.Errorf("box %s lies outside the layout", box.ID)
 		}
 	}
 	// Boxes in one column never overlap.
 	columns := map[float64][]OverviewFloorBox{}
 	for _, box := range view.Floor.Boxes {
-		columns[box.Frame.X] = append(columns[box.Frame.X], box)
+		columns[box.X] = append(columns[box.X], box)
 	}
 	for _, column := range columns {
-		sort.SliceStable(column, func(i, j int) bool { return column[i].Frame.Y < column[j].Frame.Y })
+		sort.SliceStable(column, func(i, j int) bool { return column[i].Y < column[j].Y })
 		for index := 1; index < len(column); index++ {
 			above, below := column[index-1], column[index]
-			if above.Frame.Y+above.Frame.Height > below.Frame.Y {
+			if above.Y+above.Height > below.Y {
 				t.Errorf("box %s overlaps box %s in its column", above.ID, below.ID)
 			}
 		}

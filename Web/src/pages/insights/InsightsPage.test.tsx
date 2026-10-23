@@ -1,30 +1,30 @@
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
-import type { InsightsEvolutionResponse, InsightsResponse } from "../../api/wire.gen";
+import type { InsightsEvolutionView, InsightsView } from "../../api/wire.gen";
 import { goldenText } from "../../test/golden";
 import { json } from "../../test/response";
 import { renderPage, stubDaemon, type Handler } from "../../test/daemon";
 
 const insightsPath = "/api/v1/views/insights";
-const everyBelt = (): InsightsResponse => JSON.parse(goldenText("views-insights.json")) as InsightsResponse;
-const oneBelt = (): InsightsResponse => JSON.parse(goldenText("views-insights-belt.json")) as InsightsResponse;
+const everyBelt = (): InsightsView => JSON.parse(goldenText("views-insights.json")) as InsightsView;
+const oneBelt = (): InsightsView => JSON.parse(goldenText("views-insights-belt.json")) as InsightsView;
 const evolutionPath = "/api/v1/views/insights/evolution";
-const evolution = (): InsightsEvolutionResponse => JSON.parse(goldenText("views-insights-evolution.json")) as InsightsEvolutionResponse;
+const evolution = (): InsightsEvolutionView => JSON.parse(goldenText("views-insights-evolution.json")) as InsightsEvolutionView;
 
 /** An archived belt the daemon offers once Show archived is on, with its own row and picker entry. */
 const archivedBelt = "retired-belt";
 const archivedLabel = "Retired belt";
 
 /** The overview with the archived belt added, as the daemon answers with showArchived=1. */
-const withArchived = (): InsightsResponse => {
+const withArchived = (): InsightsView => {
   const base = everyBelt();
   const row = { ...base.beltRows[0]!, id: archivedBelt, name: archivedLabel, runs: 4 };
   return { ...base, belts: [...base.belts, { id: archivedBelt, label: archivedLabel }], beltRows: [...base.beltRows, row], caption: `${base.beltRows.length + 1} belts with runs` };
 };
 
 /** The detail of the archived belt: the picker keeps it chosen, and its figures are the belt golden's. */
-const archivedDetail = (): InsightsResponse => ({
+const archivedDetail = (): InsightsView => ({
   ...oneBelt(), belt: archivedBelt, title: archivedLabel, belts: [...everyBelt().belts, { id: archivedBelt, label: archivedLabel }]
 });
 
@@ -223,7 +223,7 @@ describe("Insights page, shadow tests", () => {
     delta: { label: "+11 pts", tone: "better" as const, caption: "Shadow against live" }
   }));
   const figuresOf = { visits: 4, visitsPerRun: "1.50", lowSample: true, medianTime: "2m 0s", firstTry: { count: 3, of: 4, percent: "75%" }, tries: "1.25", cost: "–", costCaption: "" };
-  const shadowView = (): InsightsResponse => ({
+  const shadowView = (): InsightsView => ({
     ...oneBelt(), stages: [],
     shadow: {
       test: "t1", running: true, dates: "Runs started since Oct 2", caption: "Only runs that started during the test count.",

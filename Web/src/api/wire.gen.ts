@@ -4,8 +4,17 @@
 export const adjustmentFieldValues = ["backend", "model", "thinking", "brief"] as const;
 export type AdjustmentField = (typeof adjustmentFieldValues)[number];
 
+export const afkDecisionStatusValues = ["deciding", "applied", "leftForYou", "failed", "superseded"] as const;
+export type AfkDecisionStatus = (typeof afkDecisionStatusValues)[number];
+
 export const afkModeValues = ["always", "never", "global"] as const;
 export type AfkMode = (typeof afkModeValues)[number];
+
+export const afkOverrulePhaseValues = ["restarted", "held"] as const;
+export type AfkOverrulePhase = (typeof afkOverrulePhaseValues)[number];
+
+export const afkSituationKindValues = ["question", "failure", "approval", "hold"] as const;
+export type AfkSituationKind = (typeof afkSituationKindValues)[number];
 
 export const attemptInterruptionConfirmationValues = ["pending", "confirmed", "failed"] as const;
 export type AttemptInterruptionConfirmation = (typeof attemptInterruptionConfirmationValues)[number];
@@ -29,11 +38,11 @@ export const costProvenanceValues = ["reported", "estimated"] as const;
 export type CostProvenance = (typeof costProvenanceValues)[number];
 
 export const eventResourceValues = ["runs", "library", "settings", "state", "intake", "assistant", "afk", "models"] as const;
-export const factoryNodeKindValues = ["entrance", "machine", "waypoint"] as const;
-export type FactoryNodeKind = (typeof factoryNodeKindValues)[number];
-
 export const fallbackValues = ["hold", "retry", "drop"] as const;
 export type Fallback = (typeof fallbackValues)[number];
+
+export const groupByValues = ["none", "repo", "status", "belt", "epic"] as const;
+export type GroupBy = (typeof groupByValues)[number];
 
 export const inlineSpanKindValues = ["text", "strong", "code"] as const;
 export type InlineSpanKind = (typeof inlineSpanKindValues)[number];
@@ -71,8 +80,11 @@ export type LibraryRole = (typeof libraryRoleValues)[number];
 export const machineValues = ["sorter", "typewriter", "mailbox", "robot", "microscope", "reader", "van", "box", "telescope", "stamp", "crane", "drill", "radar"] as const;
 export type Machine = (typeof machineValues)[number];
 
-export const markdownBlockKindValues = ["heading", "item", "code", "paragraph"] as const;
-export type MarkdownBlockKind = (typeof markdownBlockKindValues)[number];
+export const metroLayoutGlyphValues = ["circle", "diamond", "square", "interchange"] as const;
+export type MetroLayoutGlyph = (typeof metroLayoutGlyphValues)[number];
+
+export const metroLayoutLookValues = ["running", "waiting", "held", "queued", "parked"] as const;
+export type MetroLayoutLook = (typeof metroLayoutLookValues)[number];
 
 export const pullRequestCheckStateValues = ["pending", "passing", "failing"] as const;
 export type PullRequestCheckState = (typeof pullRequestCheckStateValues)[number];
@@ -113,11 +125,17 @@ export type RunMetroTravel = (typeof runMetroTravelValues)[number];
 export const runPausePhaseValues = ["pausing", "paused", "incomplete", "resuming", "reconcileFailed"] as const;
 export type RunPausePhase = (typeof runPausePhaseValues)[number];
 
+export const runPresentationAttemptEntryContentValues = ["running", "decision", "historicalOutput", "empty"] as const;
+export type RunPresentationAttemptEntryContent = (typeof runPresentationAttemptEntryContentValues)[number];
+
 export const runStateValues = ["queued", "running", "waiting", "held", "parked", "done", "shipped", "dropped"] as const;
 export type RunState = (typeof runStateValues)[number];
 
 export const scheduleDaysValues = ["everyDay", "weekdays", "weekly"] as const;
 export type ScheduleDays = (typeof scheduleDaysValues)[number];
+
+export const sessionSidebarProjectionStatusValues = ["live", "problem", "done"] as const;
+export type SessionSidebarProjectionStatus = (typeof sessionSidebarProjectionStatusValues)[number];
 
 export const shadowArmValues = ["live", "shadow"] as const;
 export type ShadowArm = (typeof shadowArmValues)[number];
@@ -130,6 +148,15 @@ export type ShadowStageChange = (typeof shadowStageChangeValues)[number];
 
 export const stageIconValues = ["funnel", "doc", "approve", "wrench", "scope", "ship", "merge", "flag", "eye", "send", "list", "pen", "cycle", "branch", "gauge", "chip", "bolt", "jira", "clock", "hand"] as const;
 export type StageIcon = (typeof stageIconValues)[number];
+
+export const stageKindValues = ["agent", "gate", "watch"] as const;
+export type StageKind = (typeof stageKindValues)[number];
+
+export const stageStatusFaceValues = ["idle", "run", "wait", "happy", "held", "paused", "todo"] as const;
+export type StageStatusFace = (typeof stageStatusFaceValues)[number];
+
+export const stageStatusLookValues = ["done", "running", "waiting", "held", "plain"] as const;
+export type StageStatusLook = (typeof stageStatusLookValues)[number];
 
 export const stageTypeValues = ["agent", "approve", "watch"] as const;
 export type StageType = (typeof stageTypeValues)[number];
@@ -184,11 +211,10 @@ export interface AfkDecision {
   subjectTitle: string;
   stageId: string;
   stageName: string;
-  situation: string;
-  situationLabel: string;
+  situation: AfkSituationKind;
   reason?: string;
   key: string;
-  status: string;
+  status: AfkDecisionStatus;
   startedAt: string;
   decidedAt?: string;
   choice?: string;
@@ -198,15 +224,16 @@ export interface AfkDecision {
   detail?: string;
   session?: string;
   sessionId?: string;
-  backend?: string;
+  backend?: Backend;
   model?: string;
-  thinking?: string;
+  thinking?: Thinking;
   folder: string;
   reviewed: boolean;
+  situationLabel: string;
   overrule?: AfkOverrule;
   needsReview: boolean;
   label: string;
-  tone: string;
+  tone: Tone;
   headline: string;
   overruleLine?: string;
   runExists: boolean;
@@ -234,7 +261,7 @@ export interface AfkOverrule {
   routeName?: string;
   at: string;
   attemptId: string;
-  phase: string;
+  phase: AfkOverrulePhase;
   detail?: string;
   stageLabel: string;
 }
@@ -300,7 +327,7 @@ export interface AgentAction {
   reason?: string;
 }
 
-export interface AgentChoiceResponse {
+export interface AgentChoice {
   id: string;
   name: string;
   version: number;
@@ -392,7 +419,7 @@ export interface AgentUsage {
 
 export interface AgentsResponse {
   agents: AgentRecordResponse[];
-  choices: AgentChoiceResponse[];
+  choices: AgentChoice[];
   actions: AgentAction[];
   browser?: LibraryBrowser;
 }
@@ -402,7 +429,7 @@ export interface ArtifactLinkResponse {
   expiresAt: string;
 }
 
-export interface AssistantActionResponse {
+export interface AssistantAction {
   id: string;
   enabled: boolean;
   label: string;
@@ -429,7 +456,7 @@ export interface AssistantResponse {
   configuration: AssistantConfigurationResponse;
   checkCommand: string[] | null;
   problems: string[];
-  actions: AssistantActionResponse[];
+  actions: AssistantAction[];
 }
 
 export interface AssistantStartRequest {
@@ -745,6 +772,11 @@ export interface ContinueSessionResponse {
   target: string;
 }
 
+export interface DateInterval {
+  start: string;
+  duration: number;
+}
+
 export interface DesktopSuccess {
   ok: boolean;
 }
@@ -765,6 +797,49 @@ export interface ErrorResponse {
   locations?: (ProblemLocation | null)[];
 }
 
+export interface FactorySummaryCounts {
+  running: number;
+  needYou: number;
+  inProgress: number;
+  shippedToday: number;
+}
+
+export interface FloorLayout {
+  width: number;
+  height: number;
+  column: number;
+  placed: FloorLayoutPlaced[];
+  tracks: FloorLayoutStroke[];
+  lanes: FloorLayoutLaneRoute[];
+}
+
+export interface FloorLayoutLaneRoute {
+  from: FactoryTrackNode;
+  to: FactoryTrackNode;
+  belts: string[];
+  path: string;
+  arrow: string;
+  label: string;
+  labelX: number;
+  labelY: number;
+}
+
+export interface FloorLayoutPlaced {
+  node: FactoryTrackNode;
+  x: number;
+  top: number;
+  height: number;
+  anchor: number;
+}
+
+export interface FloorLayoutStroke {
+  from: FactoryTrackNode;
+  to: FactoryTrackNode;
+  belts: string[];
+  path: string;
+  width: number;
+}
+
 export interface Fork {
   id: string;
   routes: Route[];
@@ -772,11 +847,24 @@ export interface Fork {
   at?: number;
 }
 
+export interface GlobalAction {
+  id: string;
+  label: string;
+  enabled: boolean;
+  reason: string | null;
+  help?: string;
+}
+
 export interface HeldAnswerCopy {
   stage: string;
   buttonTitle: string;
   buttonHelp: string;
   note: string;
+}
+
+export interface InlineSpan {
+  type: InlineSpanKind;
+  text: string;
 }
 
 export interface InsightsBelt {
@@ -843,7 +931,17 @@ export interface InsightsEndings {
   drops: InsightsDropRow[];
 }
 
-export interface InsightsEvolutionResponse {
+export interface InsightsEvolutionRun {
+  id: string;
+  ref: string;
+  title: string;
+  version: number;
+  outcome: InsightsEvolutionOutcome;
+  finished: string;
+  column: number;
+}
+
+export interface InsightsEvolutionView {
   belt: string;
   belts: InsightsBelt[];
   title: string;
@@ -860,16 +958,6 @@ export interface InsightsEvolutionResponse {
   sendsBack: InsightsGrid;
   cost: InsightsStack;
   endings: InsightsEndings;
-}
-
-export interface InsightsEvolutionRun {
-  id: string;
-  ref: string;
-  title: string;
-  version: number;
-  outcome: InsightsEvolutionOutcome;
-  finished: string;
-  column: number;
 }
 
 export interface InsightsFigure {
@@ -941,21 +1029,6 @@ export interface InsightsRate {
   count: number;
   of: number;
   percent: string;
-}
-
-export interface InsightsResponse {
-  belt: string;
-  version: number;
-  versions: InsightsVersionChoice[];
-  period: InsightsPeriod;
-  belts: InsightsBelt[];
-  periods: InsightsPeriodChoice[];
-  title: string;
-  caption: string;
-  lowSampleThreshold: number;
-  beltRows: InsightsBeltRow[];
-  stages: InsightsStage[];
-  shadow?: InsightsShadow;
 }
 
 export interface InsightsSeries {
@@ -1072,6 +1145,21 @@ export interface InsightsVersionChoice {
   label: string;
 }
 
+export interface InsightsView {
+  belt: string;
+  version: number;
+  versions: InsightsVersionChoice[];
+  period: InsightsPeriod;
+  belts: InsightsBelt[];
+  periods: InsightsPeriodChoice[];
+  title: string;
+  caption: string;
+  lowSampleThreshold: number;
+  beltRows: InsightsBeltRow[];
+  stages: InsightsStage[];
+  shadow?: InsightsShadow;
+}
+
 export interface IssueFilter {
   label: string;
   assignee: TriggerAssignee;
@@ -1178,7 +1266,7 @@ export interface LibraryItem {
   actions: LibraryAction[];
 }
 
-export interface LibraryItemFileResponse {
+export interface LibraryItemFile {
   path: string;
   repo: string | null;
   local: string | null;
@@ -1192,7 +1280,12 @@ export interface LibraryItemRequest {
 }
 
 export interface LibraryItemResponse {
-  files: LibraryItemFileResponse[];
+  files: LibraryItemFile[];
+}
+
+export interface LibraryNavigation {
+  offered: boolean;
+  changedSinceBackup: boolean | null;
 }
 
 export interface LibraryOrigin {
@@ -1239,6 +1332,21 @@ export interface LibraryShareResponse {
   changed: boolean;
 }
 
+export interface MapCrate {
+  id: string;
+  reference: string;
+  state: string;
+  stageId?: string;
+  x: number;
+  y: number;
+}
+
+export interface MapGeometrySpan {
+  id: string;
+  start: number;
+  end: number;
+}
+
 export interface MapPath {
   subpaths: MapPoint[][];
   cornerRadius: number;
@@ -1258,12 +1366,12 @@ export interface Merge {
 }
 
 export interface MetroLayout {
+  dots: MetroLayoutDot[];
+  labels: MetroLayoutLabel[];
   width: number;
   height: number;
   lines: MetroLayoutLine[];
   stations: MetroLayoutStation[];
-  dots: MetroLayoutDot[];
-  labels: MetroLayoutLabel[];
 }
 
 export interface MetroLayoutBar {
@@ -1302,7 +1410,7 @@ export interface MetroLayoutDot {
   runIds: string[];
   beltId: string;
   stationId: string;
-  look: string;
+  look: MetroLayoutLook;
   halo: boolean;
   place: number;
   overflow: number;
@@ -1314,7 +1422,7 @@ export interface MetroLayoutLabel {
   text: string;
   box: MetroLayoutBox;
   needsYou: boolean;
-  urgent?: string;
+  urgent?: MetroLayoutLook;
   runIds: string[];
   beltId: string;
   above: boolean;
@@ -1323,7 +1431,6 @@ export interface MetroLayoutLabel {
 }
 
 export interface MetroLayoutLine {
-  id: string;
   beltId: string;
   name: string;
   colour: number;
@@ -1332,10 +1439,11 @@ export interface MetroLayoutLine {
   branches: MetroLayoutBranch[];
   returns: MetroLayoutPoint[][];
   terminus: MetroLayoutPoint;
+  routes: MetroLayoutRoutePill[];
+  id: string;
   paths: string[];
   returnPaths: string[];
   endBars: MetroLayoutBar[];
-  routes: MetroLayoutRoute[];
 }
 
 export interface MetroLayoutPoint {
@@ -1343,12 +1451,7 @@ export interface MetroLayoutPoint {
   y: number;
 }
 
-export interface MetroLayoutRange {
-  lower: number;
-  upper: number;
-}
-
-export interface MetroLayoutRoute {
+export interface MetroLayoutRoutePill {
   id: string;
   fork: string;
   route: string;
@@ -1360,36 +1463,36 @@ export interface MetroLayoutStation {
   id: string;
   name: string;
   lines: string[];
-  glyph: string;
-  kind: string;
+  glyph: MetroLayoutGlyph;
+  kind: MetroLayoutGlyph;
   x: number;
   stops: Record<string, number>;
   nameBox: MetroLayoutBox;
-  pieces: MetroLayoutRange[];
+  pieces: MetroRange[];
+  status: MetroLayoutStatus;
   top: number;
   bottom: number;
   belts: string[];
   box: MetroLayoutBox;
-  status: MetroLayoutStatus;
 }
 
 export interface MetroLayoutStatus {
   text: string;
-  look: string;
+  look: StageStatusLook;
   box: MetroLayoutBox;
+}
+
+export interface MetroRange {
+  lower: number;
+  upper: number;
 }
 
 export interface MissingResource {
 }
 
-export interface ModelActionResponse {
+export interface ModelActionDecision {
   available: boolean;
   refusalReason: string | null;
-}
-
-export interface ModelActionsResponse {
-  refresh: ModelActionResponse;
-  candidates: ModelCandidateActionResponse[];
 }
 
 export interface ModelAdmission {
@@ -1404,7 +1507,7 @@ export interface ModelAllowRequest {
   allowed: boolean;
 }
 
-export interface ModelCandidateActionResponse {
+export interface ModelCandidateActionDecision {
   id: string;
   allowed: boolean;
   available: boolean;
@@ -1425,13 +1528,18 @@ export interface ModelChoice {
   contextTokens?: number;
 }
 
-export interface ModelListingResponse {
+export interface ModelListing {
   id: string;
   label: string;
   allowed: boolean;
 }
 
-export interface ModelRunnerResponse {
+export interface ModelRunnerActions {
+  refresh: ModelActionDecision;
+  candidates: ModelCandidateActionDecision[];
+}
+
+export interface ModelRunnerResource {
   runner: Backend;
   executable: string;
   catalog: ModelCatalogSnapshot | null;
@@ -1443,8 +1551,22 @@ export interface ModelRunnerResponse {
   unavailableModels: string[];
   thinking: ThinkingChoice[];
   thinkingNote: string | null;
-  listing: ModelListingResponse[];
-  actions: ModelActionsResponse;
+  listing: ModelListing[];
+  actions: ModelRunnerActions;
+}
+
+export interface NavigationSummary {
+  belts: number;
+  agents: number;
+  afkToCheck: number;
+  library: LibraryNavigation;
+}
+
+export interface Notice {
+  id: string;
+  date: string;
+  text: string;
+  runId: string | null;
 }
 
 export interface Outcome {
@@ -1456,11 +1578,11 @@ export interface Outcome {
 }
 
 export interface OverviewFloor {
-  total: OverviewFloorCounts;
+  total: FactorySummaryCounts;
   belts: OverviewFloorBelt[];
   machines?: OverviewFloorMachine[];
   boxes?: OverviewFloorBox[];
-  layout?: OverviewFloorLayout;
+  layout?: FloorLayout;
 }
 
 export interface OverviewFloorBelt {
@@ -1468,15 +1590,15 @@ export interface OverviewFloorBelt {
   name: string;
   summary: string;
   paused: boolean;
-  counts: OverviewFloorCounts;
+  counts: FactorySummaryCounts;
 }
 
 export interface OverviewFloorBox {
   id: string;
   name: string;
   caption: string;
-  icon: string;
-  tint: string;
+  icon: StageIcon;
+  tint: Tint;
   belts: string[];
   status: OverviewFloorBoxStatus;
   runCount: number;
@@ -1490,43 +1612,16 @@ export interface OverviewFloorBox {
 
 export interface OverviewFloorBoxStatus {
   text: string;
-  look: string;
+  look: StageStatusLook;
 }
 
 export interface OverviewFloorChip {
   runId: string;
   ref: string;
   belt?: string;
-  state: string;
+  state: RunState;
   paused: boolean;
   openStage?: string;
-}
-
-export interface OverviewFloorCounts {
-  needYou: number;
-  running: number;
-  inProgress: number;
-  shippedToday: number;
-}
-
-export interface OverviewFloorLane {
-  from: FactoryNode;
-  to: FactoryNode;
-  belts: string[];
-  path: string;
-  arrow: string;
-  label: string;
-  labelX: number;
-  labelY: number;
-}
-
-export interface OverviewFloorLayout {
-  width: number;
-  height: number;
-  column: number;
-  placed: OverviewFloorPlaced[];
-  tracks: OverviewFloorStroke[];
-  lanes: OverviewFloorLane[];
 }
 
 export interface OverviewFloorMachine {
@@ -1537,35 +1632,13 @@ export interface OverviewFloorMachine {
   beltNames: string[];
   mixed: boolean;
   workers: string;
-  status: OverviewFloorStatus;
-  machine: string;
-  tint: string;
+  status: StageStatus;
+  machine: Machine;
+  tint: Tint;
   runCount: number;
   chips: OverviewFloorChip[];
   more: number;
   dimmed: boolean;
-}
-
-export interface OverviewFloorPlaced {
-  node: FactoryNode;
-  x: number;
-  top: number;
-  height: number;
-  anchor: number;
-}
-
-export interface OverviewFloorStatus {
-  text: string;
-  look: string;
-  face: string;
-}
-
-export interface OverviewFloorStroke {
-  from: FactoryNode;
-  to: FactoryNode;
-  belts: string[];
-  path: string;
-  width: number;
 }
 
 export interface OverviewResponse {
@@ -1587,7 +1660,7 @@ export interface OverviewRun {
   repository: string;
   beltId: string;
   beltName: string;
-  location: WorkLocation;
+  location: StatusWhere;
   needsYou: boolean;
   openStage?: string;
 }
@@ -1614,7 +1687,7 @@ export interface OverviewSummaryChart {
 export interface OverviewSummaryRow {
   runId: string;
   glyph: string;
-  look: string;
+  look: StageStatusLook;
   title: string;
   chip: string;
   openStage?: string;
@@ -1770,6 +1843,14 @@ export interface RestartIntent {
   detail?: string;
 }
 
+export interface Result {
+  name: string;
+  purpose: string;
+  ok: boolean;
+  detail: string;
+  optional: boolean;
+}
+
 export interface ReviewFilter {
   reviewers: TriggerReviewers;
   poll: number;
@@ -1898,20 +1979,6 @@ export interface RunAnswerRequest {
   answer?: string;
 }
 
-export interface RunAttemptPanel {
-  id: string;
-  number: number;
-  caption: string;
-  content: string;
-  runningAttempt?: number;
-  outcome?: string;
-  tone?: string;
-  route?: string;
-  note?: string;
-  detail?: string;
-  isOpen: boolean;
-}
-
 export interface RunAttemptRequest {
   attempt: string;
 }
@@ -1973,15 +2040,6 @@ export interface RunDecideRequest {
 export interface RunEmptyRequest {
 }
 
-export interface RunLeg {
-  id: string;
-  route?: string;
-  stage: string;
-  state: string;
-  look: string;
-  face: string;
-}
-
 export interface RunLegRequest {
   leg?: string;
 }
@@ -2008,26 +2066,11 @@ export interface RunMap {
   fillStageId?: string;
   fillUntilX: number;
   finished: boolean;
-  forks: RunMapForkSpan[];
+  forks: MapGeometrySpan[];
   routeLabels: RunMapRouteLabel[];
-  crates: RunMapCrate[];
+  crates: MapCrate[];
   caption: string;
   moving: boolean;
-}
-
-export interface RunMapCrate {
-  id: string;
-  reference: string;
-  state: string;
-  stageId?: string;
-  x: number;
-  y: number;
-}
-
-export interface RunMapForkSpan {
-  id: string;
-  start: number;
-  end: number;
 }
 
 export interface RunMapPlacement {
@@ -2038,11 +2081,6 @@ export interface RunMapPlacement {
   width: number;
   height: number;
   dimmed: boolean;
-}
-
-export interface RunMapPoint {
-  x: number;
-  y: number;
 }
 
 export interface RunMapRouteLabel {
@@ -2062,7 +2100,7 @@ export interface RunMapTrackPath {
   forkId?: string;
   routeId?: string;
   taken?: boolean;
-  subpaths: RunMapPoint[][];
+  subpaths: MapPoint[][];
   cornerRadius: number;
 }
 
@@ -2171,6 +2209,26 @@ export interface RunPauseSnapshot {
   reason?: string;
 }
 
+export interface RunPresentationAttemptEntry {
+  id: string;
+  number: number;
+  caption: string;
+  content: RunPresentationAttemptEntryContent;
+  runningAttempt?: number;
+  outcome?: string;
+  tone?: Tone;
+  route?: string;
+  note?: string;
+  detail?: string;
+  isOpen: boolean;
+}
+
+export interface RunPresentationWatchNote {
+  id: string;
+  reference: string;
+  note: string;
+}
+
 export interface RunResponse {
   run: RunSnapshot;
 }
@@ -2180,19 +2238,6 @@ export interface RunResumeRequest {
   note?: string;
   earlier?: boolean;
   leg?: string;
-}
-
-export interface RunSessionsResponse {
-  runId: string;
-  rows: SessionRow[];
-  selection: SessionSelection;
-  emptyMessage?: string;
-  terminal?: SessionTerminal;
-  log?: string;
-  usage?: SessionUsage;
-  takeOver?: SessionOffer;
-  ghostty: SessionOffer;
-  continueSession?: SessionOffer;
 }
 
 export interface RunShadow {
@@ -2210,19 +2255,19 @@ export interface RunStage {
   id: string;
   name: string;
   number: number;
-  kind: string;
-  step: string;
-  status: RunStatus;
-  compactStatus: RunStatus;
+  kind: StageKind;
+  status: StageStatus;
+  compactStatus: StageStatus;
   defaultAttempt?: string;
-  attempts: RunAttemptPanel[];
+  attempts: RunPresentationAttemptEntry[];
   emptyMessage?: string;
   liveWatchSummary?: string;
-  machine: string;
-  tint: string;
+  machine: Machine;
+  tint: Tint;
   worker?: string;
+  step: string;
   adjust?: RunStageAdjust;
-  facts?: RunStageFacts;
+  facts?: StagePanelFacts;
 }
 
 export interface RunStageAdjust {
@@ -2236,98 +2281,6 @@ export interface RunStageAdjust {
   runners: RunAdjustRunner[];
   repairNote?: string;
   freshSessionNote: string;
-}
-
-export interface RunStageFacts {
-  kindChip: string;
-  working: string;
-  state: RunStageFactsChip;
-  canAdjust: boolean;
-  attempts: RunStageFactsAttemptFacts[];
-  deciding?: RunStageFactsAfkNote;
-  watchCards: RunStageFactsWatchCard[];
-  watchLooking?: string;
-  approval?: RunStageFactsApproval;
-  adjustments: RunStageFactsAdjustment[];
-  send: RunStageFactsSend;
-}
-
-export interface RunStageFactsAdjustment {
-  date: string;
-  text: string;
-}
-
-export interface RunStageFactsAfkNote {
-  title: string;
-  overruleLine?: string;
-  comments?: string;
-  why?: string;
-  deciding: boolean;
-}
-
-export interface RunStageFactsApproval {
-  blocks?: MarkdownBlock[];
-  emptyDocument: string;
-  willHeading?: string;
-  will: InlineSpan[][];
-  primary?: string;
-  outcomesHelp: string;
-  outcomes: RunStageFactsOutcome[];
-}
-
-export interface RunStageFactsAttemptFacts {
-  id: string;
-  ranOn: string;
-  file?: string;
-  duration?: string;
-  decision?: string;
-  decidedBy?: string;
-  decidedAt?: string;
-  decisionLine?: string;
-  result?: RunStageFactsAttemptResult;
-  afk?: RunStageFactsAfkNote;
-}
-
-export interface RunStageFactsAttemptResult {
-  outcome?: string;
-  tone?: string;
-  route?: string;
-  note?: string;
-  detail?: string;
-  problem: boolean;
-}
-
-export interface RunStageFactsChip {
-  text: string;
-  tone: string;
-  clockSince?: string;
-}
-
-export interface RunStageFactsOutcome {
-  id: string;
-  name: string;
-  label: string;
-  tone: string;
-}
-
-export interface RunStageFactsSend {
-  earlier?: string;
-  note?: string;
-  again: string;
-}
-
-export interface RunStageFactsWatchCard {
-  id: string;
-  title: string;
-  subtitle: InlineSpan[];
-  state: string;
-  url: string;
-}
-
-export interface RunStatus {
-  text: string;
-  look: string;
-  face: string;
 }
 
 export interface RunTaskRequest {
@@ -2358,21 +2311,15 @@ export interface RunViewResponse {
   worktrees: RunWorktree[];
   worktreeAction: string;
   worktreeUnavailable: string;
-  watchNotes: RunWatchNote[];
+  watchNotes: RunPresentationWatchNote[];
   stages: RunStage[];
   heldAnswer?: HeldAnswerCopy;
-  legs: RunLeg[];
+  legs: StatusLegRow[];
   actions: RunAction[];
   afk: RunAfk;
   active: boolean;
   quickActions: RunCommand[];
   menu: RunMenuRow[];
-}
-
-export interface RunWatchNote {
-  id: string;
-  reference: string;
-  note: string;
 }
 
 export interface RunWorktree {
@@ -2403,32 +2350,26 @@ export interface SessionOffer {
   reason?: string;
 }
 
-export interface SessionRow {
-  attemptId: string;
-  stageId: string;
-  title: string;
-  caption: string;
-  status: string;
-  session: string;
-  selected: boolean;
-}
-
-export interface SessionSelection {
-  stageId: string;
-  attemptId?: string;
-  fallback?: string;
-}
-
 export interface SessionSettings {
   runner?: Backend;
   model: string;
   thinking?: Thinking;
 }
 
-export interface SessionTerminal {
-  target: string;
-  readOnly: boolean;
-  continued: boolean;
+export interface SessionSidebarProjectionRow {
+  attemptId: string;
+  stageId: string;
+  title: string;
+  caption: string;
+  status: SessionSidebarProjectionStatus;
+  session: string;
+  selected: boolean;
+}
+
+export interface SessionSidebarProjectionSelection {
+  stageId: string;
+  attemptId?: string;
+  fallback?: string;
 }
 
 export interface SessionUsage {
@@ -2436,9 +2377,23 @@ export interface SessionUsage {
   estimate?: string;
 }
 
-export interface SettingsPause {
-  start: string;
-  duration: number;
+export interface SessionsView {
+  runId: string;
+  rows: SessionSidebarProjectionRow[];
+  selection: SessionSidebarProjectionSelection;
+  emptyMessage?: string;
+  terminal?: SessionsViewTerminal;
+  log?: string;
+  usage?: SessionUsage;
+  takeOver?: SessionOffer;
+  ghostty: SessionOffer;
+  continueSession?: SessionOffer;
+}
+
+export interface SessionsViewTerminal {
+  target: string;
+  readOnly: boolean;
+  continued: boolean;
 }
 
 export interface SettingsResponse {
@@ -2450,7 +2405,7 @@ export interface SettingsResponse {
   configurationThinking: Thinking | null;
   paused: boolean;
   pausedAt: string | null;
-  pauses: SettingsPause[];
+  pauses: DateInterval[];
   allowedModels: Record<string, string[]>;
   modelCatalogs: Record<string, ModelCatalogSnapshot>;
   afk: AfkSettings;
@@ -2621,31 +2576,96 @@ export interface StageModelStatus {
   reason: string;
 }
 
-export interface StateAction {
+export interface StagePanelAfkNote {
+  title: string;
+  overruleLine?: string;
+  comments?: string;
+  why?: string;
+  deciding: boolean;
+}
+
+export interface StagePanelAttempt {
   id: string;
-  label: string;
-  enabled: boolean;
-  reason: string | null;
-  help?: string;
+  ranOn: string;
+  file?: string;
+  duration?: string;
+  decision?: string;
+  decidedBy?: string;
+  decidedAt?: string;
+  decisionLine?: string;
+  result?: StagePanelAttemptResult;
+  afk?: StagePanelAfkNote;
 }
 
-export interface StateLibrary {
-  offered: boolean;
-  changedSinceBackup: boolean | null;
+export interface StagePanelAttemptResult {
+  outcome?: string;
+  tone?: string;
+  route?: string;
+  note?: string;
+  detail?: string;
+  problem: boolean;
 }
 
-export interface StateNavigation {
-  belts: number;
-  agents: number;
-  afkToCheck: number;
-  library: StateLibrary;
+export interface StagePanelChip {
+  text: string;
+  tone: string;
+  clockSince?: string;
 }
 
-export interface StateNotice {
-  id: string;
+export interface StagePanelFacts {
+  kindChip: string;
+  working: string;
+  state: StagePanelChip;
+  canAdjust: boolean;
+  attempts: StagePanelAttempt[];
+  deciding?: StagePanelAfkNote;
+  watchCards: StagePanelWatchCard[];
+  watchLooking?: string;
+  approval?: StagePanelFactsApproval;
+  adjustments: StagePanelFactsAdjustment[];
+  send: StageSendWords;
+}
+
+export interface StagePanelFactsAdjustment {
   date: string;
   text: string;
-  runId: string | null;
+}
+
+export interface StagePanelFactsApproval {
+  blocks?: MarkdownBlock[];
+  emptyDocument: string;
+  willHeading?: string;
+  will: InlineSpan[][];
+  primary?: string;
+  outcomesHelp: string;
+  outcomes: StagePanelFactsOutcome[];
+}
+
+export interface StagePanelFactsOutcome {
+  id: string;
+  name: string;
+  label: string;
+  tone: Tone;
+}
+
+export interface StagePanelWatchCard {
+  id: string;
+  title: string;
+  subtitle: InlineSpan[];
+  state: string;
+  url: string;
+}
+
+export interface StageSendWords {
+  earlier?: string;
+  note?: string;
+  again: string;
+}
+
+export interface StageStatus {
+  text: string;
+  look: StageStatusLook;
+  face: StageStatusFace;
 }
 
 export interface StateResponse {
@@ -2653,10 +2673,10 @@ export interface StateResponse {
   checking: boolean;
   lastCheck: string | null;
   counts: RunCounts;
-  notices: StateNotice[];
+  notices: Notice[];
   settings: StateSettings;
-  actions: StateAction[];
-  navigation: StateNavigation;
+  actions: GlobalAction[];
+  navigation: NavigationSummary;
   clockLabel: string;
   clockTooltip: string;
 }
@@ -2665,6 +2685,21 @@ export interface StateSettings {
   login: string;
   notifications: boolean;
   afkEnabled: boolean;
+}
+
+export interface StatusLegRow {
+  id: string;
+  route?: string;
+  stage: string;
+  state: RunState;
+  look: StageStatusLook;
+  face: StageStatusFace;
+}
+
+export interface StatusWhere {
+  text: string;
+  look: StageStatusLook;
+  glyph: string;
 }
 
 export interface Subject {
@@ -2724,16 +2759,8 @@ export interface TokenTotals {
   cacheWrite?: number;
 }
 
-export interface ToolResponse {
-  name: string;
-  purpose: string;
-  ok: boolean;
-  detail: string;
-  optional: boolean;
-}
-
 export interface ToolsResponse {
-  tools: ToolResponse[];
+  tools: Result[];
   tmuxSocket: string;
 }
 
@@ -2842,19 +2869,13 @@ export interface WorkBelt {
   label: string;
 }
 
-export interface WorkGroup {
-  dimension: string;
+export interface WorkGroupPresentation {
+  dimension: GroupBy;
   value: string;
   title: string;
   label: string;
   count: number;
-  rows: WorkRow[];
-}
-
-export interface WorkLocation {
-  text: string;
-  look: string;
-  glyph: string;
+  rows: WorkRowPresentation[];
 }
 
 export interface WorkResponse {
@@ -2863,41 +2884,41 @@ export interface WorkResponse {
   stage?: WorkStage;
   belts: WorkBelt[];
   mainEmptyMessage?: string;
-  mainGroups: WorkGroup[];
-  watchingGroups: WorkGroup[];
-  shadowGroups: WorkGroup[];
+  mainGroups: WorkGroupPresentation[];
+  watchingGroups: WorkGroupPresentation[];
+  shadowGroups: WorkGroupPresentation[];
   shownRows: number;
   watchingRows: number;
   shadowRows: number;
   waiting: WaitingSubject[];
 }
 
-export interface WorkRow {
-  run: WorkRun;
-  reference: string;
+export interface WorkRowPresentation {
+  run: WorkRowRun;
+  openStage?: string;
   repository: string;
-  updatedAgo: string;
   progress: number;
-  location: WorkLocation;
+  location: StatusWhere;
   pausedByYou: boolean;
   pauseWord?: string;
   chip?: string;
   needsYou: boolean;
-  openStage?: string;
+  reference: string;
+  updatedAgo: string;
   shadow?: string;
 }
 
-export interface WorkRun {
+export interface WorkRowRun {
   id: string;
   beltId: string;
   beltName: string;
   stageId: string;
   state: RunState;
-  issue: WorkRunIssue;
+  issue: WorkRowRunIssue;
   updatedAt: string;
 }
 
-export interface WorkRunIssue {
+export interface WorkRowRunIssue {
   title: string;
 }
 
@@ -2908,9 +2929,7 @@ export interface WorkStage {
 
 export type EventMessage = { type: "hello"; apiVersion: number } | { type: "changed"; resource: EventResource; revision: number } | { type: "notification"; title: string; body: string };
 export type EventResource = (typeof eventResourceValues)[number];
-export type FactoryNode = { kind: "entrance" | "machine"; value: string } | { kind: "waypoint"; value: number };
-
-export type InlineSpan = { type: "text" | "strong" | "code"; text: string };
+export type FactoryTrackNode = { kind: "entrance" | "machine"; value: string } | { kind: "waypoint"; value: number };
 
 export type MarkdownBlock = { type: "heading"; level: number; text: string } | { type: "item"; marker: string; text: string } | { type: "code" | "paragraph"; text: string };
 

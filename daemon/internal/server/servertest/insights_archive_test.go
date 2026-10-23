@@ -8,14 +8,13 @@ import (
 	"testing"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
-	"github.com/robbertmanders/beltline/daemon/internal/server/api"
 )
 
 // insightsAt reads the Insights view at path with the contract's bearer, and decodes it.
-func insightsAt(t *testing.T, g *Fixture, path string) (Reply, api.InsightsResponse) {
+func insightsAt(t *testing.T, g *Fixture, path string) (Reply, core.InsightsView) {
 	t.Helper()
 	reply := g.Do(Request{Method: "GET", Path: path, Token: ContractToken})
-	var view api.InsightsResponse
+	var view core.InsightsView
 	if reply.Status == 200 {
 		mustDecode(t, reply, &view)
 	}
@@ -31,10 +30,10 @@ func TestInsightsShowArchivedQueryFiltersTheArchivedBelt(t *testing.T) {
 	g.SeedViews()
 	belt := g.Coordinator.ReadRuns()[0].BeltID
 	g.Coordinator.SetBeltArchived(belt, true)
-	hasBelt := func(view api.InsightsResponse) bool {
+	hasBelt := func(view core.InsightsView) bool {
 		return slices.ContainsFunc(view.Belts, func(item core.InsightsBelt) bool { return item.ID == belt })
 	}
-	hasRow := func(view api.InsightsResponse) bool {
+	hasRow := func(view core.InsightsView) bool {
 		return slices.ContainsFunc(view.BeltRows, func(row core.InsightsBeltRow) bool { return row.ID == belt })
 	}
 
@@ -56,7 +55,7 @@ func TestInsightsShowArchivedQueryFiltersTheArchivedBelt(t *testing.T) {
 	if !hasBelt(onView) || !hasRow(onView) {
 		t.Fatalf("showArchived=1 does not offer the archived belt in the picker and the rows")
 	}
-	want := mustMarshal(t, api.NewInsightsResponse(mustInsightsView(t, g, core.InsightsQuery{Period: core.InsightsPeriodAll, ShowArchived: true})))
+	want := mustMarshal(t, mustInsightsView(t, g, core.InsightsQuery{Period: core.InsightsPeriodAll, ShowArchived: true}))
 	if !bytes.Equal(on.Body, want) {
 		t.Fatalf("showArchived=1 is not the coordinator's view with the opt-in")
 	}

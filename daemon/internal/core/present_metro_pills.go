@@ -33,18 +33,18 @@ type MetroLayoutPill struct {
 // MetroLayoutRoutePill is a route's name pill as placed on the map: the belt's line it sits on, and its box.
 type MetroLayoutRoutePill struct {
 	// ID is "<fork>:<route>".
-	ID    string
-	Fork  string
-	Route string
-	Text  string
-	Box   MetroLayoutBox
+	ID    string         `json:"id"`
+	Fork  string         `json:"fork"`
+	Route string         `json:"route"`
+	Text  string         `json:"text"`
+	Box   MetroLayoutBox `json:"box"`
 }
 
 // MetroLayoutStatus is a station's aggregate status chip: its text and look, and the box it sits in above the glyph.
 type MetroLayoutStatus struct {
-	Text string
-	Look StageStatusLook
-	Box  MetroLayoutBox
+	Text string          `json:"text"`
+	Look StageStatusLook `json:"look"`
+	Box  MetroLayoutBox  `json:"box"`
 }
 
 // metroMapPillWidth is the width of a route name pill with text.

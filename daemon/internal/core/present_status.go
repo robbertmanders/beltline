@@ -33,9 +33,9 @@ const (
 
 // StageStatus is how a stage looks for one run: the status above its machine and the face.
 type StageStatus struct {
-	Text string
-	Look StageStatusLook
-	Face StageStatusFace
+	Text string          `json:"text"`
+	Look StageStatusLook `json:"look"`
+	Face StageStatusFace `json:"face"`
 }
 
 // StatusStep is where a stage stands for one run; skipped is
@@ -134,12 +134,12 @@ func runStateStep(state RunState) (StatusStep, bool) {
 
 // StatusLegRow is one row per route the run took, with its stage and that stage's status.
 type StatusLegRow struct {
-	ID    string
-	Route *string
-	Stage string
-	State RunState
-	Look  StageStatusLook
-	Face  StageStatusFace
+	ID    string          `json:"id"`
+	Route *string         `json:"route,omitzero"`
+	Stage string          `json:"stage"`
+	State RunState        `json:"state"`
+	Look  StageStatusLook `json:"look"`
+	Face  StageStatusFace `json:"face"`
 }
 
 // StatusLegs are the legs of a split run, one per route taken. Each leg's row reads

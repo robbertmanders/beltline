@@ -61,18 +61,18 @@ type CoordinatorStateSnapshot struct {
 // belts and agents, the AFK decisions still to check, the factory the library came from,
 // and whether the Market destination is offered (a marketplace repository is set).
 type NavigationSummary struct {
-	Belts      int
-	Agents     int
-	AfkToCheck int
+	Belts      int `json:"belts"`
+	Agents     int `json:"agents"`
+	AfkToCheck int `json:"afkToCheck"`
 	// Library says whether any library repository is configured, and whether the
 	// library changed since the backup repository last took it (nil without one).
-	Library LibraryNavigation
+	Library LibraryNavigation `json:"library"`
 }
 
 // LibraryNavigation is the navigation's view of the library repositories.
 type LibraryNavigation struct {
-	Offered            bool
-	ChangedSinceBackup *bool
+	Offered            bool  `json:"offered"`
+	ChangedSinceBackup *bool `json:"changedSinceBackup"`
 }
 
 // CoordinatorViewsSnapshot is the Work and Overview reads' coordinator-owned

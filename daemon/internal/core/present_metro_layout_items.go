@@ -10,13 +10,13 @@ import (
 // MetroLayoutCard is the text a run dot's card shows: a headline, a detail line and a hint, and where
 // the card sits beside its dot.
 type MetroLayoutCard struct {
-	Headline string
-	Detail   *string
-	Hint     string
+	Headline string  `json:"headline"`
+	Detail   *string `json:"detail,omitzero"`
+	Hint     string  `json:"hint"`
 	// Left, Top and Width are where the card's left edge, top and width sit beside its dot; set once the map's width is known.
-	Left  float64
-	Top   float64
-	Width float64
+	Left  float64 `json:"left"`
+	Top   float64 `json:"top"`
+	Width float64 `json:"width"`
 }
 
 // Place puts the card beside its dot: to the right, or to the left when there is no room on the right, and
@@ -63,23 +63,23 @@ const (
 
 // MetroLayoutStation is a stop on the map: a stage, or an interchange of several belts.
 type MetroLayoutStation struct {
-	ID   string
-	Name string
+	ID   string `json:"id"`
+	Name string `json:"name"`
 	// Lines is the name as it is set, on one line or two.
-	Lines []string
-	Glyph MetroLayoutGlyph
+	Lines []string         `json:"lines"`
+	Glyph MetroLayoutGlyph `json:"glyph"`
 	// Kind is the stage's own shape, which an interchange keeps in its corners:
 	// square for a watch, a little rounded for an agent or an approval.
-	Kind MetroLayoutGlyph
-	X    float64
+	Kind MetroLayoutGlyph `json:"kind"`
+	X    float64          `json:"x"`
 	// Stops is the y each belt stops at. An interchange spans the highest to the lowest.
-	Stops   map[string]float64
-	NameBox MetroLayoutBox
+	Stops   map[string]float64 `json:"stops"`
+	NameBox MetroLayoutBox     `json:"nameBox"`
 	// Pieces are the stretches of an interchange drawn as one piece; a line that runs between two of them,
 	// without stopping, passes over their link.
-	Pieces []MetroRange
+	Pieces []MetroRange `json:"pieces"`
 	// Status is the station's aggregate status chip, above its glyph.
-	Status MetroLayoutStatus
+	Status MetroLayoutStatus `json:"status"`
 }
 
 // Top is the highest stop.
@@ -176,44 +176,45 @@ func MetroLayoutLookFor(state RunState) *MetroLayoutLook {
 
 // MetroLayoutDot is a run dot on a station, or the "+n" mark gathering several.
 type MetroLayoutDot struct {
-	ID        string
-	RunIDs    []string
-	BeltID    string
-	StationID string
-	Look      MetroLayoutLook
-	Halo      bool
-	Place     int
+	ID        string          `json:"id"`
+	RunIDs    []string        `json:"runIds"`
+	BeltID    string          `json:"beltId"`
+	StationID string          `json:"stationId"`
+	Look      MetroLayoutLook `json:"look"`
+	Halo      bool            `json:"halo"`
+	Place     int             `json:"place"`
 	// Overflow is the runs gathered into the "+n" mark. Zero on a run's own dot.
-	Overflow int
-	At       MetroLayoutPoint
+	Overflow int              `json:"overflow"`
+	At       MetroLayoutPoint `json:"at"`
 	// Card is what the dot's card says when it is pointed at.
-	Card MetroLayoutCard
+	Card MetroLayoutCard `json:"card"`
 }
 
 // MetroLayoutLabel is a run label: the text under or over a station's dots.
 type MetroLayoutLabel struct {
-	Text     string
-	Box      MetroLayoutBox
-	NeedsYou bool
+	Text     string         `json:"text"`
+	Box      MetroLayoutBox `json:"box"`
+	NeedsYou bool           `json:"needsYou"`
 	// Urgent is Held or Waiting when the label is a pill; nil for plain text.
-	Urgent *MetroLayoutLook
-	RunIDs []string
-	BeltID string
-	Above  bool
+	Urgent *MetroLayoutLook `json:"urgent,omitzero"`
+	RunIDs []string         `json:"runIds"`
+	BeltID string           `json:"beltId"`
+	Above  bool             `json:"above"`
 	// Dot is the first dot it names, which a leader joins it to.
-	Dot MetroLayoutPoint
+	Dot MetroLayoutPoint `json:"dot"`
 	// OpenRunID is the run a click opens: the first that needs you, else the first.
-	OpenRunID *string
+	OpenRunID *string `json:"openRunId,omitzero"`
 }
 
 // MetroLayout is the factory as a transit map, in points.
 type MetroLayout struct {
-	Lines    []MetroLayoutLine
-	Stations []MetroLayoutStation
-	Dots     []MetroLayoutDot
-	Labels   []MetroLayoutLabel
-	Width    float64
-	Height   float64
+	// Lines and Stations go out with what they derive (api.MetroLayoutWire).
+	Lines    []MetroLayoutLine    `json:"-"`
+	Stations []MetroLayoutStation `json:"-"`
+	Dots     []MetroLayoutDot     `json:"dots"`
+	Labels   []MetroLayoutLabel   `json:"labels"`
+	Width    float64              `json:"width"`
+	Height   float64              `json:"height"`
 }
 
 // MetroLayoutArgs are the parameters of NewMetroLayout. CharWidth nil is 6.6; Paused and Pause are the

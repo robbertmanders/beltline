@@ -7,12 +7,12 @@ import "slices"
 // MapCrate is a crate the run's map draws: the run itself, or one unfinished leg of a split run.
 // X and Y are the crate's centre in points; Y is already lifted above its track.
 type MapCrate struct {
-	ID        string
-	Reference string
-	State     string
-	StageID   *string
-	X         float64
-	Y         float64
+	ID        string  `json:"id"`
+	Reference string  `json:"reference"`
+	State     string  `json:"state"`
+	StageID   *string `json:"stageId,omitzero"`
+	X         float64 `json:"x"`
+	Y         float64 `json:"y"`
 }
 
 // mapCrateLift is how far a crate rides above its track, measured from the track's centre.

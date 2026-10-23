@@ -5,7 +5,7 @@ import { describeError } from "../api/errors";
 import { assistantCommandRequest, assistantPath, assistantQueryKey } from "../api/assistantCommands";
 import { apiQueryKey, resourcesForPath } from "../api/resources";
 import { backendValues } from "../api/wire.gen";
-import type { AssistantConfigurationResponse, AssistantResponse, Backend, ModelRunnerResponse, Thinking } from "../api/wire.gen";
+import type { AssistantConfigurationResponse, AssistantResponse, Backend, ModelRunnerResource, Thinking } from "../api/wire.gen";
 import { useCommand } from "../api/useCommand";
 import { useRuntime } from "../app/runtime";
 import { Sheet } from "./Sheet";
@@ -52,7 +52,7 @@ export function AssistantSidebar({ available, reserved, stored, onWidthChange, o
   const local = selection ?? resource?.configuration ?? null;
   const modelQuery = useQuery({
     queryKey: apiQueryKey(modelsPath(local?.backend ?? "pi")),
-    queryFn: ({ signal }) => apiRequest<ModelRunnerResponse>(modelsPath(local?.backend ?? "pi"), { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<ModelRunnerResource>(modelsPath(local?.backend ?? "pi"), { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead && local !== null,
     retry: false,
     meta: { resourceDeps: resourcesForPath(modelsPath(local?.backend ?? "pi")) }

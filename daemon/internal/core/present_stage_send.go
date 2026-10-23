@@ -5,11 +5,11 @@ import "strconv"
 // StageSendWords is the Send sheet's words for a stage.
 type StageSendWords struct {
 	// Earlier is "Include Build's 2 earlier attempts", for an agent stage.
-	Earlier *string
+	Earlier *string `json:"earlier,omitzero"`
 	// Note is what sending here starts, for an agent stage.
-	Note *string
+	Note *string `json:"note,omitzero"`
 	// Again is what running the held stage again does: "Run this stage again." or "Unpark at this stage."
-	Again string
+	Again string `json:"again"`
 }
 
 // StageSendWordsOf is the Send sheet's words for stage in run.

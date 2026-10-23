@@ -62,47 +62,47 @@ func FloorLayoutMetricsDefault() FloorLayoutMetrics {
 // FloorLayoutPlaced is a node's box, as the drawing places it: its left edge (X is the centre
 // of its column), its top, its height, and the Y its track runs at (Anchor).
 type FloorLayoutPlaced struct {
-	Node   FactoryTrackNode
-	X      float64
-	Top    float64
-	Height float64
-	Anchor float64
+	Node   FactoryTrackNode `json:"node"`
+	X      float64          `json:"x"`
+	Top    float64          `json:"top"`
+	Height float64          `json:"height"`
+	Anchor float64          `json:"anchor"`
 }
 
 // FloorLayoutStroke is a stretch of track between two nodes, drawn as one path.
 type FloorLayoutStroke struct {
-	From  FactoryTrackNode
-	To    FactoryTrackNode
-	Belts []string
-	Path  string
-	Width float64
+	From  FactoryTrackNode `json:"from"`
+	To    FactoryTrackNode `json:"to"`
+	Belts []string         `json:"belts"`
+	Path  string           `json:"path"`
+	Width float64          `json:"width"`
 }
 
 // FloorLayoutLaneRoute is a dotted lane back to an earlier machine, with its arrow head and the names of
 // the belts that take it, centred on LabelX, LabelY: down at Right, back along LabelY and up into the
 // earlier machine at Left.
 type FloorLayoutLaneRoute struct {
-	From   FactoryTrackNode
-	To     FactoryTrackNode
-	Belts  []string
-	Left   float64
-	Right  float64
-	Path   string
-	Arrow  string
-	Label  string
-	LabelX float64
-	LabelY float64
+	From   FactoryTrackNode `json:"from"`
+	To     FactoryTrackNode `json:"to"`
+	Belts  []string         `json:"belts"`
+	Left   float64          `json:"-"`
+	Right  float64          `json:"-"`
+	Path   string           `json:"path"`
+	Arrow  string           `json:"arrow"`
+	Label  string           `json:"label"`
+	LabelX float64          `json:"labelX"`
+	LabelY float64          `json:"labelY"`
 }
 
 // FloorLayout is where everything on the factory floor goes, in points.
 type FloorLayout struct {
-	Width   float64
-	Height  float64
-	Column  float64
-	Placed  []FloorLayoutPlaced
-	Tracks  []FloorLayoutStroke
-	Lanes   []FloorLayoutLaneRoute
-	Metrics FloorLayoutMetrics
+	Width   float64                `json:"width"`
+	Height  float64                `json:"height"`
+	Column  float64                `json:"column"`
+	Placed  []FloorLayoutPlaced    `json:"placed"`
+	Tracks  []FloorLayoutStroke    `json:"tracks"`
+	Lanes   []FloorLayoutLaneRoute `json:"lanes"`
+	Metrics FloorLayoutMetrics     `json:"-"`
 }
 
 // floorLayoutLabelSeparator joins a lane's belt names. Copy from FloorLayout.init.

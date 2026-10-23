@@ -1,8 +1,8 @@
-import type { FactoryNode, OverviewFloorLayout } from "../../api/wire.gen";
+import type { FactoryTrackNode, FloorLayout } from "../../api/wire.gen";
 import { focusOpacity } from "./focus";
 
 /** A node's key in the daemon's layout, which matches the node's kind and value. */
-export function nodeKey(node: FactoryNode): string {
+export function nodeKey(node: FactoryTrackNode): string {
   return `${node.kind}:${node.value}`;
 }
 
@@ -11,7 +11,7 @@ export function nodeKey(node: FactoryNode): string {
  * them. Each track is drawn once, at the daemon's width; a focused belt's tracks change colour in place and are
  * painted after the rest, so they are never stroked twice. Its lanes stay in full view while the rest dim.
  */
-export function FactoryTracks({ layout, focus }: { layout: OverviewFloorLayout; focus: string | null }) {
+export function FactoryTracks({ layout, focus }: { layout: FloorLayout; focus: string | null }) {
   const isFocused = (belts: readonly string[]) => focus !== null && belts.includes(focus);
   const tracks = [...layout.tracks.filter(stroke => !isFocused(stroke.belts)), ...layout.tracks.filter(stroke => isFocused(stroke.belts))];
   return <>

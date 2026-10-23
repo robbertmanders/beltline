@@ -324,9 +324,9 @@ type MapGeometryLane struct {
 
 // MapGeometrySpan is the horizontal extent of one fork.
 type MapGeometrySpan struct {
-	ID    string
-	Start float64
-	End   float64
+	ID    string  `json:"id"`
+	Start float64 `json:"start"`
+	End   float64 `json:"end"`
 }
 
 // MapGeometry is every belt position after the content width is known.

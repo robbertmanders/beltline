@@ -14,8 +14,8 @@ import (
 
 // MetroRange is a closed range of layers or rows. Lower and Upper are its ends.
 type MetroRange struct {
-	Lower float64
-	Upper float64
+	Lower float64 `json:"lower"`
+	Upper float64 `json:"upper"`
 }
 
 // metroMax is max(x, y) for floats: y when y is at least x, else x.

@@ -3,7 +3,7 @@ import { apiRequest } from "../../api/client";
 import { apiQueryKey } from "../../api/resources";
 
 import { backendValues, fallbackValues } from "../../api/wire.gen";
-import type { Backend, ModelRunnerResponse, Outcome, Stage, StageMenu, Thinking, Workspace } from "../../api/wire.gen";
+import type { Backend, ModelRunnerResource, Outcome, Stage, StageMenu, Thinking, Workspace } from "../../api/wire.gen";
 import { useRuntime } from "../../app/runtime";
 import { ModelColumnHeadings } from "../../components/ModelColumnHeadings";
 import { ModelPicker } from "../../components/ModelPicker";
@@ -24,7 +24,7 @@ export function useRunnerModels(runner: string, enabled = true) {
   const known = (backendValues as readonly string[]).includes(runner);
   const query = useQuery({
     queryKey: apiQueryKey(`/api/v1/models/${runner}`),
-    queryFn: ({ signal }) => apiRequest<ModelRunnerResponse>(`/api/v1/models/${runner}`, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<ModelRunnerResource>(`/api/v1/models/${runner}`, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead && enabled && known,
     retry: false,
     meta: { resourceDeps: ["models", "settings"] }

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { apiRequest } from "../../api/client";
 import { apiQueryKey, resourcesForPath } from "../../api/resources";
 import { backendValues } from "../../api/wire.gen";
-import type { Backend, ModelRunnerResponse } from "../../api/wire.gen";
+import type { Backend, ModelRunnerResource } from "../../api/wire.gen";
 import { useCommand } from "../../api/useCommand";
 import { ErrorProblems } from "../../components/ProblemList";
 import { useRuntime } from "../../app/runtime";
@@ -19,7 +19,7 @@ export function AllowedModelsCard() {
   const modelsPath = `/api/v1/models/${runner}${search ? `?q=${encodeURIComponent(search)}` : ""}`;
   const models = useQuery({
     queryKey: apiQueryKey(`/api/v1/models/${runner}`, search),
-    queryFn: ({ signal }) => apiRequest<ModelRunnerResponse>(modelsPath, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<ModelRunnerResource>(modelsPath, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead,
     retry: false,
     meta: { resourceDeps: resourcesForPath("/api/v1/models/:runner") }

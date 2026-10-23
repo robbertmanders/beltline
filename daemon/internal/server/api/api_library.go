@@ -110,21 +110,10 @@ type LibraryShareResponse struct {
 
 // LibraryItemResponse is the item's files beside this library's copies, for the compare sheet.
 type LibraryItemResponse struct {
-	Files []LibraryItemFileResponse `json:"files"`
+	Files []coordinator.LibraryItemFile `json:"files"`
 }
 
-// LibraryItemFileResponse is one file of an item: the repository's text and this library's, each null when absent.
-type LibraryItemFileResponse struct {
-	Path  string  `json:"path"`
-	Repo  *string `json:"repo"`
-	Local *string `json:"local"`
-}
-
-// NewLibraryItemResponse maps the compare files.
+// NewLibraryItemResponse is the item's files.
 func NewLibraryItemResponse(files []coordinator.LibraryItemFile) LibraryItemResponse {
-	out := make([]LibraryItemFileResponse, 0, len(files))
-	for _, file := range files {
-		out = append(out, LibraryItemFileResponse{Path: file.Path, Repo: file.Repo, Local: file.Local})
-	}
-	return LibraryItemResponse{Files: out}
+	return LibraryItemResponse{Files: files}
 }

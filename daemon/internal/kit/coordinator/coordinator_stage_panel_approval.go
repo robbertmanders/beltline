@@ -12,18 +12,23 @@ import (
 func (c *Coordinator) approvalFacts(run core.Run, stage core.Stage) StagePanelFactsApproval {
 	primary := core.ApprovalPrimary(stage.Outcomes)
 	document := c.approvalDocument(run, stage)
+	var blocks []core.MarkdownBlock
+	if document != nil {
+		text := core.DocumentHoisting(core.OutcomeParserStrip(*document), core.DocumentHoistingDefaultSection)
+		blocks = append([]core.MarkdownBlock{}, core.MarkdownBlockParse(text)...)
+	}
 	buttons := make([]StagePanelFactsOutcome, 0, len(stage.Outcomes))
 	for _, outcome := range stage.Outcomes {
 		buttons = append(buttons, StagePanelFactsOutcome{ID: outcome.ID, Name: outcome.Name, Label: outcome.ButtonLabel(), Tone: outcome.Tone})
 	}
 
 	if primary == nil {
-		return StagePanelFactsApproval{Document: document, EmptyDocument: core.StageCopyNoAgentWroteYet,
+		return StagePanelFactsApproval{Document: document, Blocks: blocks, EmptyDocument: core.StageCopyNoAgentWroteYet,
 			Will: [][]core.InlineSpan{}, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons}
 	}
 	primaryID := primary.ID
 	will := core.ApprovalWillOf(run, stage, *primary)
-	return StagePanelFactsApproval{Document: document, EmptyDocument: core.StageCopyNoAgentWroteYet, WillHeading: &will.Heading,
+	return StagePanelFactsApproval{Document: document, Blocks: blocks, EmptyDocument: core.StageCopyNoAgentWroteYet, WillHeading: &will.Heading,
 		Will: will.Lines, Primary: &primaryID, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons}
 }
 

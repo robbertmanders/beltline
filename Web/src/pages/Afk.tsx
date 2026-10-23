@@ -5,7 +5,7 @@ import { apiRequest } from "../api/client";
 import { describeError } from "../api/errors";
 import { apiQueryKey, resourcesForPath } from "../api/resources";
 import { backendValues } from "../api/wire.gen";
-import type { AfkDecision, AfkDecisionsResponse, AfkSettings, ModelChoice, ModelRunnerResponse, SettingsResponse, StateResponse } from "../api/wire.gen";
+import type { AfkDecision, AfkDecisionsResponse, AfkSettings, ModelChoice, ModelRunnerResource, SettingsResponse, StateResponse } from "../api/wire.gen";
 
 /** The decisions list's filter: the ones waiting for review, or all of them. */
 type AfkFilter = "review" | "all";
@@ -71,7 +71,7 @@ function Allowances({ settings }: { settings: AfkSettings }) {
 
   const models = useQuery({
     queryKey: apiQueryKey(`/api/v1/models/${settings.backend}`),
-    queryFn: ({ signal }) => apiRequest<ModelRunnerResponse>(`/api/v1/models/${settings.backend}`, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<ModelRunnerResource>(`/api/v1/models/${settings.backend}`, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead,
     retry: false,
     meta: { resourceDeps: resourcesForPath("/api/v1/models/:runner") }

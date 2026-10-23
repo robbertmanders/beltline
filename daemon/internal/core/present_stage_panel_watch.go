@@ -4,14 +4,14 @@ package core
 
 // StagePanelWatchCard is one pull request a watch waits on, as a stage panel shows it.
 type StagePanelWatchCard struct {
-	ID string
+	ID string `json:"id"`
 	// Title is "owner/repo#12", shortened where two belts share a name.
-	Title string
+	Title string `json:"title"`
 	// Subtitle is the run's title and branch, as inline spans: "Title · branch " then the branch as code.
-	Subtitle []InlineSpan
+	Subtitle []InlineSpan `json:"subtitle"`
 	// State is "The pull request is merged." or "It waits for a review and a merge."
-	State string
-	URL   string
+	State string `json:"state"`
+	URL   string `json:"url"`
 }
 
 // StagePanelWatchCardsOf is one card per pull request the run's watch waits on, in the run's order.

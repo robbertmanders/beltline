@@ -24,44 +24,45 @@ const (
 
 // RunPresentationAttemptEntry is one attempt in a stage panel.
 type RunPresentationAttemptEntry struct {
-	ID             string
-	Number         int
-	Caption        string
-	Content        RunPresentationAttemptEntryContent
-	RunningAttempt *int
-	Outcome        *string
-	Tone           *Tone
-	Route          *string
-	Note           *string
-	Detail         *string
-	IsOpen         bool
+	ID             string                             `json:"id"`
+	Number         int                                `json:"number"`
+	Caption        string                             `json:"caption"`
+	Content        RunPresentationAttemptEntryContent `json:"content"`
+	RunningAttempt *int                               `json:"runningAttempt,omitzero"`
+	Outcome        *string                            `json:"outcome,omitzero"`
+	Tone           *Tone                              `json:"tone,omitzero"`
+	Route          *string                            `json:"route,omitzero"`
+	Note           *string                            `json:"note,omitzero"`
+	Detail         *string                            `json:"detail,omitzero"`
+	IsOpen         bool                               `json:"isOpen"`
 }
 
 // RunPresentationStagePanel is one stage on the run page.
 type RunPresentationStagePanel struct {
-	ID               string
-	Name             string
-	Number           int
-	Kind             StageKind
-	Step             StatusStep
-	Status           StageStatus
-	CompactStatus    StageStatus
-	DefaultAttempt   *string
-	Attempts         []RunPresentationAttemptEntry
-	EmptyMessage     *string
-	LiveWatchSummary *string
+	ID     string    `json:"id"`
+	Name   string    `json:"name"`
+	Number int       `json:"number"`
+	Kind   StageKind `json:"kind"`
+	// Step goes out as the panel's step word (api.RunStageWire), which writes todo as notStarted.
+	Step             StatusStep                    `json:"-"`
+	Status           StageStatus                   `json:"status"`
+	CompactStatus    StageStatus                   `json:"compactStatus"`
+	DefaultAttempt   *string                       `json:"defaultAttempt,omitzero"`
+	Attempts         []RunPresentationAttemptEntry `json:"attempts"`
+	EmptyMessage     *string                       `json:"emptyMessage,omitzero"`
+	LiveWatchSummary *string                       `json:"liveWatchSummary,omitzero"`
 	// Machine is the daemon's machine drawing for this stage; Tint is the tint it uses.
-	Machine Machine
-	Tint    Tint
+	Machine Machine `json:"machine"`
+	Tint    Tint    `json:"tint"`
 	// Worker is the runner or agent label shown under the stage name.
-	Worker *string
+	Worker *string `json:"worker,omitzero"`
 }
 
 // RunPresentationWatchNote is one live watch observation on a pull request.
 type RunPresentationWatchNote struct {
-	ID        string
-	Reference string
-	Note      string
+	ID        string `json:"id"`
+	Reference string `json:"reference"`
+	Note      string `json:"note"`
 }
 
 // RunPresentationSnapshot is everything the run page shows for one run.

@@ -6,11 +6,11 @@ package core
 // GlobalAction is one of the app's global controls. Reason says why it is unavailable;
 // nil when it is enabled. Help is what the control does, as the app's tooltip said it.
 type GlobalAction struct {
-	ID      string
-	Label   string
-	Enabled bool
-	Reason  *string
-	Help    *string
+	ID      string  `json:"id"`
+	Label   string  `json:"label"`
+	Enabled bool    `json:"enabled"`
+	Reason  *string `json:"reason"`
+	Help    *string `json:"help,omitzero"`
 }
 
 // Copy used by the global controls. Literal text is exact.

@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
-	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
 
 // AfkDecisionsResponse is `GET /api/v1/afk/decisions?filter=review|all`: the
@@ -138,68 +137,21 @@ func NewAfkOverruleOfferWire(offer *core.AfkOffer, refusal *core.AfkRefusal) (Af
 	return wire, true
 }
 
-// AfkOverruleWire is the overrule an applied decision carries.
+// AfkOverruleWire is the overrule an applied decision carries, with its stage's label.
 type AfkOverruleWire struct {
-	Comments   string     `json:"comments"`
-	StageID    string     `json:"stageId"`
-	StageName  string     `json:"stageName"`
-	RouteName  *string    `json:"routeName,omitzero"`
-	At         jsonx.Date `json:"at"`
-	AttemptID  string     `json:"attemptId"`
-	Phase      string     `json:"phase"`
-	Detail     *string    `json:"detail,omitzero"`
-	StageLabel string     `json:"stageLabel"`
+	core.AfkOverrule
+	StageLabel string `json:"stageLabel"`
 }
 
-// NewAfkOverruleWire builds the afk overrule wire from its arguments.
-func NewAfkOverruleWire(overrule core.AfkOverrule) AfkOverruleWire {
-	return AfkOverruleWire{
-		Comments:   overrule.Comments,
-		StageID:    overrule.StageID,
-		StageName:  overrule.StageName,
-		RouteName:  core.CopyPointer(overrule.RouteName),
-		At:         overrule.At,
-		AttemptID:  overrule.AttemptID,
-		Phase:      string(overrule.Phase),
-		Detail:     core.CopyPointer(overrule.Detail),
-		StageLabel: overrule.StageLabel(),
-	}
-}
-
-// AfkDecisionWire is one decision: its stored identity and data, plus the
-// fields the AFK log derives so a client shows the same status without
-// recomputing them. Optional fields are omitted when nil.
+// AfkDecisionWire is one decision: its stored record, plus the fields the AFK
+// log derives so a client shows the same status without recomputing them.
 type AfkDecisionWire struct {
-	ID             string           `json:"id"`
-	RunID          string           `json:"runId"`
-	BeltName       string           `json:"beltName"`
-	SubjectRef     string           `json:"subjectRef"`
-	SubjectTitle   string           `json:"subjectTitle"`
-	StageID        string           `json:"stageId"`
-	StageName      string           `json:"stageName"`
-	Situation      string           `json:"situation"`
+	core.AfkDecision
 	SituationLabel string           `json:"situationLabel"`
-	Reason         *string          `json:"reason,omitzero"`
-	Key            string           `json:"key"`
-	Status         string           `json:"status"`
-	StartedAt      jsonx.Date       `json:"startedAt"`
-	DecidedAt      *jsonx.Date      `json:"decidedAt,omitzero"`
-	Choice         *string          `json:"choice,omitzero"`
-	Action         *string          `json:"action,omitzero"`
-	Message        *string          `json:"message,omitzero"`
-	Why            *string          `json:"why,omitzero"`
-	Detail         *string          `json:"detail,omitzero"`
-	Session        *string          `json:"session,omitzero"`
-	SessionID      *string          `json:"sessionId,omitzero"`
-	Backend        *string          `json:"backend,omitzero"`
-	Model          *string          `json:"model,omitzero"`
-	Thinking       *string          `json:"thinking,omitzero"`
-	Folder         string           `json:"folder"`
-	Reviewed       bool             `json:"reviewed"`
 	Overrule       *AfkOverruleWire `json:"overrule,omitzero"`
 	NeedsReview    bool             `json:"needsReview"`
 	Label          string           `json:"label"`
-	Tone           string           `json:"tone"`
+	Tone           core.Tone        `json:"tone"`
 	Headline       string           `json:"headline"`
 	OverruleLine   *string          `json:"overruleLine,omitzero"`
 	RunExists      bool             `json:"runExists"`
@@ -212,55 +164,24 @@ type AfkDecisionWire struct {
 	OverruleOffer     *AfkOverruleOfferWire `json:"overruleOffer,omitzero"`
 }
 
-// NewAfkDecisionWire builds the afk decision wire from its arguments.
+// NewAfkDecisionWire is the decision with what the AFK log derives from it.
 func NewAfkDecisionWire(decision core.AfkDecision, runExists, stageExists, folderExists bool, overruleOffer *AfkOverruleOfferWire) AfkDecisionWire {
 	wire := AfkDecisionWire{
-		ID:             decision.ID,
-		RunID:          decision.RunID,
-		BeltName:       decision.BeltName,
-		SubjectRef:     decision.SubjectRef,
-		SubjectTitle:   decision.SubjectTitle,
-		StageID:        decision.StageID,
-		StageName:      decision.StageName,
-		Situation:      string(decision.Situation),
-		SituationLabel: decision.Situation.Label(),
-		Reason:         core.CopyPointer(decision.Reason),
-		Key:            decision.Key,
-		Status:         string(decision.Status),
-		StartedAt:      decision.StartedAt,
-		DecidedAt:      core.CopyPointer(decision.DecidedAt),
-		Choice:         core.CopyPointer(decision.Choice),
-		Action:         core.CopyPointer(decision.Action),
-		Message:        core.CopyPointer(decision.Message),
-		Why:            core.CopyPointer(decision.Why),
-		Detail:         core.CopyPointer(decision.Detail),
-		Session:        core.CopyPointer(decision.Session),
-		SessionID:      core.CopyPointer(decision.SessionID),
-		Folder:         decision.Folder,
-		Reviewed:       decision.Reviewed,
-		NeedsReview:    decision.NeedsReview(),
-		Label:          core.AfkLogLabel(decision),
-		Tone:           string(core.AfkLogTone(decision)),
-		Headline:       core.AfkLogHeadline(decision),
-		OverruleLine:   core.AfkLogOverruleLine(decision),
-		RunExists:      runExists,
-		StageExists:    stageExists,
-		FolderExists:   folderExists,
-		OverruleOffer:  overruleOffer,
-	}
-	if decision.Backend != nil {
-		backend := string(*decision.Backend)
-		wire.Backend = &backend
-	}
-	wire.Model = core.CopyPointer(decision.Model)
-	if decision.Thinking != nil {
-		thinking := string(*decision.Thinking)
-		wire.Thinking = &thinking
+		AfkDecision:       decision,
+		SituationLabel:    decision.Situation.Label(),
+		NeedsReview:       decision.NeedsReview(),
+		Label:             core.AfkLogLabel(decision),
+		Tone:              core.AfkLogTone(decision),
+		Headline:          core.AfkLogHeadline(decision),
+		OverruleLine:      core.AfkLogOverruleLine(decision),
+		RunExists:         runExists,
+		StageExists:       stageExists,
+		FolderExists:      folderExists,
+		RevealUnavailable: core.AfkLogRevealUnavailable(decision, folderExists),
+		OverruleOffer:     overruleOffer,
 	}
 	if decision.Overrule != nil {
-		overrule := NewAfkOverruleWire(*decision.Overrule)
-		wire.Overrule = &overrule
+		wire.Overrule = &AfkOverruleWire{AfkOverrule: *decision.Overrule, StageLabel: decision.Overrule.StageLabel()}
 	}
-	wire.RevealUnavailable = core.AfkLogRevealUnavailable(decision, folderExists)
 	return wire
 }

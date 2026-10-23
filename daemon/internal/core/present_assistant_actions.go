@@ -9,10 +9,10 @@ import "strings"
 // AssistantAction is a daemon-owned command the configuration assistant can offer
 // in its current state. Reason says why it is unavailable; nil when it is enabled.
 type AssistantAction struct {
-	ID      string
-	Enabled bool
-	Label   string
-	Reason  *string
+	ID      string  `json:"id"`
+	Enabled bool    `json:"enabled"`
+	Label   string  `json:"label"`
+	Reason  *string `json:"reason"`
 }
 
 // Copy used by the configuration assistant's commands. Literal text is exact.

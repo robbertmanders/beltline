@@ -1,11 +1,11 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import type { ModelChoice, ModelRunnerResponse } from "../api/wire.gen";
+import type { ModelChoice, ModelRunnerResource } from "../api/wire.gen";
 import { golden } from "../test/golden";
 import { ModelPicker, type ModelPickerProps } from "./ModelPicker";
 
-const models = golden<ModelRunnerResponse>("models.json");
+const models = golden<ModelRunnerResource>("models.json");
 const choices: ModelChoice[] = models.choices;
 
 function renderPicker(overrides: Partial<ModelPickerProps> = {}) {

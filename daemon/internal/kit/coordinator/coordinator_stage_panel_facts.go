@@ -3,6 +3,8 @@ package coordinator
 import (
 	"time"
 
+	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
+
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 )
 
@@ -12,73 +14,57 @@ import (
 // watch's pull requests, and an approval's document with what its good outcome
 // sets in motion.
 type StagePanelFacts struct {
-	KindChip string
+	KindChip string `json:"kindChip"`
 	// Working says who is working on the stage, or what a watch waits for.
-	Working   string
-	State     StagePanelFactsChip
-	CanAdjust bool
-	Attempts  []StagePanelFactsAttemptFacts
+	Working   string                   `json:"working"`
+	State     core.StagePanelChip      `json:"state"`
+	CanAdjust bool                     `json:"canAdjust"`
+	Attempts  []core.StagePanelAttempt `json:"attempts"`
 	// Deciding is the AFK decision the stage is deciding now, when this is the run's stage.
-	Deciding *StagePanelFactsAfkNote
+	Deciding *core.StagePanelAfkNote `json:"deciding,omitzero"`
 	// WatchCards are a watch's pull requests, when it waits on them.
-	WatchCards []StagePanelFactsWatchCard
+	WatchCards []core.StagePanelWatchCard `json:"watchCards"`
 	// WatchLooking is a watch's line while no pull request is known yet.
-	WatchLooking *string
-	Approval     *StagePanelFactsApproval
-	Adjustments  []StagePanelFactsAdjustment
+	WatchLooking *string                     `json:"watchLooking,omitzero"`
+	Approval     *StagePanelFactsApproval    `json:"approval,omitzero"`
+	Adjustments  []StagePanelFactsAdjustment `json:"adjustments"`
 	// Send is the Send sheet's words for this stage, as the app's SendToSheet put them.
-	Send StagePanelFactsSend
+	Send core.StageSendWords `json:"send"`
 }
-
-// StagePanelFactsChip is one chip in the panel's head (core.StagePanelChip).
-type StagePanelFactsChip = core.StagePanelChip
-
-// StagePanelFactsAfkNote is an AFK decision as the AFK log presents it, for the panel's note (core.StagePanelAfkNote).
-type StagePanelFactsAfkNote = core.StagePanelAfkNote
-
-// StagePanelFactsAttemptResult is what an attempt ended with (core.StagePanelAttemptResult).
-type StagePanelFactsAttemptResult = core.StagePanelAttemptResult
-
-// StagePanelFactsAttemptFacts is one attempt's line in the panel (core.StagePanelAttempt).
-type StagePanelFactsAttemptFacts = core.StagePanelAttempt
-
-// StagePanelFactsWatchCard is one pull request a watch waits on (core.StagePanelWatchCard).
-type StagePanelFactsWatchCard = core.StagePanelWatchCard
 
 // StagePanelFactsApproval is an approval's document and what its good outcome sets in motion.
 type StagePanelFactsApproval struct {
 	// Document is the latest agent output leading into this approval's most recent visit.
-	Document *string
+	Document *string `json:"-"`
+	// Blocks is the document as Markdown blocks, stripped of outcome lines and hoisted; nil when there is none.
+	Blocks []core.MarkdownBlock `json:"blocks,omitzero"`
 	// EmptyDocument is shown in place of the document when no agent has written one.
-	EmptyDocument string
-	WillHeading   *string
+	EmptyDocument string  `json:"emptyDocument"`
+	WillHeading   *string `json:"willHeading,omitzero"`
 	// Will is each line of "Beltline will", as inline spans.
-	Will [][]core.InlineSpan
+	Will [][]core.InlineSpan `json:"will"`
 	// Primary is the good outcome: the wide button the others sit under.
-	Primary *string
+	Primary *string `json:"primary,omitzero"`
 	// OutcomesHelp is the line under the outcome buttons.
-	OutcomesHelp string
+	OutcomesHelp string `json:"outcomesHelp"`
 	// Outcomes are the stage's outcomes in its order, each with the words its button shows.
-	Outcomes []StagePanelFactsOutcome
+	Outcomes []StagePanelFactsOutcome `json:"outcomes"`
 }
 
 // StagePanelFactsOutcome is one outcome button of an approval.
 type StagePanelFactsOutcome struct {
-	ID    string
-	Name  string
-	Label string
-	Tone  core.Tone
+	ID    string    `json:"id"`
+	Name  string    `json:"name"`
+	Label string    `json:"label"`
+	Tone  core.Tone `json:"tone"`
 }
 
 // StagePanelFactsAdjustment is one stage adjustment in the panel's history.
 type StagePanelFactsAdjustment struct {
-	Date time.Time
+	Date jsonx.Date `json:"date"`
 	// Text is "Build adjusted 4 min ago · Model, Thinking".
-	Text string
+	Text string `json:"text"`
 }
-
-// StagePanelFactsSend is the Send sheet's words for a stage (core.StageSendWords).
-type StagePanelFactsSend = core.StageSendWords
 
 // stagePanelFacts returns the stage panel facts for every stage of a run, by stage id.
 // ambiguous is core.RepoLabelAmbiguousNames over the book, which the run page has worked out already.
@@ -98,7 +84,7 @@ func (c *Coordinator) stagePanelFactsOne(run core.Run, stage core.Stage, now tim
 	step := core.StatusStepOf(run, stage.ID)
 	shown := core.AttemptPanelShown(attempts, nil)
 	kindChip := core.StagePanelKindChipOf(stage, core.UppercasedFull(core.AttemptPanelRanOn(shown, stage, c.catalogModelLabel)))
-	facts := make([]StagePanelFactsAttemptFacts, 0, len(attempts))
+	facts := make([]core.StagePanelAttempt, 0, len(attempts))
 	for _, attempt := range attempts {
 		facts = append(facts, core.StagePanelAttemptOf(attempt, run, stage, c.catalogModelLabel, now, c.autopilot.Decision(attempt.AfkDecision)))
 	}
@@ -108,12 +94,12 @@ func (c *Coordinator) stagePanelFactsOne(run core.Run, stage core.Stage, now tim
 		approval = &value
 	}
 	working := core.StagePanelWorkingOf(run, stage, ambiguous)
-	var deciding *StagePanelFactsAfkNote
+	var deciding *core.StagePanelAfkNote
 	if stage.ID == run.StageID {
 		deciding = core.StagePanelDecidingNote(c.autopilot.DecisionsFor(run.ID))
 	}
 	watchNotTicket := stage.Kind() == core.StageKindWatch && !stage.WatchesTicket()
-	cards := []StagePanelFactsWatchCard{}
+	cards := []core.StagePanelWatchCard{}
 	var looking *string
 	if watchNotTicket {
 		cards = core.StagePanelWatchCardsOf(run, ambiguous)
@@ -126,7 +112,7 @@ func (c *Coordinator) stagePanelFactsOne(run core.Run, stage core.Stage, now tim
 			continue
 		}
 		adjustments = append(adjustments, StagePanelFactsAdjustment{
-			Date: adjustment.Date.Time,
+			Date: adjustment.Date,
 			Text: core.AdjustmentHistoryLine(stage.Name, adjustment, now),
 		})
 	}

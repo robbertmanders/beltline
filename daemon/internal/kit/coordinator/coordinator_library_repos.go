@@ -58,9 +58,9 @@ type LibraryShareResult struct {
 
 // LibraryItemFile is one file an item is made of, with the repository's and this library's text (nil when absent).
 type LibraryItemFile struct {
-	Path  string
-	Repo  *string
-	Local *string
+	Path  string  `json:"path"`
+	Repo  *string `json:"repo"`
+	Local *string `json:"local"`
 }
 
 // LibraryRepos reads every configured library repository from the clones on disk,

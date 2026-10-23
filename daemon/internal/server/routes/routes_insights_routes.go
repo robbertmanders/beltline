@@ -30,7 +30,7 @@ func AddViewInsights(mux *http.ServeMux, c *coordinator.Coordinator) {
 		if !ok {
 			return nil, api.MissingResource{}
 		}
-		return api.NewInsightsResponse(view), nil
+		return view, nil
 	}))
 }
 
@@ -79,7 +79,7 @@ func AddViewInsightsEvolution(mux *http.ServeMux, c *coordinator.Coordinator) {
 		if !ok {
 			return nil, api.MissingResource{}
 		}
-		return api.NewInsightsEvolutionResponse(view), nil
+		return view, nil
 	}))
 }
 

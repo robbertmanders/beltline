@@ -21,7 +21,7 @@ type RunViewResponse struct {
 	// Look is how the belt is drawn: `boxes`, `machines` or `metro` (BeltLook).
 	Look string `json:"look"`
 	// Map is the belt as machines on a track. Sent only for the `machines` look.
-	Map *RunMapWire `json:"map,omitzero"`
+	Map *core.RunMap `json:"map,omitzero"`
 	// Boxes is the belt as stage boxes. Sent only for the `boxes` look.
 	Boxes *core.RunBoxes `json:"boxes,omitzero"`
 	// Metro is the belt as a metro line. Sent only for the `metro` look.
@@ -38,16 +38,16 @@ type RunViewResponse struct {
 	ErasureCopy string      `json:"erasureCopy"`
 	Cost        RunCostWire `json:"cost"`
 	// SessionCount is how many attempts ran an agent session: the Sessions button's count.
-	SessionCount        int                `json:"sessionCount"`
-	Links               []RunLinkWire      `json:"links"`
-	Worktrees           []RunWorktreeWire  `json:"worktrees"`
-	WorktreeAction      string             `json:"worktreeAction"`
-	WorktreeUnavailable string             `json:"worktreeUnavailable"`
-	WatchNotes          []RunWatchNoteWire `json:"watchNotes"`
-	Stages              []RunStageWire     `json:"stages"`
+	SessionCount        int                             `json:"sessionCount"`
+	Links               []RunLinkWire                   `json:"links"`
+	Worktrees           []RunWorktreeWire               `json:"worktrees"`
+	WorktreeAction      string                          `json:"worktreeAction"`
+	WorktreeUnavailable string                          `json:"worktreeUnavailable"`
+	WatchNotes          []core.RunPresentationWatchNote `json:"watchNotes"`
+	Stages              []RunStageWire                  `json:"stages"`
 	// HeldAnswer is a held run's in-session answer button, its help and what happens next.
 	HeldAnswer *core.HeldAnswerCopy `json:"heldAnswer,omitzero"`
-	Legs       []RunLegWire         `json:"legs"`
+	Legs       []core.StatusLegRow  `json:"legs"`
 	Actions    []core.RunAction     `json:"actions"`
 	// Afk is the run's AFK button: its mode, whether that means AFK mode now,
 	// the mode a click moves to, and its help.
@@ -82,10 +82,10 @@ func NewRunViewResponse(snapshot coordinator.CoordinatorRunViewSnapshot) RunView
 		WorktreeAction: runner.WorktreeTargetsAction,
 		// WorktreeUnavailable is the reason when a run has no worktree to open.
 		WorktreeUnavailable: runner.WorktreeTargetsUnavailable,
-		WatchNotes:          []RunWatchNoteWire{},
+		WatchNotes:          snapshot.Presentation.WatchNotes,
 		Stages:              []RunStageWire{},
 		HeldAnswer:          core.HeldAnswerCopyForRun(snapshot.Run),
-		Legs:                []RunLegWire{},
+		Legs:                snapshot.Presentation.Legs,
 		Actions:             snapshot.Presentation.Actions,
 		Afk:                 NewRunAfkWire(snapshot.Run, snapshot.AfkGlobal),
 		Active:              snapshot.Run.State.IsActive(),
@@ -93,11 +93,16 @@ func NewRunViewResponse(snapshot coordinator.CoordinatorRunViewSnapshot) RunView
 		Menu:                core.RunMenu(snapshot.Run, snapshot.Presentation.Actions),
 	}
 	if snapshot.Look == core.BeltLookMachines {
-		mapWire := NewRunMapWire(snapshot)
-		out.Map = &mapWire
+		runMap := core.NewRunMap(core.RunMapArgs{
+			Run: snapshot.Run, Geometry: snapshot.Map, Compact: snapshot.Presentation.Compact,
+			AvailableWidth: snapshot.AvailableWidth, ContentWidth: snapshot.MapContentWidth,
+			Panels: snapshot.Presentation.Stages, Paused: snapshot.Pause.IsPaused || snapshot.BeltPaused,
+			Ambiguous: snapshot.AmbiguousRepositories,
+		})
+		out.Map = &runMap
 	}
 	if snapshot.Look == core.BeltLookMetro {
-		metro := RunMetroWire(snapshot)
+		metro := core.RunMetroLayoutMap(snapshot.Run, snapshot.Presentation.Stages)
 		out.Metro = &metro
 	}
 	out.Heading = core.RunPresentationHeading(snapshot.Run, snapshot.AmbiguousRepositories)
@@ -107,24 +112,17 @@ func NewRunViewResponse(snapshot coordinator.CoordinatorRunViewSnapshot) RunView
 	for _, target := range snapshot.Worktrees {
 		out.Worktrees = append(out.Worktrees, NewRunWorktreeWire(target))
 	}
-	for _, note := range snapshot.Presentation.WatchNotes {
-		out.WatchNotes = append(out.WatchNotes, NewRunWatchNoteWire(note))
-	}
 	for _, panel := range snapshot.Presentation.Stages {
 		var adjust *RunStageAdjustWire
 		if help, ok := snapshot.AdjustHelp[panel.ID]; ok {
 			wire := NewRunStageAdjustWire(help)
 			adjust = &wire
 		}
-		var facts *RunStageFactsWire
+		var facts *coordinator.StagePanelFacts
 		if panelFacts, ok := snapshot.PanelFacts[panel.ID]; ok {
-			wire := NewRunStageFactsWire(panelFacts)
-			facts = &wire
+			facts = &panelFacts
 		}
 		out.Stages = append(out.Stages, NewRunStageWire(panel, adjust, facts))
-	}
-	for _, leg := range snapshot.Presentation.Legs {
-		out.Legs = append(out.Legs, NewRunLegWire(leg))
 	}
 	return out
 }
@@ -206,87 +204,26 @@ func NewRunLinkWire(target core.RunLinksTarget) RunLinkWire {
 	return RunLinkWire{ID: target.ID, Title: target.Title, Reference: target.Reference, Detail: target.Detail(), URL: target.URL}
 }
 
-// RunWatchNoteWire is one watch note on the run page.
-type RunWatchNoteWire struct {
-	ID        string `json:"id"`
-	Reference string `json:"reference"`
-	Note      string `json:"note"`
-}
-
-// NewRunWatchNoteWire ports `RunWatchNoteWire.init(_ note: RunPresentation.WatchNote)`.
-func NewRunWatchNoteWire(note core.RunPresentationWatchNote) RunWatchNoteWire {
-	return RunWatchNoteWire{ID: note.ID, Reference: note.Reference, Note: note.Note}
-}
-
-// RunStageWire is one stage panel of the run page. Optional fields are omitted
-// when nil; Adjust and Facts are set from the snapshot's per-stage help.
+// RunStageWire is one stage panel of the run page, with its step word and the
+// snapshot's per-stage help: Adjust for an agent stage, and the panel's Facts.
 type RunStageWire struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Number int    `json:"number"`
-	Kind   string `json:"kind"`
+	core.RunPresentationStagePanel
 	// Step is the panel's step word: done, running, waiting, queued, held,
 	// parked, dropped, redo, notStarted, skipped.
-	Step             string                `json:"step"`
-	Status           RunStatusWire         `json:"status"`
-	CompactStatus    RunStatusWire         `json:"compactStatus"`
-	DefaultAttempt   *string               `json:"defaultAttempt,omitzero"`
-	Attempts         []RunAttemptPanelWire `json:"attempts"`
-	EmptyMessage     *string               `json:"emptyMessage,omitzero"`
-	LiveWatchSummary *string               `json:"liveWatchSummary,omitzero"`
-	Machine          string                `json:"machine"`
-	Tint             string                `json:"tint"`
-	Worker           *string               `json:"worker,omitzero"`
+	Step string `json:"step"`
 	// Adjust is an agent stage's Adjust stage help; absent for approvals and watches.
 	Adjust *RunStageAdjustWire `json:"adjust,omitzero"`
 	// Facts are the panel's head chips, attempt lines and an approval's document.
-	Facts *RunStageFactsWire `json:"facts,omitzero"`
+	Facts *coordinator.StagePanelFacts `json:"facts,omitzero"`
 }
 
-// NewRunStageWire ports `RunStageWire.init(_ panel: RunPresentation.StagePanel, adjust:facts:)`.
-func NewRunStageWire(panel core.RunPresentationStagePanel, adjust *RunStageAdjustWire, facts *RunStageFactsWire) RunStageWire {
-	out := RunStageWire{
-		ID:               panel.ID,
-		Name:             panel.Name,
-		Number:           panel.Number,
-		Kind:             string(panel.Kind),
-		Step:             runStageStepWire(panel.Step),
-		Status:           NewRunStatusWire(panel.Status),
-		CompactStatus:    NewRunStatusWire(panel.CompactStatus),
-		DefaultAttempt:   panel.DefaultAttempt,
-		Attempts:         []RunAttemptPanelWire{},
-		EmptyMessage:     panel.EmptyMessage,
-		LiveWatchSummary: panel.LiveWatchSummary,
-		Machine:          string(panel.Machine),
-		Tint:             string(panel.Tint),
-		Worker:           panel.Worker,
-		Adjust:           adjust,
-		Facts:            facts,
+// NewRunStageWire is the panel with its step word, adjust help and facts.
+func NewRunStageWire(panel core.RunPresentationStagePanel, adjust *RunStageAdjustWire, facts *coordinator.StagePanelFacts) RunStageWire {
+	step := string(panel.Step)
+	if panel.Step == core.StatusStepTodo {
+		step = "notStarted"
 	}
-	for _, attempt := range panel.Attempts {
-		out.Attempts = append(out.Attempts, NewRunAttemptPanelWire(attempt))
-	}
-	return out
-}
-
-// runStageStepWire is the step word a stage panel shows: todo is written as notStarted.
-func runStageStepWire(step core.StatusStep) string {
-	if step == core.StatusStepTodo {
-		return "notStarted"
-	}
-	return string(step)
-}
-
-// RunStatusWire is a stage status: its text, colour look and machine face.
-type RunStatusWire struct {
-	Text string `json:"text"`
-	Look string `json:"look"`
-	Face string `json:"face"`
-}
-
-// NewRunStatusWire ports `RunStatusWire.init(_ status: StageStatus)`.
-func NewRunStatusWire(status core.StageStatus) RunStatusWire {
-	return RunStatusWire{Text: status.Text, Look: string(status.Look), Face: string(status.Face)}
+	return RunStageWire{RunPresentationStagePanel: panel, Step: step, Adjust: adjust, Facts: facts}
 }
 
 // RunStageAdjustWire is a stage's Adjust sheet: its help, the current settings
@@ -359,62 +296,4 @@ func NewRunAdjustRunnerWire(rn coordinator.StageAdjustRunner) RunAdjustRunnerWir
 		out.EmptyNote = &empty
 	}
 	return out
-}
-
-// RunAttemptPanelWire is one attempt row of a stage panel.
-type RunAttemptPanelWire struct {
-	ID             string  `json:"id"`
-	Number         int     `json:"number"`
-	Caption        string  `json:"caption"`
-	Content        string  `json:"content"`
-	RunningAttempt *int    `json:"runningAttempt,omitzero"`
-	Outcome        *string `json:"outcome,omitzero"`
-	Tone           *string `json:"tone,omitzero"`
-	Route          *string `json:"route,omitzero"`
-	Note           *string `json:"note,omitzero"`
-	Detail         *string `json:"detail,omitzero"`
-	IsOpen         bool    `json:"isOpen"`
-}
-
-// NewRunAttemptPanelWire ports `RunAttemptPanelWire.init(_ attempt: RunPresentation.AttemptEntry)`.
-func NewRunAttemptPanelWire(attempt core.RunPresentationAttemptEntry) RunAttemptPanelWire {
-	out := RunAttemptPanelWire{
-		ID:             attempt.ID,
-		Number:         attempt.Number,
-		Caption:        attempt.Caption,
-		Content:        string(attempt.Content),
-		RunningAttempt: attempt.RunningAttempt,
-		Outcome:        attempt.Outcome,
-		Route:          attempt.Route,
-		Note:           attempt.Note,
-		Detail:         attempt.Detail,
-		IsOpen:         attempt.IsOpen,
-	}
-	if attempt.Tone != nil {
-		tone := string(*attempt.Tone)
-		out.Tone = &tone
-	}
-	return out
-}
-
-// RunLegWire is one leg of a split run.
-type RunLegWire struct {
-	ID    string  `json:"id"`
-	Route *string `json:"route,omitzero"`
-	Stage string  `json:"stage"`
-	State string  `json:"state"`
-	Look  string  `json:"look"`
-	Face  string  `json:"face"`
-}
-
-// NewRunLegWire ports `RunLegWire.init(_ leg: Status.LegRow)`.
-func NewRunLegWire(leg core.StatusLegRow) RunLegWire {
-	return RunLegWire{
-		ID:    leg.ID,
-		Route: leg.Route,
-		Stage: leg.Stage,
-		State: string(leg.State),
-		Look:  string(leg.Look),
-		Face:  string(leg.Face),
-	}
 }

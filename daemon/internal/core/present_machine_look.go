@@ -3,8 +3,8 @@ package core
 // MachineLook is how a stage's machine looks: an agent stage's comes from its agent, the
 // others' from what they do.
 type MachineLook struct {
-	Machine Machine
-	Tint    Tint
+	Machine Machine `json:"machine"`
+	Tint    Tint    `json:"tint"`
 }
 
 // MachineLookOf is the machine and tint a stage is drawn with; agent is the stage's agent, nil when it has none.

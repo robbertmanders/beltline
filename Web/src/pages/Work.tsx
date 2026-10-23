@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { apiRequest } from "../api/client";
 import { describeError } from "../api/errors";
 import { apiQueryKey, resourcesForPath } from "../api/resources";
-import type { WorkGroup, WorkResponse, WorkRow } from "../api/wire.gen";
+import type { WorkGroupPresentation, WorkResponse, WorkRowPresentation } from "../api/wire.gen";
 import { useRuntime } from "../app/runtime";
 import { ProblemItems } from "../components/ProblemList";
 import { Caps, Chip, NeedChip, Segmented, Select, Tag } from "../components/Paper";
@@ -31,12 +31,12 @@ const groupings = [
 const columns = ["Issue", "Repository", "Belt", "Stage", "Updated"] as const;
 
 /** A run's page, opened at the decision stage for a row that needs a person. The run link follows the run otherwise. */
-export function workRunHref(row: WorkRow): string {
+export function workRunHref(row: WorkRowPresentation): string {
   const run = `/runs/${encodeURIComponent(row.run.id)}`;
   return row.openStage ? `${run}?stage=${encodeURIComponent(row.openStage)}` : run;
 }
 
-function RunRow({ row }: { row: WorkRow }) {
+function RunRow({ row }: { row: WorkRowPresentation }) {
   const navigate = useNavigate();
   const held = row.chip === "Answer";
   const tone = row.needsYou ? (held ? "held" : "needs") : "passive";
@@ -65,7 +65,7 @@ function RunRow({ row }: { row: WorkRow }) {
 
 interface RunTableProps {
   label: string;
-  groups: readonly WorkGroup[];
+  groups: readonly WorkGroupPresentation[];
   groupBy: string;
   folded: ReadonlySet<string>;
   onToggle: (value: string) => void;

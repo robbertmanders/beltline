@@ -16,11 +16,11 @@ import (
 // what it is for, and what its detail says. Optional tools do not block the app.
 // The result is not encoded directly; the wire keys are set by the server's DTO.
 type Result struct {
-	Name     string
-	Purpose  string
-	OK       bool
-	Detail   string
-	Optional bool
+	Name     string `json:"name"`
+	Purpose  string `json:"purpose"`
+	OK       bool   `json:"ok"`
+	Detail   string `json:"detail"`
+	Optional bool   `json:"optional"`
 }
 
 // GhosttyApplicationPath is where Ghostty is installed. The launch package's desktop actions

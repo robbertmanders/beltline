@@ -5,7 +5,7 @@ import { apiRequest } from "../api/client";
 import { ApiError, SignInRequiredError } from "../api/errors";
 import { globalCommandRequest } from "../api/globalCommands";
 import { apiQueryKey, resourcesForPath } from "../api/resources";
-import type { StateAction, StateResponse } from "../api/wire.gen";
+import type { GlobalAction, StateResponse } from "../api/wire.gen";
 import { isGlobalActionId } from "../api/actions";
 import { useSettingsQuery } from "../api/useSettingsQuery";
 import { useCommand } from "../api/useCommand";
@@ -216,7 +216,7 @@ function ActionBar() {
  * Each control owns its request, so a slow Fetch cannot block Pause or AFK. The sidebar shows AFK as a switch:
  * the same action, checked while the daemon's AFK setting is on.
  */
-function GlobalControl({ action, state, sidebar }: { action: StateAction; state: StateResponse; sidebar?: { icon: ReactNode; iconOnly: boolean } }) {
+function GlobalControl({ action, state, sidebar }: { action: GlobalAction; state: StateResponse; sidebar?: { icon: ReactNode; iconOnly: boolean } }) {
   const runtime = useRuntime();
   const command = useCommand();
   const online = runtime.canRead && runtime.connection === "connected";

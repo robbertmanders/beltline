@@ -3,7 +3,7 @@ import { apiRequest } from "../../api/client";
 import { describeError } from "../../api/errors";
 import { apiQueryKey } from "../../api/resources";
 import { backendValues } from "../../api/wire.gen";
-import type { Backend, ModelRunnerResponse, Thinking } from "../../api/wire.gen";
+import type { Backend, ModelRunnerResource, Thinking } from "../../api/wire.gen";
 
 import { useRuntime } from "../../app/runtime";
 import { backendLabels } from "../../components/backendLabels";
@@ -23,12 +23,12 @@ export function RunnerFields({ idPrefix, runner, model, thinking, onModel, onThi
   const runtime = useRuntime();
   const query = useQuery({
     queryKey: apiQueryKey(`/api/v1/models/${runner}`),
-    queryFn: ({ signal }) => apiRequest<ModelRunnerResponse>(`/api/v1/models/${runner}`, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<ModelRunnerResource>(`/api/v1/models/${runner}`, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead,
     retry: false,
     meta: { resourceDeps: ["models", "settings"] }
   });
-  const models: ModelRunnerResponse | undefined = query.data;
+  const models: ModelRunnerResource | undefined = query.data;
   const state: ModelPickerState = query.isPending ? "loading" : query.isError ? "failed" : "ready";
   const thinkingChoices = models?.thinking ?? [];
   const staleThinking = thinking && !thinkingChoices.some(choice => choice.id === thinking);

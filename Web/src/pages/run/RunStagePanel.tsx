@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { apiRequest } from "../../api/client";
 import { apiQueryKey, resourcesForPath } from "../../api/resources";
 import { artifactLinkRequest, desktopRequest } from "../../api/runCommands";
-import type { ArtifactLinkResponse, AttemptArtifactsResponse, AttemptOutputResponse, InlineSpan, Run, RunAttemptPanel, RunStage, RunWatchNote, Stage } from "../../api/wire.gen";
+import type { ArtifactLinkResponse, AttemptArtifactsResponse, AttemptOutputResponse, InlineSpan, Run, RunPresentationAttemptEntry, RunStage, RunPresentationWatchNote, Stage } from "../../api/wire.gen";
 import { MarkdownBlocks } from "../../components/MarkdownBlocks";
 import { Caps, Chip, Select, Tag } from "../../components/Paper";
 import { ErrorProblems } from "../../components/ProblemList";
@@ -104,7 +104,7 @@ export interface RunStagePanelProps {
   stage: Stage;
   selectedAttempt: string | null;
   onSelectAttempt: (attemptId: string) => void;
-  watchNotes: readonly RunWatchNote[];
+  watchNotes: readonly RunPresentationWatchNote[];
   command: CommandController;
   canRead: boolean;
   connection: ConnectionStatus;
@@ -145,7 +145,7 @@ function WorkingBar() {
  */
 export function RunStagePanel({ runId, panel, stage, selectedAttempt, onSelectAttempt, watchNotes, command, canRead, connection, sessionsOpen, onWatchSession, onAdjust, answer, decision }: RunStagePanelProps) {
   const revealLabel = useRevealLabel();
-  const attempt: RunAttemptPanel | undefined = panel.attempts.find(item => item.id === selectedAttempt) ?? panel.attempts.find(item => item.id === panel.defaultAttempt);
+  const attempt: RunPresentationAttemptEntry | undefined = panel.attempts.find(item => item.id === selectedAttempt) ?? panel.attempts.find(item => item.id === panel.defaultAttempt);
   const facts = panel.facts;
   const attemptFacts: AttemptFacts | undefined = facts?.attempts.find(item => item.id === attempt?.id);
   const online = canRead && connection === "connected";

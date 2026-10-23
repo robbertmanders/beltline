@@ -5,20 +5,6 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/kit/coordinator"
 )
 
-// AssistantActionResponse is one action the configuration assistant offers.
-// `reason` is written as an explicit null when there is none.
-type AssistantActionResponse struct {
-	ID      string  `json:"id"`
-	Enabled bool    `json:"enabled"`
-	Label   string  `json:"label"`
-	Reason  *string `json:"reason"`
-}
-
-// NewAssistantActionResponse builds the assistant action response from its arguments.
-func NewAssistantActionResponse(action coordinator.AssistantAction) AssistantActionResponse {
-	return AssistantActionResponse{ID: action.ID, Enabled: action.Enabled, Label: action.Label, Reason: core.CopyPointer(action.Reason)}
-}
-
 // AssistantConfigurationResponse is the complete assistant configuration on the
 // wire. `thinking` is written as an explicit null when unset.
 type AssistantConfigurationResponse struct {
@@ -44,15 +30,11 @@ type AssistantResponse struct {
 	Configuration AssistantConfigurationResponse `json:"configuration"`
 	CheckCommand  *[]string                      `json:"checkCommand"`
 	Problems      []string                       `json:"problems"`
-	Actions       []AssistantActionResponse      `json:"actions"`
+	Actions       []core.AssistantAction         `json:"actions"`
 }
 
 // NewAssistantResponse builds the assistant response from its arguments.
 func NewAssistantResponse(resource coordinator.AssistantResource) AssistantResponse {
-	actions := make([]AssistantActionResponse, 0, len(resource.Actions))
-	for _, action := range resource.Actions {
-		actions = append(actions, NewAssistantActionResponse(action))
-	}
 	return AssistantResponse{
 		Running:       resource.Running,
 		Busy:          resource.Busy,
@@ -61,7 +43,7 @@ func NewAssistantResponse(resource coordinator.AssistantResource) AssistantRespo
 		Configuration: NewAssistantConfigurationResponse(resource.Configuration),
 		CheckCommand:  apiOptionalStrings(resource.CheckCommand),
 		Problems:      append([]string{}, resource.Problems...),
-		Actions:       actions,
+		Actions:       resource.Actions,
 	}
 }
 

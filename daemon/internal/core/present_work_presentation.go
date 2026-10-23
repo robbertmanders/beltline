@@ -197,47 +197,53 @@ func WorkPresentationBeltLabel(name string, archived bool) string {
 // client can show the same status. The full run does not travel with it; a row carries
 // only the run's fields the row and its link read, so a Work read copies no run.
 type WorkRowPresentation struct {
-	Run WorkRowRun
+	Run WorkRowRun `json:"run"`
 	// OpenStage is where the row opens (WorkRowPresentationOpenStage).
-	OpenStage *string
+	OpenStage *string `json:"openStage,omitzero"`
 	// Repository is the disambiguated display name of the run's repository.
-	Repository string
-	Progress   float64
-	Location   StatusWhere
+	Repository string      `json:"repository"`
+	Progress   float64     `json:"progress"`
+	Location   StatusWhere `json:"location"`
 	// PausedByYou is whether this run's own Pause is blocking progress.
-	PausedByYou bool
+	PausedByYou bool `json:"pausedByYou"`
 	// PauseWord is the pause word after the stage name, when a pause or continuation has one.
-	PauseWord *string
+	PauseWord *string `json:"pauseWord,omitzero"`
 	// Chip is "Answer" for a held run, "Decide" for a waiting one, nil otherwise.
-	Chip     *string
-	NeedsYou bool
+	Chip     *string `json:"chip,omitzero"`
+	NeedsYou bool    `json:"needsYou"`
 	// Held is whether the chip is the held (Answer) one, for the row's red styling.
-	Held bool
+	Held bool `json:"-"`
 	// Reference is the subject's short reference, such as "#184" or "KAN-70".
-	Reference string
+	Reference string `json:"reference"`
 	// UpdatedAgo is the Updated column: how long ago the run changed, from the daemon's clock.
-	UpdatedAgo string
+	UpdatedAgo string `json:"updatedAgo"`
 	// Shadow is the chip of a run on a shadow version, such as "Shadow v2"; nil otherwise.
-	Shadow *string
+	Shadow *string `json:"shadow,omitzero"`
 }
 
 // WorkRowRun is the part of a run a Work row carries: its identity, belt, stage, state, title
 // and when it changed. Every field is a value, so a row shares nothing with the run.
 type WorkRowRun struct {
-	ID        string
-	BeltID    string
-	BeltName  string
-	StageID   string
-	State     RunState
-	Title     string
-	UpdatedAt jsonx.Date
+	ID       string   `json:"id"`
+	BeltID   string   `json:"beltId"`
+	BeltName string   `json:"beltName"`
+	StageID  string   `json:"stageId"`
+	State    RunState `json:"state"`
+	// Issue is the subject's title, under the key the run itself keeps it.
+	Issue     WorkRowRunIssue `json:"issue"`
+	UpdatedAt jsonx.Date      `json:"updatedAt"`
+}
+
+// WorkRowRunIssue is the subject a Work row names: its title.
+type WorkRowRunIssue struct {
+	Title string `json:"title"`
 }
 
 // WorkRowRunOf is the row's part of run.
 func WorkRowRunOf(run *Run) WorkRowRun {
 	return WorkRowRun{
 		ID: run.ID, BeltID: run.BeltID, BeltName: run.BeltName, StageID: run.StageID, State: run.State,
-		Title: run.Subject.Title, UpdatedAt: run.UpdatedAt,
+		Issue: WorkRowRunIssue{Title: run.Subject.Title}, UpdatedAt: run.UpdatedAt,
 	}
 }
 
@@ -286,12 +292,12 @@ func WorkRowPresentationChipText(run Run) *string {
 // WorkGroupPresentation is a Work section's group with each row already presented. Count stays
 // section-local, as WorkGroupGroup's does.
 type WorkGroupPresentation struct {
-	Key   WorkGroupKey
-	Count int
-	Title string
+	WorkGroupKey
+	Title string `json:"title"`
 	// Label is the header text: a repository's disambiguated short name, else the group value.
-	Label string
-	Rows  []WorkRowPresentation
+	Label string                `json:"label"`
+	Count int                   `json:"count"`
+	Rows  []WorkRowPresentation `json:"rows"`
 }
 
 // WorkGroupPresentationOf presents a group for Work.
@@ -305,7 +311,7 @@ func WorkGroupPresentationOf(group WorkGroupGroup, pausedBelts map[string]struct
 		_, paused := pausedBelts[run.BeltID]
 		rows = append(rows, WorkRowPresentationRow(run, paused, pause, ambiguous, now))
 	}
-	return WorkGroupPresentation{Key: group.Key, Count: group.Count, Title: group.Title(), Label: label, Rows: rows}
+	return WorkGroupPresentation{WorkGroupKey: group.Key, Count: group.Count, Title: group.Title(), Label: label, Rows: rows}
 }
 
 // WorkView is everything the Work view shows for one query, built from one read. The

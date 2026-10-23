@@ -17,10 +17,10 @@ import (
 // Notice is a line the app shows about a run or the coordinator.
 // Identifiable). ID comes from the coordinator's IDs.
 type Notice struct {
-	ID    string
-	Date  jsonx.Date
-	Text  string
-	RunID *string
+	ID    string     `json:"id"`
+	Date  jsonx.Date `json:"date"`
+	Text  string     `json:"text"`
+	RunID *string    `json:"runId"`
 }
 
 // RunBook holds the runs and what happens to them: it applies the engine's

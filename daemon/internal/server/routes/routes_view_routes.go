@@ -52,7 +52,7 @@ func AddViewRunSessions(mux *http.ServeMux, c *coordinator.Coordinator) {
 		if view == nil {
 			return nil, api.MissingResource{}
 		}
-		return api.NewRunSessionsResponse(*view), nil
+		return *view, nil
 	}))
 }
 

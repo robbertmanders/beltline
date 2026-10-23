@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { apiRequest } from "../../api/client";
 import { describeError } from "../../api/errors";
 import { apiQueryKey, resourcesForPath } from "../../api/resources";
-import { insightsFigureIDValues, insightsPeriodValues, type InsightsEvolutionResponse, type InsightsFigureID, type InsightsPeriod, type InsightsResponse } from "../../api/wire.gen";
+import { insightsFigureIDValues, insightsPeriodValues, type InsightsEvolutionView, type InsightsFigureID, type InsightsPeriod, type InsightsView } from "../../api/wire.gen";
 import { useRuntime } from "../../app/runtime";
 import { Caps, Segmented, Select, Tag } from "../../components/Paper";
 import { BeltList, Stages } from "./InsightsSections";
@@ -68,7 +68,7 @@ export function InsightsPage() {
   const path = insightsRequestPath(belt, version, period, showArchived);
   const result = useQuery({
     queryKey: apiQueryKey(path),
-    queryFn: ({ signal }) => apiRequest<InsightsResponse>(path, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<InsightsView>(path, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead && !evolution,
     retry: false,
     placeholderData: previous => previous,
@@ -77,7 +77,7 @@ export function InsightsPage() {
   const evolutionPath = evolutionRequestPath(belt, choice, showArchived);
   const evolutionResult = useQuery({
     queryKey: apiQueryKey(evolutionPath),
-    queryFn: ({ signal }) => apiRequest<InsightsEvolutionResponse>(evolutionPath, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<InsightsEvolutionView>(evolutionPath, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead && evolution,
     retry: false,
     placeholderData: previous => previous,

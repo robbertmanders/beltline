@@ -13,52 +13,52 @@ import (
 // ModelActionDecision says whether one model command may run, and the daemon's
 // reason when it may not.
 type ModelActionDecision struct {
-	Available     bool
-	RefusalReason *string
+	Available     bool    `json:"available"`
+	RefusalReason *string `json:"refusalReason"`
 }
 
 // ModelCandidateActionDecision is one candidate's allow and remove availability.
 type ModelCandidateActionDecision struct {
-	ID            string
-	Allowed       bool
-	Available     bool
-	RefusalReason *string
+	ID            string  `json:"id"`
+	Allowed       bool    `json:"allowed"`
+	Available     bool    `json:"available"`
+	RefusalReason *string `json:"refusalReason"`
 }
 
 // ModelRunnerActions are the daemon-derived decisions for a runner's Allowed models card.
 type ModelRunnerActions struct {
-	Refresh    ModelActionDecision
-	Candidates []ModelCandidateActionDecision
+	Refresh    ModelActionDecision            `json:"refresh"`
+	Candidates []ModelCandidateActionDecision `json:"candidates"`
 }
 
 // ModelRunnerResource is a runner's model resource: its catalog state, the
 // currently admitted choices and the saved permissions that are no longer in the catalog.
 type ModelRunnerResource struct {
-	Runner     core.Backend
-	Executable string
-	Catalog    *core.ModelCatalogSnapshot
-	Usable     bool
-	Loading    bool
-	Error      *string
+	Runner     core.Backend               `json:"runner"`
+	Executable string                     `json:"executable"`
+	Catalog    *core.ModelCatalogSnapshot `json:"catalog"`
+	Usable     bool                       `json:"usable"`
+	Loading    bool                       `json:"loading"`
+	Error      *string                    `json:"error"`
 	// AllowedModels are the saved permissions for the runner.
-	AllowedModels []string
-	Choices       []core.ModelChoice
+	AllowedModels []string           `json:"allowedModels"`
+	Choices       []core.ModelChoice `json:"choices"`
 	// UnavailableModels are the saved permissions no longer in the catalog.
-	UnavailableModels []string
+	UnavailableModels []string `json:"unavailableModels"`
 	// Thinking are the thinking levels this runner accepts, labelled by the daemon.
-	Thinking []core.ThinkingChoice
+	Thinking []core.ThinkingChoice `json:"thinking"`
 	// ThinkingNote says why Thinking is off for a runner that has no thinking setting.
-	ThinkingNote *string
+	ThinkingNote *string `json:"thinkingNote"`
 	// Listing is every catalog model matching the search, with its label and whether it is allowed.
-	Listing []ModelListing
-	Actions ModelRunnerActions
+	Listing []ModelListing     `json:"listing"`
+	Actions ModelRunnerActions `json:"actions"`
 }
 
 // ModelListing is one catalog model as the Allowed models list shows it.
 type ModelListing struct {
-	ID      string
-	Label   string
-	Allowed bool
+	ID      string `json:"id"`
+	Label   string `json:"label"`
+	Allowed bool   `json:"allowed"`
 }
 
 // ReadModelRunner reads a runner's models. It never writes settings. With no usable

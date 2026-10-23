@@ -4,7 +4,7 @@ import { apiRequest } from "../../api/client";
 import { describeError } from "../../api/errors";
 import { apiQueryKey, resourcesForPath } from "../../api/resources";
 import { continueSessionRequest, desktopRequest } from "../../api/runCommands";
-import type { ContinueSessionResponse, RunSessionsResponse, SessionRow } from "../../api/wire.gen";
+import type { ContinueSessionResponse, SessionsView, SessionSidebarProjectionRow } from "../../api/wire.gen";
 import { type TerminalTarget } from "../../api/terminalSocket";
 import { useCommand } from "../../api/useCommand";
 import { useRuntime } from "../../app/runtime";
@@ -13,8 +13,8 @@ import { useViewportHeight } from "../../components/useViewportHeight";
 import { clampSidebarWidth, drawnSidebarWidth, sidebarKeyboardStep } from "../../state/preferences";
 
 // The Mac app's marks: a half moon while it runs, a cross for a problem, a tick once it finished.
-const statusGlyph: Record<SessionRow["status"], string> = { live: "◐", problem: "✕", done: "✓" };
-const statusLabel: Record<SessionRow["status"], string> = { live: "Live", problem: "Problem", done: "Done" };
+const statusGlyph: Record<SessionSidebarProjectionRow["status"], string> = { live: "◐", problem: "✕", done: "✓" };
+const statusLabel: Record<SessionSidebarProjectionRow["status"], string> = { live: "Live", problem: "Problem", done: "Done" };
 
 export interface SessionsSidebarProps {
   runId: string;
@@ -46,7 +46,7 @@ export function SessionsSidebar({ runId, selectedStage, selectedAttempt, availab
   const url = search.toString() ? `${path}?${search.toString()}` : path;
   const query = useQuery({
     queryKey: apiQueryKey(path, { stage: selectedStage, attempt: selectedAttempt }),
-    queryFn: ({ signal }) => apiRequest<RunSessionsResponse>(url, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<SessionsView>(url, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead && runId.length > 0,
     retry: false,
     // A new selection keeps the rows on screen until its read arrives, so they do not blink out and back.

@@ -3,6 +3,7 @@
 package servertest
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 	"github.com/robbertmanders/beltline/daemon/internal/server/api"
 	"github.com/robbertmanders/beltline/daemon/internal/server/routes"
+	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
 
 // TestAgentStagesCarryTheirAdjustHelpAndApprovalsDoNot
@@ -129,30 +131,37 @@ func TestAttemptOutputParsesLongMarkdownForTheNamedAttemptOnly(t *testing.T) {
 	if reply.Status != http.StatusOK {
 		t.Fatalf("output: HTTP %d", reply.Status)
 	}
-	var response api.AttemptOutputResponse
+	var response struct {
+		Availability string          `json:"availability"`
+		Blocks       json.RawMessage `json:"blocks"`
+	}
 	if err := routes.JSONDecode(reply.Body, &response); err != nil {
 		t.Fatalf("output: %v", err)
 	}
-	var parsed []api.MarkdownBlockWire
-	for _, block := range core.MarkdownBlockParse(core.DocumentHoisting(core.OutcomeParserStrip(text), core.DocumentHoistingDefaultSection)) {
-		parsed = append(parsed, api.NewMarkdownBlockWire(block))
+	parsed, err := jsonx.Marshal(core.MarkdownBlockParse(core.DocumentHoisting(core.OutcomeParserStrip(text), core.DocumentHoistingDefaultSection)))
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(response.Blocks, parsed) {
+	if string(response.Blocks) != string(parsed) {
 		t.Fatal("the blocks are not the shared Markdown parse of the output")
 	}
 	if response.Availability != "available" {
 		t.Fatalf("availability %q, want available", response.Availability)
 	}
+	var blocks []struct {
+		Type  string `json:"type"`
+		Level int    `json:"level"`
+		Text  string `json:"text"`
+	}
+	if err := json.Unmarshal(response.Blocks, &blocks); err != nil {
+		t.Fatalf("blocks: %v", err)
+	}
 	hasTitle, hasCode := false, false
-	for _, block := range response.Blocks {
-		encoded, err := routes.JSONEncode(block)
-		if err != nil {
-			t.Fatalf("encode block: %v", err)
-		}
-		if block.Level == 1 && block.Text == "Release notes" {
+	for _, block := range blocks {
+		if block.Type == "heading" && block.Level == 1 && block.Text == "Release notes" {
 			hasTitle = true
 		}
-		if strings.Contains(string(encoded), "hello  ") {
+		if strings.Contains(block.Text, "hello  ") {
 			hasCode = true
 		}
 	}

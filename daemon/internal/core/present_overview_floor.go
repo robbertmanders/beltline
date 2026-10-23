@@ -1,6 +1,6 @@
 //
-// The Floor's belts, machines or boxes and run chips as values. Not encoded
-// directly: the API carries its own wire form.
+// The Floor's belts, machines or boxes and run chips as values, as the API
+// sends them.
 
 package core
 
@@ -9,84 +9,93 @@ import (
 	"time"
 )
 
-// OverviewFloorBelt is one belt on the Floor, with its counts.
+// OverviewFloorBelt is one entrance of the Floor, with its counts.
 type OverviewFloorBelt struct {
-	ID   string
-	Name string
+	ID   string `json:"id"`
+	Name string `json:"name"`
 	// Summary is the belt's own one-line summary, from its trigger and repositories.
-	Summary string
-	Paused  bool
-	Counts  FactorySummaryCounts
+	Summary string               `json:"summary"`
+	Paused  bool                 `json:"paused"`
+	Counts  FactorySummaryCounts `json:"counts"`
 }
 
 // OverviewFloorChip is a run as a chip below its machine or under its box.
 type OverviewFloorChip struct {
-	RunID string
-	Ref   string
+	RunID string `json:"runId"`
+	Ref   string `json:"ref"`
 	// Belt is the belt's short name: always on a box, and on a machine only when more than one belt shares it.
-	Belt   *string
-	State  RunState
-	Paused bool
+	Belt   *string  `json:"belt,omitzero"`
+	State  RunState `json:"state"`
+	Paused bool     `json:"paused"`
 	// OpenStage is where the chip opens: the run's stage when a person is needed, else the run.
-	OpenStage *string
+	OpenStage *string `json:"openStage,omitzero"`
 }
 
-// OverviewFloorMachine is one machine on the machines Floor.
+// OverviewFloorMachine is one machine on the machines Floor, drawn with its MachineLook.
 type OverviewFloorMachine struct {
-	ID   string
-	Name string
+	ID   string `json:"id"`
+	Name string `json:"name"`
 	// Number is the layer the machine sits in, counted from the entrances.
-	Number    int
-	Belts     []string
-	BeltNames []string
-	Mixed     bool
+	Number    int      `json:"number"`
+	Belts     []string `json:"belts"`
+	BeltNames []string `json:"beltNames"`
+	Mixed     bool     `json:"mixed"`
 	// Workers is one line per member stage: "belt [id]: worker", for the MIXED tag.
-	Workers  string
-	Status   StageStatus
-	Look     MachineLook
-	RunCount int
+	Workers string      `json:"workers"`
+	Status  StageStatus `json:"status"`
+	MachineLook
+	RunCount int `json:"runCount"`
 	// Chips are up to five chips; above five, the first four and More.
-	Chips []OverviewFloorChip
-	More  int
+	Chips []OverviewFloorChip `json:"chips"`
+	More  int                 `json:"more"`
 	// Dimmed is true while no active run is at the machine.
-	Dimmed bool
+	Dimmed bool `json:"dimmed"`
 }
 
 // OverviewFloorFrame is a rectangle in the layout's points.
 type OverviewFloorFrame struct {
-	X      float64
-	Y      float64
-	Width  float64
-	Height float64
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
 }
 
-// OverviewFloorBox is a merged stage on the boxes Floor: its icon and colour, its caption and
-// status, its run tags and the box's place on the layout.
+// OverviewFloorBoxStatus is a box's status: its text and colour look.
+type OverviewFloorBoxStatus struct {
+	Text string          `json:"text"`
+	Look StageStatusLook `json:"look"`
+}
+
+// OverviewFloorBox is a merged stage on the boxes Floor: its icon and colour (StageLook), its caption and
+// status, its run tags and the cell it sits in on the layout (OverviewFloorFrame: the box, its status
+// above and its tags below).
 type OverviewFloorBox struct {
-	ID   string
-	Name string
+	ID   string `json:"id"`
+	Name string `json:"name"`
 	// Caption is "Agent", "Approval" or "Watch", with the number of belts when several share it.
-	Caption    string
-	Look       StageLook
-	Belts      []string
-	StatusText string
-	StatusLook StageStatusLook
-	RunCount   int
+	Caption string `json:"caption"`
+	StageLook
+	Belts    []string               `json:"belts"`
+	Status   OverviewFloorBoxStatus `json:"status"`
+	RunCount int                    `json:"runCount"`
 	// Chips are up to three run tags, then More for the rest.
-	Chips []OverviewFloorChip
-	More  int
-	// Frame is the cell the box sits in: the box, its status above and its tags below.
-	Frame OverviewFloorFrame
+	Chips []OverviewFloorChip `json:"chips"`
+	More  int                 `json:"more"`
+	OverviewFloorFrame
 }
 
-// OverviewFloor is the Floor for one look.
+// OverviewFloor is the Floor for one look: entrances with their counts, and the look's drawing. The
+// machines look has its machines and the boxes look its boxes, each with the one drawn layout, in
+// points; the metro has neither, only its own drawing.
 type OverviewFloor struct {
-	Belts []OverviewFloorBelt
-	// Machines are for the machines look; empty for the others.
-	Machines []OverviewFloorMachine
-	// Boxes are for the boxes look; empty for the others.
-	Boxes []OverviewFloorBox
-	Total FactorySummaryCounts
+	Total FactorySummaryCounts `json:"total"`
+	Belts []OverviewFloorBelt  `json:"belts"`
+	// Machines are for the machines look only; nil for the others.
+	Machines []OverviewFloorMachine `json:"machines,omitzero"`
+	// Boxes are for the boxes look only; nil for the others.
+	Boxes []OverviewFloorBox `json:"boxes,omitzero"`
+	// Layout is the machines' or the boxes' drawing; nil for the metro.
+	Layout *FloorLayout `json:"layout,omitzero"`
 }
 
 // OverviewFloorChipLimit is the most chips a machine shows before it collapses to four and a count.
@@ -153,10 +162,9 @@ func NewOverviewFloor(a OverviewFloorArgs) OverviewFloor {
 	a.Runs = floorRuns(a.Runs)
 
 	floor := OverviewFloor{
-		Belts:    overviewFloorBelts(a.Belts, summary),
-		Machines: []OverviewFloorMachine{},
-		Boxes:    []OverviewFloorBox{},
-		Total:    summary.Total,
+		Belts:  overviewFloorBelts(a.Belts, summary),
+		Total:  summary.Total,
+		Layout: a.Layout,
 	}
 	switch a.Look {
 	case BeltLookMachines:
@@ -229,19 +237,19 @@ func overviewFloorMachine(a OverviewFloorArgs, machine FactoryTrackMachine, paus
 		more = len(here) - (OverviewFloorChipLimit - 1)
 	}
 	return OverviewFloorMachine{
-		ID:        machine.ID,
-		Name:      machine.Name,
-		Number:    overviewFloorLayer(a.Track, machine),
-		Belts:     machine.Belts(),
-		BeltNames: overviewFloorBeltNames(a.Track, machine),
-		Mixed:     machine.Mixed(),
-		Workers:   machine.Workers(),
-		Status:    StatusColumn(here, pausedBelts, a.Pause),
-		Look:      MachineLookOf(machine.Members[0].Stage, agent(machine.Members[0].Stage)),
-		RunCount:  len(here),
-		Chips:     chips,
-		More:      more,
-		Dimmed:    len(here) == 0,
+		ID:          machine.ID,
+		Name:        machine.Name,
+		Number:      overviewFloorLayer(a.Track, machine),
+		Belts:       machine.Belts(),
+		BeltNames:   overviewFloorBeltNames(a.Track, machine),
+		Mixed:       machine.Mixed(),
+		Workers:     machine.Workers(),
+		Status:      StatusColumn(here, pausedBelts, a.Pause),
+		MachineLook: MachineLookOf(machine.Members[0].Stage, agent(machine.Members[0].Stage)),
+		RunCount:    len(here),
+		Chips:       chips,
+		More:        more,
+		Dimmed:      len(here) == 0,
 	}
 }
 
@@ -299,16 +307,15 @@ func overviewFloorBox(a OverviewFloorArgs, machine FactoryTrackMachine, pausedBe
 		more = len(here) - OverviewBoxesTagLimit
 	}
 	return OverviewFloorBox{
-		ID:         machine.ID,
-		Name:       machine.Name,
-		Caption:    OverviewBoxesCaption(stage, len(machine.Belts())),
-		Look:       StageLookOf(stage, agent(stage)),
-		Belts:      machine.Belts(),
-		StatusText: statusText,
-		StatusLook: statusLook,
-		RunCount:   len(here),
-		Chips:      chips,
-		More:       more,
-		Frame:      frame,
+		ID:                 machine.ID,
+		Name:               machine.Name,
+		Caption:            OverviewBoxesCaption(stage, len(machine.Belts())),
+		StageLook:          StageLookOf(stage, agent(stage)),
+		Belts:              machine.Belts(),
+		Status:             OverviewFloorBoxStatus{Text: statusText, Look: statusLook},
+		RunCount:           len(here),
+		Chips:              chips,
+		More:               more,
+		OverviewFloorFrame: frame,
 	}
 }

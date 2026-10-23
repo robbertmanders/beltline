@@ -1,7 +1,7 @@
 // The Evolution view of one belt: its figures for the recent runs, then each figure, where the time goes,
 // approvals and holds, sends back, cost by stage and how runs end, by version or by week. The daemon sends
 // every figure, statistic and tick; this lays them out.
-import type { InsightsEvolutionResponse, InsightsFigure, InsightsFigureID } from "../../api/wire.gen";
+import type { InsightsEvolutionView, InsightsFigure, InsightsFigureID } from "../../api/wire.gen";
 import { Caps, Segmented } from "../../components/Paper";
 import { Cumulative, FigureChart, Histogram, SendsBackGrid, StackChart } from "./EvolutionCharts";
 
@@ -70,7 +70,7 @@ function ColumnLine({ figure, from }: { figure: InsightsFigure; from: number }) 
 }
 
 /** The six figures for the recent runs; picking one charts it below. */
-function FigureCards({ view, chosen, onChoose }: { view: InsightsEvolutionResponse; chosen: InsightsFigureID; onChoose: (id: InsightsFigureID) => void }) {
+function FigureCards({ view, chosen, onChoose }: { view: InsightsEvolutionView; chosen: InsightsFigureID; onChoose: (id: InsightsFigureID) => void }) {
   const first = view.columns[0]?.label ?? "", last = view.columns.at(-1)?.label ?? "";
   return <div className="insights-kpis evolution-figures">
     {view.figures.map(figure => <button key={figure.id} type="button" className="paper-card insights-kpi evolution-figure" aria-pressed={figure.id === chosen}
@@ -86,7 +86,7 @@ function FigureCards({ view, chosen, onChoose }: { view: InsightsEvolutionRespon
   </div>;
 }
 
-export function Evolution({ view, choice, onChange }: { view: InsightsEvolutionResponse; choice: EvolutionChoice; onChange: (changes: Partial<EvolutionChoice>) => void }) {
+export function Evolution({ view, choice, onChange }: { view: InsightsEvolutionView; choice: EvolutionChoice; onChange: (changes: Partial<EvolutionChoice>) => void }) {
   const figure = view.figures.find(item => item.id === choice.figure) ?? view.figures[0];
   const columns = { columns: view.columns, from: view.from, onFrom: (from: number) => onChange({ from }) };
   return <div className="evolution">

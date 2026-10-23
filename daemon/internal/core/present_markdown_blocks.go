@@ -15,6 +15,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
 
 // MarkdownBlockKind is the kind of a parsed block.
@@ -29,11 +31,37 @@ const (
 
 // MarkdownBlock is one block of agent Markdown. Level is set for a heading, Marker for an
 // item (its bullet or number) and Text for every kind. It is comparable with ==.
+//
+// Encoding: each kind writes its own keys: heading {type, level, text}, item {type, marker,
+// text}, code and paragraph {type, text}.
 type MarkdownBlock struct {
 	Kind   MarkdownBlockKind
 	Level  int
 	Marker string
 	Text   string
+}
+
+// MarshalJSON writes the block's type and the keys its kind has.
+func (b MarkdownBlock) MarshalJSON() ([]byte, error) {
+	switch b.Kind {
+	case MarkdownBlockKindHeading:
+		return jsonx.Marshal(struct {
+			Type  MarkdownBlockKind `json:"type"`
+			Level int               `json:"level"`
+			Text  string            `json:"text"`
+		}{b.Kind, b.Level, b.Text})
+	case MarkdownBlockKindItem:
+		return jsonx.Marshal(struct {
+			Type   MarkdownBlockKind `json:"type"`
+			Marker string            `json:"marker"`
+			Text   string            `json:"text"`
+		}{b.Kind, b.Marker, b.Text})
+	default:
+		return jsonx.Marshal(struct {
+			Type MarkdownBlockKind `json:"type"`
+			Text string            `json:"text"`
+		}{b.Kind, b.Text})
+	}
 }
 
 // Copy and syntax used by MarkdownBlock. Literal text is exact.

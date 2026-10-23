@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "../../api/client";
 import { apiQueryKey, resourcesForPath } from "../../api/resources";
-import type { BeltResourceResponse, InsightsResponse } from "../../api/wire.gen";
+import type { BeltResourceResponse, InsightsView } from "../../api/wire.gen";
 import { useCommand } from "../../api/useCommand";
 import { useRuntime } from "../../app/runtime";
 import { ErrorProblems } from "../../components/ProblemList";
@@ -32,7 +32,7 @@ export function ShadowDecisionSheet({ beltId, beltName, shadowLabel, test, decis
   const path = `/api/v1/views/insights?belt=${encodeURIComponent(beltId)}&shadow=${encodeURIComponent(test)}`;
   const insights = useQuery({
     queryKey: apiQueryKey(path),
-    queryFn: ({ signal }) => apiRequest<InsightsResponse>(path, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<InsightsView>(path, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead && decision === "accept",
     retry: false,
     meta: { resourceDeps: resourcesForPath(path) }

@@ -122,8 +122,8 @@ const (
 // InlineSpan is a piece of inline Markdown the daemon has parsed, so a client never
 // sees the markup. Text carries the span's text for every kind.
 type InlineSpan struct {
-	Kind InlineSpanKind
-	Text string
+	Kind InlineSpanKind `json:"type"`
+	Text string         `json:"text"`
 }
 
 // InlineSpanParse splits `**strong**` and “ `code` “ out of a line. An unclosed

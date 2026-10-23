@@ -39,11 +39,7 @@ func TestToolsAnswersTheChecksInOrderAndEqualTheCoordinatorsResults(t *testing.T
 		t.Fatalf("tool names %v, want %v", names, want)
 	}
 
-	var tools []api.ToolResponse
-	for _, result := range f.Coordinator.CheckTools(context.Background()) {
-		tools = append(tools, api.NewToolResponse(result))
-	}
-	source, err := routes.JSONEncode(api.NewToolsResponse(tools, runner.TmuxSocket()))
+	source, err := routes.JSONEncode(api.NewToolsResponse(f.Coordinator.CheckTools(context.Background()), runner.TmuxSocket()))
 	if err != nil {
 		t.Fatalf("tools: %v", err)
 	}

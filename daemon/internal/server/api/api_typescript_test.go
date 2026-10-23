@@ -40,9 +40,8 @@ var tsOverrides = map[string]string{
 		`{ ticket: { key: string } }`,
 	"RouteSet":         `Record<string, string | string[]>`,
 	"RunPauseDeferred": `{ merged: { _0: string[] } } | { conflict: { _0: string[] } }`,
-	"FactoryNodeWire":  `{ kind: "entrance" | "machine"; value: string } | { kind: "waypoint"; value: number }`,
-	"InlineSpanWire":   `{ type: "text" | "strong" | "code"; text: string }`,
-	"MarkdownBlockWire": `{ type: "heading"; level: number; text: string } | { type: "item"; marker: string; text: string } | ` +
+	"FactoryTrackNode": `{ kind: "entrance" | "machine"; value: string } | { kind: "waypoint"; value: number }`,
+	"MarkdownBlock": `{ type: "heading"; level: number; text: string } | { type: "item"; marker: string; text: string } | ` +
 		`{ type: "code" | "paragraph"; text: string }`,
 	"RunSnapshot": `Run & { actions: RunAction[] }`,
 }
@@ -50,6 +49,8 @@ var tsOverrides = map[string]string{
 // tsRoots lists the types the generator starts from besides the exported types of this package:
 // the responses handlers encode from other packages, and the core types the overrides name.
 var tsRoots = []string{
+	"github.com/robbertmanders/beltline/daemon/internal/core.InsightsEvolutionView",
+	"github.com/robbertmanders/beltline/daemon/internal/core.InsightsView",
 	"github.com/robbertmanders/beltline/daemon/internal/core.IssueFilter",
 	"github.com/robbertmanders/beltline/daemon/internal/core.JiraQuery",
 	"github.com/robbertmanders/beltline/daemon/internal/core.Run",
@@ -63,15 +64,16 @@ var tsRoots = []string{
 	"github.com/robbertmanders/beltline/daemon/internal/core.TriggerFormPresentation",
 	"github.com/robbertmanders/beltline/daemon/internal/kit/coordinator.AssistantConfiguration",
 	"github.com/robbertmanders/beltline/daemon/internal/kit/coordinator.BeltContext",
+	"github.com/robbertmanders/beltline/daemon/internal/kit/coordinator.ModelRunnerResource",
+	"github.com/robbertmanders/beltline/daemon/internal/kit/coordinator.SessionsView",
 	"github.com/robbertmanders/beltline/daemon/internal/server/routes.ArtifactLinkResponse",
 	"github.com/robbertmanders/beltline/daemon/internal/server/routes.DesktopSuccess",
 }
 
 // tsRedirects names the struct a custom encoding writes, by Go type name (same package).
 var tsRedirects = map[string]string{
-	"Belt":             "Belt",
-	"Stage":            "stageWire",
-	"SettingsResponse": "settingsResponseWire",
+	"Belt":  "Belt",
+	"Stage": "stageWire",
 }
 
 // tsExtra declares TypeScript for wire values this package does not define: the event messages
@@ -214,7 +216,7 @@ func (g *tsGen) declare(e *tsType) string {
 
 // expr returns the TypeScript type of a Go type, registering the named types it reaches.
 func (g *tsGen) expr(t types.Type) string {
-	switch t := t.(type) {
+	switch t := types.Unalias(t).(type) {
 	case *types.Basic:
 		switch {
 		case t.Info()&types.IsString != 0:
@@ -306,8 +308,26 @@ func (g *tsGen) named(n *types.Named) string {
 	return name
 }
 
-// fields returns a struct's TypeScript members in declaration order, flattening embedded structs as encoding/json does.
+// fields returns a struct's TypeScript members in declaration order, flattening embedded structs as
+// encoding/json does: a key the outer struct declares hides the embedded one.
 func (g *tsGen) fields(st *types.Struct) []string {
+	return g.fieldsHiding(st, nil)
+}
+
+func (g *tsGen) fieldsHiding(st *types.Struct, hidden map[string]bool) []string {
+	own := map[string]bool{}
+	for key := range hidden {
+		own[key] = true
+	}
+	for i := 0; i < st.NumFields(); i++ {
+		key, _, _ := strings.Cut(reflect.StructTag(st.Tag(i)).Get("json"), ",")
+		if f := st.Field(i); !f.Anonymous() || key != "" {
+			if key == "" {
+				key = f.Name()
+			}
+			own[key] = true
+		}
+	}
 	var out []string
 	for i := 0; i < st.NumFields(); i++ {
 		f := st.Field(i)
@@ -318,7 +338,7 @@ func (g *tsGen) fields(st *types.Struct) []string {
 		key, opts, _ := strings.Cut(tag, ",")
 		if f.Anonymous() && key == "" {
 			if inner, ok := derefType(f.Type()).Underlying().(*types.Struct); ok {
-				out = append(out, g.fields(inner)...)
+				out = append(out, g.fieldsHiding(inner, own)...)
 			}
 			continue
 		}
@@ -327,6 +347,9 @@ func (g *tsGen) fields(st *types.Struct) []string {
 		}
 		if key == "" {
 			key = f.Name()
+		}
+		if hidden[key] {
+			continue
 		}
 		_, isStruct := f.Type().Underlying().(*types.Struct)
 		optional := strings.Contains(opts, "omitzero") || strings.Contains(opts, "omitempty") && !isStruct

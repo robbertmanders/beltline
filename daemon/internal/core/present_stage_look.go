@@ -5,8 +5,8 @@ package core
 
 // StageLook is what a stage box shows besides its words: its icon and colour.
 type StageLook struct {
-	Icon StageIcon
-	Tint Tint
+	Icon StageIcon `json:"icon"`
+	Tint Tint      `json:"tint"`
 }
 
 // StageLookOf is the look of a stage box. An agent stage's look comes from its agent; approvals and watches

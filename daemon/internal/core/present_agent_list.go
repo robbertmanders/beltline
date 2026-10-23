@@ -4,9 +4,9 @@ import "strconv"
 
 // AgentChoice is an agent a new stage may copy, as the belt editor lists it.
 type AgentChoice struct {
-	ID      string
-	Name    string
-	Version int
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Version int    `json:"version"`
 }
 
 // AgentChoices are the agents a new stage may copy: the live records in library order, so

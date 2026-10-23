@@ -11,9 +11,9 @@ import (
 
 // StatusWhere is where a run is, in one line, with its look and glyph.
 type StatusWhere struct {
-	Text  string
-	Look  StageStatusLook
-	Glyph string
+	Text  string          `json:"text"`
+	Look  StageStatusLook `json:"look"`
+	Glyph string          `json:"glyph"`
 }
 
 // StatusLocation is where a run is, in one line: "Spec · running".

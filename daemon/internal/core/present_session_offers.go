@@ -7,8 +7,8 @@ package core
 // SessionOffer says whether a sidebar control may be used now, and when it may not, why.
 // Reason is the sentence a person reads; nil when enabled.
 type SessionOffer struct {
-	Enabled bool
-	Reason  *string
+	Enabled bool    `json:"enabled"`
+	Reason  *string `json:"reason,omitzero"`
 }
 
 // SessionGhosttyNoSessionOffer is the Ghostty offer when no attempt is selected, or the

@@ -3,15 +3,19 @@
 
 package core
 
-import "time"
+import (
+	"time"
+
+	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
+)
 
 // StagePanelChip is one chip in a stage panel's head.
 type StagePanelChip struct {
-	Text string
+	Text string `json:"text"`
 	// Tone is one of good, running, you, problem or grey.
-	Tone string
+	Tone string `json:"tone"`
 	// ClockSince is, while an agent stage runs and nothing pauses it, when its clock started, less any paused time.
-	ClockSince *time.Time
+	ClockSince *jsonx.Date `json:"clockSince,omitzero"`
 }
 
 // StagePanelStateChipOf is the chip in a stage panel's head for the stage's status step, given the
@@ -35,7 +39,7 @@ func StagePanelStateChipOf(run Run, stage Stage, step StatusStep, now time.Time,
 		}
 		elapsed := pause.Elapsed(started, now)
 		since := now.Add(-time.Duration(elapsed * float64(time.Second)))
-		return StagePanelChip{Text: "RUNNING", Tone: "running", ClockSince: &since}
+		return StagePanelChip{Text: "RUNNING", Tone: "running", ClockSince: &jsonx.Date{Time: since}}
 	case StatusStepWaiting:
 		return chip("WAITING FOR YOU", "you")
 	case StatusStepHeld:

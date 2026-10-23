@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { OverviewFloorBelt, OverviewFloorChip, OverviewFloorLayout, OverviewFloorMachine, OverviewRun } from "../../api/wire.gen";
+import type { OverviewFloorBelt, OverviewFloorChip, FloorLayout, OverviewFloorMachine, OverviewRun } from "../../api/wire.gen";
 import { focusOpacity } from "./focus";
 import { FactoryTracks, nodeKey } from "./FactoryTracks";
 import { EntranceCard, RunChip, Station } from "./Stations";
@@ -9,7 +9,7 @@ const entranceWidth = 208;
 const entranceCentreOffset = 10;
 
 export interface FactoryMapProps {
-  layout: OverviewFloorLayout;
+  layout: FloorLayout;
   belts: readonly OverviewFloorBelt[];
   machines: readonly OverviewFloorMachine[];
   runs: ReadonlyMap<string, OverviewRun>;

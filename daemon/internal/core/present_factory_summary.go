@@ -5,10 +5,10 @@ import "time"
 // FactorySummaryCounts are one belt's run counts on the factory floor, or the factory's total.
 // The zero value has every count at zero.
 type FactorySummaryCounts struct {
-	Running      int
-	NeedYou      int
-	InProgress   int
-	ShippedToday int
+	Running      int `json:"running"`
+	NeedYou      int `json:"needYou"`
+	InProgress   int `json:"inProgress"`
+	ShippedToday int `json:"shippedToday"`
 }
 
 // FactorySummaryBelt is one belt's counts, as the factory summary holds them.

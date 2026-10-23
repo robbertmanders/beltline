@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 	"github.com/robbertmanders/beltline/daemon/internal/kit/coordinator"
 )
@@ -33,52 +32,13 @@ func NewAgentRecordResponse(record core.AgentRecord, beltCount *int) AgentRecord
 	}
 }
 
-// agentRecordResponseFields is the wire form of AgentRecordResponse for
-// decoding: the glyph and detail are optional here.
-type agentRecordResponseFields struct {
-	Agent     core.Agent      `json:"agent"`
-	Archived  bool            `json:"archived"`
-	BuiltIn   bool            `json:"builtIn"`
-	BeltCount *int            `json:"beltCount,omitzero"`
-	Glyph     *core.StageIcon `json:"glyph,omitzero"`
-	Detail    *string         `json:"detail,omitzero"`
-}
-
-// UnmarshalJSON reads the glyph and detail
-// are derived from the agent when a body omits them (the editor's detail).
-func (r *AgentRecordResponse) UnmarshalJSON(data []byte) error {
-	var fields agentRecordResponseFields
-	if err := json.Unmarshal(data, &fields); err != nil {
-		return err
-	}
-	uses := core.ValueOf(fields.BeltCount)
-	glyph := core.ValueOr(fields.Glyph, fields.Agent.Glyph())
-	detail := core.ValueOr(fields.Detail, core.AgentListDetail(fields.Agent, uses))
-	*r = AgentRecordResponse{
-		Agent:     fields.Agent,
-		Archived:  fields.Archived,
-		BuiltIn:   fields.BuiltIn,
-		BeltCount: fields.BeltCount,
-		Glyph:     glyph,
-		Detail:    detail,
-	}
-	return nil
-}
-
 // AgentsResponse is the body of GET /api/v1/agents.
 type AgentsResponse struct {
 	Agents  []AgentRecordResponse `json:"agents"`
-	Choices []AgentChoiceResponse `json:"choices"`
+	Choices []core.AgentChoice    `json:"choices"`
 	Actions []core.AgentAction    `json:"actions"`
 	// Browser is omitted when the library browser was not read.
 	Browser *core.LibraryBrowser `json:"browser,omitzero"`
-}
-
-// AgentChoiceResponse is an agent a new stage may copy: the live agents, in library order.
-type AgentChoiceResponse struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Version int    `json:"version"`
 }
 
 // NewAgentsResponse builds the agents response from its arguments:
@@ -90,13 +50,9 @@ func NewAgentsResponse(agents []core.AgentRecord, beltCounts map[string]int, bro
 		count := beltCounts[record.Agent.ID]
 		rows = append(rows, NewAgentRecordResponse(record, &count))
 	}
-	choices := make([]AgentChoiceResponse, 0)
-	for _, choice := range core.AgentChoices(agents) {
-		choices = append(choices, AgentChoiceResponse{ID: choice.ID, Name: choice.Name, Version: choice.Version})
-	}
 	return AgentsResponse{
 		Agents:  rows,
-		Choices: choices,
+		Choices: core.AgentChoices(agents),
 		Actions: core.AgentActionsForList(),
 		Browser: core.CopyPointer(browser),
 	}
