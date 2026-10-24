@@ -96,7 +96,7 @@ func TestRepeatedReadAndErrorMatricesLeaveDiskAndCoordinatorStateUnchanged(t *te
 			"/api/v1/views/work?filter=shipped&groupBy=status",
 			"/api/v1/views/work?groupBy=epic",
 			"/api/v1/views/work?filter=active&groupBy=belt",
-			"/api/v1/views/work?belt=no-such-belt&stage=no-such-machine",
+			"/api/v1/views/work?belt=no-such-belt&stage=no-such-stage",
 			"/api/v1/views/work?search=no-such-run",
 			"/api/v1/waiting",
 			"/api/v1/views/overview",
@@ -128,14 +128,17 @@ func TestRepeatedReadAndErrorMatricesLeaveDiskAndCoordinatorStateUnchanged(t *te
 		}
 
 		runID := f.ActionRunID
-		for _, width := range []string{"width=420", "width=620", "width=621", "width=1080"} {
-			path := "/api/v1/views/run/" + runID + "?" + width
+		if reply := f.Do(Request{Method: "GET", Path: "/api/v1/views/run/" + runID, Token: ContractToken}); reply.Status != 200 {
+			t.Fatalf("run view: status %d", reply.Status)
+		}
+		for _, width := range []string{"width=420", "width=1080"} {
+			path := "/api/v1/views/overview?" + width
 			if reply := f.Do(Request{Method: "GET", Path: path, Token: ContractToken}); reply.Status != 200 {
 				t.Fatalf("%s: status %d", path, reply.Status)
 			}
 		}
 		for _, query := range []string{"width=NaN", "width=420&width=621"} {
-			path := "/api/v1/views/run/" + runID + "?" + query
+			path := "/api/v1/views/overview?" + query
 			if reply := f.Do(Request{Method: "GET", Path: path, Token: ContractToken}); reply.Status != 422 {
 				t.Fatalf("%s: status %d, want 422", path, reply.Status)
 			}

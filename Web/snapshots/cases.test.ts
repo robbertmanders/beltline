@@ -7,7 +7,7 @@ import { matchesRun, resolveRunSelector, type DemoRun } from "./runSelector";
 import { beltsCases } from "./cases/belts";
 
 const runCaseIds = [
-  "run-open", "run-metro-selected", "run-metro-current-selected", "run-machines", "run-closed", "run-sessions-click", "run-wide", "run-wrapping-closed", "run-wrapping-open",
+  "run-open", "run-closed", "run-sessions-click", "run-wide", "run-wrapping-closed", "run-wrapping-open",
   "run-controls-open", "run-reduced-motion", "run-paused", "run-paused-sessions", "run-pause-incomplete",
   "run-waiting", "run-parked", "run-parked-sessions", "run-held", "run-review", "run-watch", "run-multi-watch",
   "run-nested", "run-afk-approved", "run-open-links", "run-stage-adjust", "run-send-to", "run-route"
@@ -27,7 +27,7 @@ describe("snapshot selection", () => {
       "agents-reset-confirmation", "agents-assistant-running", "agents-assistant-running-terminal", "agents-assistant-stopped", "agents-codex", "agents-model-rows"];
     const workOnly = ["work-epic", "work-grouped", "work-paused", "work-status", "work-watching"];
     const beltsOwn = beltsCases.map(item => item.id).filter(id => id !== "belts-open" && id !== "belts-closed");
-    const overviewOwn = ["overview-floor-open", "overview-floor-closed", "overview-floor-pinned", "overview-floor-metro", "overview-paused"];
+    const overviewOwn = ["overview-floor-open", "overview-floor-closed", "overview-floor-pinned", "overview-paused"];
     const appearance = ids.filter(id => id.startsWith("appearance-"));
     const extra = [...appearance, ...runCaseIds, ...interactive, ...beltsOwn, ...overviewOwn, "library-shared", "library-compare", "afk-all", "settings-models-expanded", "native-7g-afk", "native-7i-afk-on", "native-7k-afk-decided", "native-7m-overrule-row", "native-7e-settings", "native-7g-settings-paused", "native-7j-settings-continued", "native-7f-settings-factories", "settings-model-error", "settings-inline-422", "library-share-belt", ...workOnly];
     expect(ids.filter(id => !extra.includes(id)).sort()).toEqual([...existing].sort());
@@ -39,7 +39,7 @@ describe("snapshot selection", () => {
     expect(ids).toContain("gallery");
     for (const id of runCaseIds) expect(ids).toContain(id);
   });
-  it("keeps both navigation states of every Overview look", () => {
+  it("keeps both navigation states of every Overview view", () => {
     const overview = selectCases("overview").map(item => `${item.id}:${item.sidebar?.navigationOpen}`);
     expect(overview).toEqual(expect.arrayContaining(["overview-open:true", "overview-closed:false", "overview-floor-open:true",
       "overview-floor-closed:false"]));

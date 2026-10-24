@@ -265,8 +265,8 @@ func TestBackendThinkingKeepsTheLevel(t *testing.T) {
 	}
 }
 
-// TestStageWorkerKeyAndFile covers StageFile and WorkerKey.
-func TestStageWorkerKeyAndFile(t *testing.T) {
+// TestStageFile covers StageFile.
+func TestStageFile(t *testing.T) {
 	t.Parallel()
 	if got := StageFile(new("spec"), StageTypeAgent); got != "spec.md" {
 		t.Errorf("StageFile(spec) = %q", got)
@@ -276,10 +276,6 @@ func TestStageWorkerKeyAndFile(t *testing.T) {
 	}
 	if got := StageFile(new("x"), StageTypeWatch); got != "pull request" {
 		t.Errorf("StageFile(watch) = %q, want the output name", got)
-	}
-	stage := btStageAgent("triage", nil)
-	if got := stage.WorkerKey(); got != "agent:triage:pi" {
-		t.Errorf("WorkerKey = %q, want agent:triage:pi", got)
 	}
 }
 

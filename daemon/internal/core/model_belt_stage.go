@@ -3,8 +3,6 @@
 
 package core
 
-import "strings"
-
 // StageType is the type of a stage: an agent, an approval or a watch.
 type StageType string
 
@@ -256,20 +254,6 @@ func (s Stage) WatchTarget() *WatchTarget {
 	}
 	pr := WatchTargetPullRequest
 	return &pr
-}
-
-// WorkerKey is the worker identity for shared factory stations (versions do
-// not change the worker).
-func (s Stage) WorkerKey() string {
-	agentID := ""
-	if s.Agent != nil {
-		agentID = s.Agent.ID
-	}
-	runner := ""
-	if s.Runner != nil {
-		runner = string(*s.Runner)
-	}
-	return strings.Join([]string{string(s.Kind()), agentID, runner}, ":")
 }
 
 // StageFile is the file a stage with key writes, given its type.

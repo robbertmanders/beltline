@@ -42,18 +42,18 @@ func factoryTrackTestLayer(t *testing.T, f FactoryTrack, node FactoryTrackNode) 
 	return *layer
 }
 
-// factoryTrackTestMachineOf is the machine a stage of a belt is part of, failing when it is none.
-func factoryTrackTestMachineOf(t *testing.T, f FactoryTrack, stage, belt string) *FactoryTrackMachine {
+// factoryTrackTestStageOf is the merged stage a belt's stage is part of, failing when it is none.
+func factoryTrackTestStageOf(t *testing.T, f FactoryTrack, stage, belt string) *FactoryTrackStage {
 	t.Helper()
-	machine := f.MachineOf(stage, belt)
-	if machine == nil {
-		t.Fatalf("stage %s of %s has no machine", stage, belt)
+	merged := f.StageOf(stage, belt)
+	if merged == nil {
+		t.Fatalf("stage %s of %s is on no merged stage", stage, belt)
 	}
-	return machine
+	return merged
 }
 
-// TestBeltsEnterOnTheLeftAndMeetAtSharedMachines
-func TestBeltsEnterOnTheLeftAndMeetAtSharedMachines(t *testing.T) {
+// TestBeltsEnterOnTheLeftAndMeetAtSharedStages
+func TestBeltsEnterOnTheLeftAndMeetAtSharedStages(t *testing.T) {
 	t.Parallel()
 	f := factoryTrackTestFloor(factoryTrackTestBelt("a", []string{"Triage", "Build", "Ship"}), factoryTrackTestBelt("b", []string{"Build", "Ship"}))
 	counts := []int{}
@@ -66,7 +66,7 @@ func TestBeltsEnterOnTheLeftAndMeetAtSharedMachines(t *testing.T) {
 	if !reflect.DeepEqual(f.Layers[0], []FactoryTrackNode{FactoryTrackEntrance("a"), FactoryTrackEntrance("b")}) {
 		t.Fatalf("layer 0 = %+v", f.Layers[0])
 	}
-	if got := factoryTrackTestLayer(t, f, FactoryTrackMachineNode("build")); got != 2 {
+	if got := factoryTrackTestLayer(t, f, FactoryTrackStageNode("build")); got != 2 {
 		t.Fatalf("build layer = %d, want 2", got)
 	}
 	// b's way in skips Triage's layer through a waypoint.
@@ -75,7 +75,7 @@ func TestBeltsEnterOnTheLeftAndMeetAtSharedMachines(t *testing.T) {
 	}
 	var shared *FactoryTrackTrack
 	for i := range f.Tracks {
-		if f.Tracks[i].From == FactoryTrackMachineNode("build") && f.Tracks[i].To == FactoryTrackMachineNode("ship") {
+		if f.Tracks[i].From == FactoryTrackStageNode("build") && f.Tracks[i].To == FactoryTrackStageNode("ship") {
 			shared = &f.Tracks[i]
 		}
 	}
@@ -98,13 +98,13 @@ func factoryTrackHasTrack(f FactoryTrack, from, to FactoryTrackNode) bool {
 func TestBeltsInTheOtherOrderLoopBack(t *testing.T) {
 	t.Parallel()
 	f := factoryTrackTestFloor(factoryTrackTestBelt("a", []string{"Build", "Verify"}), factoryTrackTestBelt("b", []string{"Verify", "Build"}))
-	if factoryTrackTestLayer(t, f, FactoryTrackMachineNode("verify")) <= factoryTrackTestLayer(t, f, FactoryTrackMachineNode("build")) {
+	if factoryTrackTestLayer(t, f, FactoryTrackStageNode("verify")) <= factoryTrackTestLayer(t, f, FactoryTrackStageNode("build")) {
 		t.Fatal("verify is not after build")
 	}
 	if len(f.Returns) != 1 {
 		t.Fatalf("returns = %d, want 1", len(f.Returns))
 	}
-	if f.Returns[0].From != FactoryTrackMachineNode("verify") || f.Returns[0].To != FactoryTrackMachineNode("build") {
+	if f.Returns[0].From != FactoryTrackStageNode("verify") || f.Returns[0].To != FactoryTrackStageNode("build") {
 		t.Fatalf("return = %+v", f.Returns[0])
 	}
 	if !reflect.DeepEqual(f.Returns[0].Belts, []string{"b"}) {
@@ -112,57 +112,57 @@ func TestBeltsInTheOtherOrderLoopBack(t *testing.T) {
 	}
 }
 
-// TestABeltThatPassesANameAgainGetsASecondMachine
-func TestABeltThatPassesANameAgainGetsASecondMachine(t *testing.T) {
+// TestABeltThatPassesANameAgainGetsASecondStage
+func TestABeltThatPassesANameAgainGetsASecondStage(t *testing.T) {
 	t.Parallel()
 	f := factoryTrackTestFloor(factoryTrackTestBelt("a", []string{"Triage", "Ship", "Verify", "Ship", "Wrap up"}),
 		factoryTrackTestBelt("b", []string{"Ship", "Ship"}))
 	if len(f.Returns) != 0 {
 		t.Fatalf("returns = %+v, want none", f.Returns)
 	}
-	if got := factoryTrackTestMachineOf(t, f, "a-1", "a").ID; got != "ship" {
-		t.Fatalf("a-1 machine = %q", got)
+	if got := factoryTrackTestStageOf(t, f, "a-1", "a").ID; got != "ship" {
+		t.Fatalf("a-1 merged stage = %q", got)
 	}
-	if got := factoryTrackTestMachineOf(t, f, "a-3", "a").ID; got != "ship #2" {
-		t.Fatalf("a-3 machine = %q", got)
+	if got := factoryTrackTestStageOf(t, f, "a-3", "a").ID; got != "ship #2" {
+		t.Fatalf("a-3 merged stage = %q", got)
 	}
-	if got := f.Machine("ship #2"); got == nil || got.Name != "Ship" {
+	if got := f.Stage("ship #2"); got == nil || got.Name != "Ship" {
 		t.Fatalf("ship #2 = %+v", got)
 	}
-	if factoryTrackTestLayer(t, f, FactoryTrackMachineNode("ship #2")) <= factoryTrackTestLayer(t, f, FactoryTrackMachineNode("verify")) {
+	if factoryTrackTestLayer(t, f, FactoryTrackStageNode("ship #2")) <= factoryTrackTestLayer(t, f, FactoryTrackStageNode("verify")) {
 		t.Fatal("ship #2 is not after verify")
 	}
-	// Another belt's second Ship is the same second machine.
-	if got := factoryTrackTestMachineOf(t, f, "b-1", "b").ID; got != "ship #2" {
-		t.Fatalf("b-1 machine = %q", got)
+	// Another belt's second Ship is the same second merged stage.
+	if got := factoryTrackTestStageOf(t, f, "b-1", "b").ID; got != "ship #2" {
+		t.Fatalf("b-1 merged stage = %q", got)
 	}
 }
 
-// TestTheEarlierOfTwoStagesWithANameStaysOffTheSharedMachineWhenItWouldLeadBack
-func TestTheEarlierOfTwoStagesWithANameStaysOffTheSharedMachineWhenItWouldLeadBack(t *testing.T) {
+// TestTheEarlierOfTwoStagesWithANameStaysOffTheSharedStageWhenItWouldLeadBack
+func TestTheEarlierOfTwoStagesWithANameStaysOffTheSharedStageWhenItWouldLeadBack(t *testing.T) {
 	t.Parallel()
 	f := factoryTrackTestFloor(factoryTrackTestBelt("a", []string{"Triage", "Verify", "Ship"}),
 		factoryTrackTestBelt("b", []string{"Triage", "Ship", "Verify", "Ship"}))
 	if len(f.Returns) != 0 {
 		t.Fatalf("returns = %+v, want none", f.Returns)
 	}
-	if got := factoryTrackTestMachineOf(t, f, "b-1", "b").ID; got != "ship #2" {
-		t.Fatalf("b-1 machine = %q", got)
+	if got := factoryTrackTestStageOf(t, f, "b-1", "b").ID; got != "ship #2" {
+		t.Fatalf("b-1 merged stage = %q", got)
 	}
-	if got := factoryTrackTestMachineOf(t, f, "b-3", "b").ID; got != "ship" {
-		t.Fatalf("b-3 machine = %q", got)
+	if got := factoryTrackTestStageOf(t, f, "b-3", "b").ID; got != "ship" {
+		t.Fatalf("b-3 merged stage = %q", got)
 	}
-	if factoryTrackTestLayer(t, f, FactoryTrackMachineNode("ship #2")) >= factoryTrackTestLayer(t, f, FactoryTrackMachineNode("verify")) {
+	if factoryTrackTestLayer(t, f, FactoryTrackStageNode("ship #2")) >= factoryTrackTestLayer(t, f, FactoryTrackStageNode("verify")) {
 		t.Fatal("ship #2 is not before verify")
 	}
 }
 
-// TestABeltInAnotherOrderStillSharesTheMachineAndGoesBack
-func TestABeltInAnotherOrderStillSharesTheMachineAndGoesBack(t *testing.T) {
+// TestABeltInAnotherOrderStillSharesTheStageAndGoesBack
+func TestABeltInAnotherOrderStillSharesTheStageAndGoesBack(t *testing.T) {
 	t.Parallel()
 	f := factoryTrackTestFloor(factoryTrackTestBelt("a", []string{"Verify", "Ship"}), factoryTrackTestBelt("b", []string{"Ship", "Verify"}))
-	if len(f.Machines) != 2 {
-		t.Fatalf("machines = %d, want 2", len(f.Machines))
+	if len(f.Stages) != 2 {
+		t.Fatalf("merged stages = %d, want 2", len(f.Stages))
 	}
 	if len(f.Returns) != 1 {
 		t.Fatalf("returns = %d, want 1", len(f.Returns))
@@ -178,49 +178,18 @@ func TestARouteOnlyCountsWhatItPassedItself(t *testing.T) {
 	belt.Stages[1].Route = &one
 	belt.Stages[2].Route = &two
 	f := factoryTrackTestFloor(belt)
-	// Alternatives share a machine; coming back to Triage after the fork does not.
-	if got := factoryTrackTestMachineOf(t, f, "a-1", "a").ID; got != "build" {
-		t.Fatalf("a-1 machine = %q", got)
+	// Alternatives share a merged stage; coming back to Triage after the fork does not.
+	if got := factoryTrackTestStageOf(t, f, "a-1", "a").ID; got != "build" {
+		t.Fatalf("a-1 merged stage = %q", got)
 	}
-	if got := factoryTrackTestMachineOf(t, f, "a-2", "a").ID; got != "build" {
-		t.Fatalf("a-2 machine = %q", got)
+	if got := factoryTrackTestStageOf(t, f, "a-2", "a").ID; got != "build" {
+		t.Fatalf("a-2 merged stage = %q", got)
 	}
-	if got := factoryTrackTestMachineOf(t, f, "a-4", "a").ID; got != "triage #2" {
-		t.Fatalf("a-4 machine = %q", got)
+	if got := factoryTrackTestStageOf(t, f, "a-4", "a").ID; got != "triage #2" {
+		t.Fatalf("a-4 merged stage = %q", got)
 	}
 	if len(f.Returns) != 0 {
 		t.Fatalf("returns = %+v, want none", f.Returns)
-	}
-}
-
-// TestTracksBendWhereTheySplitOrJoin
-func TestTracksBendWhereTheySplitOrJoin(t *testing.T) {
-	t.Parallel()
-	f := factoryTrackTestFloor(factoryTrackTestBelt("a", []string{"Triage", "Build", "Wrap up"}),
-		factoryTrackTestBelt("b", []string{"Triage", "Ship", "Wrap up"}))
-	var split, join, straight *FactoryTrackTrack
-	for i := range f.Tracks {
-		track := &f.Tracks[i]
-		switch {
-		case track.From == FactoryTrackMachineNode("triage") && track.To == FactoryTrackMachineNode("build"):
-			split = track
-		case track.From == FactoryTrackMachineNode("ship") && track.To == FactoryTrackMachineNode("wrap up"):
-			join = track
-		case track.To == FactoryTrackMachineNode("triage") && straight == nil:
-			straight = track
-		}
-	}
-	if split == nil || join == nil || straight == nil {
-		t.Fatal("missing track")
-	}
-	if got := f.Bend(*split); got != FactoryTrackBendOut {
-		t.Fatalf("split bend = %q", got)
-	}
-	if got := f.Bend(*join); got != FactoryTrackBendIn {
-		t.Fatalf("join bend = %q", got)
-	}
-	if got := f.Bend(*straight); got != FactoryTrackBendIn {
-		t.Fatalf("straight bend = %q", got)
 	}
 }
 

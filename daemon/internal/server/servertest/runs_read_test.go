@@ -29,7 +29,7 @@ func TestAgentStagesCarryTheirAdjustHelpAndApprovalsDoNot(t *testing.T) {
 	for _, stage := range run.Stages {
 		// The page asks for the stage it shows, and that stage's help is the one it gets.
 		focus := stage.ID
-		snapshot := f.Coordinator.ReadRunViewSnapshot(run.ID, 1080, &focus)
+		snapshot := f.Coordinator.ReadRunViewSnapshot(run.ID, &focus)
 		if snapshot == nil {
 			t.Fatal("no run view snapshot")
 		}

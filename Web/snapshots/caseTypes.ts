@@ -64,8 +64,6 @@ export interface SnapshotCase {
   expectedPreferences?: Partial<SidebarState>;
   /** Test-only browser API responses used to reach stable error states. A `query` must equal the request's query string; without one any query matches. */
   apiResponses?: readonly { path: string; status: number; body: string; query?: string }[];
-  /** The run page's metro line after the steps: the station that is selected, and whether it is the run's current station. */
-  metroCheck?: { stage: string; current: boolean };
   /** A visible message required after pre-capture steps have completed. */
   expectedText?: string;
   /** Selectors of columns that must be visible with a nonzero width when captured. */

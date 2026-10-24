@@ -99,6 +99,16 @@ func AgentFileParse(text, id string, version int) (Agent, error) {
 	return agentFileBuild(fields, lists, lines[end+1:], id, version)
 }
 
+// agentFileLegacyMachineIcons is the icon an agent file saved before icons gets from its
+// machine: the drawing agents were shown as before stage boxes. The machine itself is no
+// longer read, and an unknown one leaves the agent on the chip.
+var agentFileLegacyMachineIcons = map[string]StageIcon{
+	"sorter": StageIconFunnel, "typewriter": StageIconDoc, "mailbox": StageIconSend, "robot": StageIconWrench,
+	"microscope": StageIconScope, "reader": StageIconEye, "telescope": StageIconEye, "van": StageIconShip,
+	"box": StageIconChip, "stamp": StageIconApprove, "crane": StageIconBranch, "drill": StageIconWrench,
+	"radar": StageIconGauge,
+}
+
 // agentFileFrontmatterEnd is the index of the closing --- line, or -1 when the
 // text does not start with a frontmatter block.
 func agentFileFrontmatterEnd(lines []string) int {
@@ -162,11 +172,6 @@ func agentFileBuild(fields map[string]string, lists map[string][]map[string]stri
 	if agent.Alternates, err = agentFileAlternates(lists["alternates"]); err != nil {
 		return Agent{}, err
 	}
-	if value, ok := fields["machine"]; ok {
-		if agent.Machine, err = agentFileChoice(value, "machine", AllMachine); err != nil {
-			return Agent{}, err
-		}
-	}
 	if value, ok := fields["tint"]; ok {
 		if agent.Tint, err = agentFileChoice(value, "tint", AllTint); err != nil {
 			return Agent{}, err
@@ -177,6 +182,8 @@ func agentFileBuild(fields map[string]string, lists map[string][]map[string]stri
 		if err != nil {
 			return Agent{}, err
 		}
+		agent.Icon = &icon
+	} else if icon, ok := agentFileLegacyMachineIcons[fields["machine"]]; ok {
 		agent.Icon = &icon
 	}
 	if agent.Outcomes, err = agentFileOutcomes(lists["outcomes"]); err != nil {
@@ -220,7 +227,6 @@ func AgentFileWrite(agent Agent) string {
 			}
 		}
 	}
-	fmt.Fprintf(&b, "machine: %s\n", agent.Machine)
 	fmt.Fprintf(&b, "tint: %s\n", agent.Tint)
 	if agent.Icon != nil {
 		fmt.Fprintf(&b, "icon: %s\n", *agent.Icon)

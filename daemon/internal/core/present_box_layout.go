@@ -292,7 +292,7 @@ func (b *boxLayoutBuilder) connect(tails []boxLayoutTail, node string) {
 }
 
 // lay lays segments from column along the row whose middle is centre, joining the first to tails. A fork
-// splits its row: its routes stack evenly above and below it, as the machines' lanes do. Every box gets the +
+// splits its row: its routes stack evenly above and below it. Every box gets the +
 // in front of it, and every route its + at the end (or in its empty slot), so each place a stage can go is drawn.
 func (b *boxLayoutBuilder) lay(segments []BeltLayoutSegment, column, centre float64, tails []boxLayoutTail, fork, route *string) boxLayoutResult {
 	for _, segment := range segments {
@@ -460,4 +460,22 @@ func boxLayoutStages(segments []BeltLayoutSegment) []Stage {
 		out = append(out, segment.Stages()...)
 	}
 	return out
+}
+
+// BeltLayoutColumns is how many columns a segment takes when drawn: one per
+// stage, and a fork as many as its longest route, counting a nested fork as
+// its own width.
+func BeltLayoutColumns(segment BeltLayoutSegment) int {
+	if segment.Kind == BeltLayoutSegmentStage {
+		return 1
+	}
+	widest := 0
+	for _, route := range segment.Routes {
+		sum := 0
+		for _, seg := range route {
+			sum += BeltLayoutColumns(seg)
+		}
+		widest = max(widest, sum)
+	}
+	return max(1, widest)
 }

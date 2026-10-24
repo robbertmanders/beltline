@@ -32,9 +32,9 @@ func floorTestFinite(v float64) bool {
 	return !math.IsNaN(v) && !math.IsInf(v, 0)
 }
 
-// floorTestPlace places track with every machine cell 140 points high and the minimum columns.
+// floorTestPlace places track with every box cell 140 points high and the minimum columns.
 func floorTestPlace(track FactoryTrack) FloorLayout {
-	return NewFloorLayout(track, nil, nil, func(FactoryTrackMachine) float64 { return 140 })
+	return NewFloorLayout(track, OverviewBoxesMetrics(), nil, func(FactoryTrackStage) float64 { return 140 })
 }
 
 // floorTestNodeCount is the number of nodes in track's layers.
@@ -51,14 +51,14 @@ func TestEveryNodeAndStrokeHasFiniteBoundsAtTheMinimumColumn(t *testing.T) {
 	t.Parallel()
 	track := OverviewPresentationTrack([]OverviewBelt{floorTestBelt("issues"), floorTestBelt("docs"), floorTestBelt("reviews")})
 	layout := floorTestPlace(track)
-	if layout.Column != FloorLayoutMetricsDefault().MinColumn {
+	if layout.Column != OverviewBoxesMetrics().MinColumn {
 		t.Errorf("column = %v, want the minimum column", layout.Column)
 	}
 	if !floorTestFinite(layout.Width) || !floorTestFinite(layout.Height) {
 		t.Errorf("width %v and height %v must be finite", layout.Width, layout.Height)
 	}
-	if layout.Width < FloorLayoutMinimumWidth(track, nil) {
-		t.Errorf("width %v is below the minimum width %v", layout.Width, FloorLayoutMinimumWidth(track, nil))
+	if layout.Width < FloorLayoutMinimumWidth(track, OverviewBoxesMetrics()) {
+		t.Errorf("width %v is below the minimum width %v", layout.Width, FloorLayoutMinimumWidth(track, OverviewBoxesMetrics()))
 	}
 	if len(layout.Placed) != floorTestNodeCount(track) {
 		t.Errorf("placed %d nodes, want %d", len(layout.Placed), floorTestNodeCount(track))
@@ -98,41 +98,41 @@ func TestEveryTrackIsDrawnAtOneWidthHoweverManyBeltsShareIt(t *testing.T) {
 		t.Fatal("the fixture has stretches several belts share")
 	}
 	for _, stroke := range layout.Tracks {
-		if stroke.Width != FloorLayoutMetricsDefault().Thickness {
-			t.Errorf("stroke width = %v, want the one track thickness %v: a shared stretch is not drawn heavier", stroke.Width, FloorLayoutMetricsDefault().Thickness)
+		if stroke.Width != OverviewBoxesMetrics().Thickness {
+			t.Errorf("stroke width = %v, want the one track thickness %v: a shared stretch is not drawn heavier", stroke.Width, OverviewBoxesMetrics().Thickness)
 		}
 	}
 }
 
-// TestASharedStageIsOneMachineWithEveryBeltThatRunsIt
-func TestASharedStageIsOneMachineWithEveryBeltThatRunsIt(t *testing.T) {
+// TestASharedStageIsOneStageWithEveryBeltThatRunsIt
+func TestASharedStageIsOneStageWithEveryBeltThatRunsIt(t *testing.T) {
 	t.Parallel()
 	track := OverviewPresentationTrack([]OverviewBelt{floorTestBelt("issues"), floorTestBelt("docs")})
-	var shared []FactoryTrackMachine
-	for _, machine := range track.Machines {
-		if len(machine.Belts()) > 1 {
-			shared = append(shared, machine)
+	var shared []FactoryTrackStage
+	for _, merged := range track.Stages {
+		if len(merged.Belts()) > 1 {
+			shared = append(shared, merged)
 		}
 	}
 	if len(shared) == 0 {
-		t.Fatal("belts with the same stage names share their machines")
+		t.Fatal("belts with the same stage names share their merged stages")
 	}
-	for _, machine := range shared {
+	for _, merged := range shared {
 		want := map[string]struct{}{}
-		for _, member := range machine.Members {
+		for _, member := range merged.Members {
 			want[member.BeltID] = struct{}{}
 		}
 		got := map[string]struct{}{}
-		for _, id := range machine.Belts() {
+		for _, id := range merged.Belts() {
 			got[id] = struct{}{}
 		}
 		if !reflect.DeepEqual(got, want) {
-			t.Errorf("machine %s belts = %v, want the members' belts %v", machine.ID, got, want)
+			t.Errorf("merged stage %s belts = %v, want the members' belts %v", merged.ID, got, want)
 		}
 	}
 	layout := floorTestPlace(track)
-	for _, machine := range shared {
-		node := FactoryTrackMachineNode(machine.ID)
+	for _, merged := range shared {
+		node := FactoryTrackStageNode(merged.ID)
 		count := 0
 		for _, placed := range layout.Placed {
 			if placed.Node == node {
@@ -140,38 +140,25 @@ func TestASharedStageIsOneMachineWithEveryBeltThatRunsIt(t *testing.T) {
 			}
 		}
 		if count != 1 {
-			t.Errorf("shared machine %s is placed %d times, want once", machine.ID, count)
+			t.Errorf("shared stage %s is placed %d times, want once", merged.ID, count)
 		}
 	}
 }
 
-// TestAMachinesHeightFollowsItsDrawnChips
-func TestAMachinesHeightFollowsItsDrawnChips(t *testing.T) {
+// TestABoxsHeightFollowsItsDrawnTags
+func TestABoxsHeightFollowsItsDrawnTags(t *testing.T) {
 	t.Parallel()
 	track := OverviewPresentationTrack([]OverviewBelt{floorTestBelt("issues")})
-	machine := track.Machines[0]
-	runs := make([]Run, 0, 6)
-	for range 6 {
-		runs = append(runs, NewRun(RunArgs{Belt: DefaultsBelt([]string{"acme/x"}, "agent", DefaultsBuiltInAgents(), true),
-			Subject: DefaultSubject("acme/x", "t"), Now: engineT0}))
+	full := OverviewBoxesHeight(6)
+	if full <= OverviewBoxesHeight(0) {
+		t.Fatalf("height with six runs = %v, want more than with none (%v)", full, OverviewBoxesHeight(0))
 	}
-	mixed := 0.0
-	if machine.Mixed() {
-		mixed = 26
-	}
-	full := 140 + mixed + float64(OverviewFloorChipLimit)*26
-	if got := FactoryCellHeight(machine, runs); got != full {
-		t.Errorf("height with six runs = %v, want %v", got, full)
-	}
-	if got := FactoryCellHeight(machine, nil); got != 140+mixed {
-		t.Errorf("height with no runs = %v, want %v", got, 140+mixed)
-	}
-	layout := NewFloorLayout(track, nil, nil, func(m FactoryTrackMachine) float64 { return FactoryCellHeight(m, runs) })
+	layout := NewFloorLayout(track, OverviewBoxesMetrics(), nil, func(FactoryTrackStage) float64 { return full })
 	found := slices.ContainsFunc(layout.Placed, func(placed FloorLayoutPlaced) bool {
 		return placed.Height == full
 	})
 	if !found {
-		t.Errorf("no placed node has the height %v of a machine with six runs", full)
+		t.Errorf("no placed node has the height %v of a box with six runs", full)
 	}
 }
 
@@ -212,19 +199,19 @@ func TestLanesLieBelowTheirLabelsAndCarryTheirBelts(t *testing.T) {
 func TestAWiderViewSpreadsTheColumnsAndANarrowerOneKeepsTheMinimum(t *testing.T) {
 	t.Parallel()
 	track := OverviewPresentationTrack([]OverviewBelt{floorTestBelt("issues"), floorTestBelt("docs")})
-	minimum := FloorLayoutMinimumWidth(track, nil)
+	minimum := FloorLayoutMinimumWidth(track, OverviewBoxesMetrics())
 	wideWidth := minimum + 400
-	wide := NewFloorLayout(track, nil, &wideWidth, func(FactoryTrackMachine) float64 { return 140 })
-	if wide.Column <= FloorLayoutMetricsDefault().MinColumn {
-		t.Errorf("wide column = %v, want more than the minimum %v", wide.Column, FloorLayoutMetricsDefault().MinColumn)
+	wide := NewFloorLayout(track, OverviewBoxesMetrics(), &wideWidth, func(FactoryTrackStage) float64 { return 140 })
+	if wide.Column <= OverviewBoxesMetrics().MinColumn {
+		t.Errorf("wide column = %v, want more than the minimum %v", wide.Column, OverviewBoxesMetrics().MinColumn)
 	}
 	if math.Abs(wide.Width-(minimum+400)) >= 0.001 {
 		t.Errorf("wide width = %v, want %v", wide.Width, minimum+400)
 	}
 	narrowWidth := minimum - 400
-	narrow := NewFloorLayout(track, nil, &narrowWidth, func(FactoryTrackMachine) float64 { return 140 })
-	if narrow.Column != FloorLayoutMetricsDefault().MinColumn {
-		t.Errorf("narrow column = %v, want the minimum %v", narrow.Column, FloorLayoutMetricsDefault().MinColumn)
+	narrow := NewFloorLayout(track, OverviewBoxesMetrics(), &narrowWidth, func(FactoryTrackStage) float64 { return 140 })
+	if narrow.Column != OverviewBoxesMetrics().MinColumn {
+		t.Errorf("narrow column = %v, want the minimum %v", narrow.Column, OverviewBoxesMetrics().MinColumn)
 	}
 	if !reflect.DeepEqual(narrow, floorTestPlace(track)) {
 		t.Error("a narrower view than the minimum places the same layout as no width")

@@ -1,5 +1,5 @@
 // Agent, AgentRef, AgentSnapshot,
-// AgentOutcome, Machine, Tint, Thinking and AgentRecord.
+// AgentOutcome, Tint, Thinking and AgentRecord.
 
 package core
 
@@ -31,9 +31,8 @@ type Agent struct {
 	// Alternates are other runner, model and thinking settings a new stage
 	// spreads its fresh sessions across, besides these.
 	Alternates []SessionSettings `json:"alternates"`
-	Machine    Machine           `json:"machine"`
 	Tint       Tint              `json:"tint"`
-	// Icon is the glyph its stage boxes show; nil uses the one its machine suggests.
+	// Icon is the glyph its stage boxes show; nil is the chip.
 	Icon     *StageIcon     `json:"icon,omitzero"`
 	Outcomes []AgentOutcome `json:"outcomes"`
 	Brief    string         `json:"brief"`
@@ -44,7 +43,7 @@ type Agent struct {
 // AgentArgs are the parameters of NewAgent. Pointer fields whose default
 // is not the Go zero value are nil for that default: Version nil is 1, Key nil
 // is the ID, Workspace nil is WorkspaceReadOnly, Slots nil is 2, Runner nil is
-// BackendPi, Machine nil is MachineBox and Tint nil is TintGrey.
+// BackendPi and Tint nil is TintGrey.
 type AgentArgs struct {
 	ID         string
 	Version    *int
@@ -56,7 +55,6 @@ type AgentArgs struct {
 	Model      string
 	Thinking   *Thinking
 	Alternates []SessionSettings
-	Machine    *Machine
 	Tint       *Tint
 	Icon       *StageIcon
 	Outcomes   []AgentOutcome
@@ -76,7 +74,6 @@ func NewAgent(a AgentArgs) Agent {
 		Model:      a.Model,
 		Thinking:   a.Thinking,
 		Alternates: a.Alternates,
-		Machine:    MachineBox,
 		Tint:       TintGrey,
 		Icon:       a.Icon,
 		Outcomes:   a.Outcomes,
@@ -97,9 +94,6 @@ func NewAgent(a AgentArgs) Agent {
 	if a.Runner != nil {
 		agent.Runner = *a.Runner
 	}
-	if a.Machine != nil {
-		agent.Machine = *a.Machine
-	}
 	if a.Tint != nil {
 		agent.Tint = *a.Tint
 	}
@@ -116,13 +110,12 @@ func (a Agent) Ref() AgentRef {
 	return AgentRef{ID: a.ID, Version: a.Version}
 }
 
-// Glyph is the glyph the agent's stage boxes show: its icon, else the one its
-// machine suggests.
+// Glyph is the glyph the agent's stage boxes show: its icon, else the chip.
 func (a Agent) Glyph() StageIcon {
 	if a.Icon != nil {
 		return *a.Icon
 	}
-	return StageIconFromMachine(a.Machine)
+	return StageIconChip
 }
 
 // Pool is the settings a new stage's fresh sessions can start with: these
@@ -251,68 +244,7 @@ type AgentOutcome struct {
 	To []string `json:"to"`
 }
 
-// Machine is the drawing a stage's machine uses.
-type Machine string
-
-const (
-	MachineSorter     Machine = "sorter"
-	MachineTypewriter Machine = "typewriter"
-	MachineMailbox    Machine = "mailbox"
-	MachineRobot      Machine = "robot"
-	MachineMicroscope Machine = "microscope"
-	MachineReader     Machine = "reader"
-	MachineVan        Machine = "van"
-	MachineBox        Machine = "box"
-	MachineTelescope  Machine = "telescope"
-	MachineStamp      Machine = "stamp"
-	MachineCrane      Machine = "crane"
-	MachineDrill      Machine = "drill"
-	MachineRadar      Machine = "radar"
-)
-
-// AllMachine lists every Machine in declaration order (CaseIterable).
-var AllMachine = []Machine{
-	MachineSorter, MachineTypewriter, MachineMailbox, MachineRobot, MachineMicroscope, MachineReader, MachineVan,
-	MachineBox, MachineTelescope, MachineStamp, MachineCrane, MachineDrill, MachineRadar,
-}
-
-// Known reports whether x is one of the cases of Machine.
-func (x Machine) Known() bool { return enumKnown(x, AllMachine) }
-
-// Label is the name shown for the machine.
-func (m Machine) Label() string {
-	switch m {
-	case MachineSorter:
-		return "Gumball sorter"
-	case MachineTypewriter:
-		return "Typewriter"
-	case MachineMailbox:
-		return "Mailbox"
-	case MachineRobot:
-		return "Robot"
-	case MachineMicroscope:
-		return "Microscope"
-	case MachineReader:
-		return "Reader"
-	case MachineVan:
-		return "Van"
-	case MachineBox:
-		return "Box"
-	case MachineTelescope:
-		return "Telescope"
-	case MachineStamp:
-		return "Stamp"
-	case MachineCrane:
-		return "Crane"
-	case MachineDrill:
-		return "Drill"
-	case MachineRadar:
-		return "Radar"
-	}
-	return ""
-}
-
-// Tint is a machine's colour.
+// Tint is the colour of an agent's stage boxes.
 type Tint string
 
 const (

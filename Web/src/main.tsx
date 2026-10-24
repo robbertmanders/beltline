@@ -5,7 +5,6 @@ import { applyStoredAppearance } from "./state/theme";
 import "./theme/tokens.css";
 import "./theme/fields.css";
 import "./theme/shell.css";
-import "./theme/machines/machines.css";
 import "./components/components.css";
 import "./pages/run/run.css";
 import "./components/assistantSidebar.css";

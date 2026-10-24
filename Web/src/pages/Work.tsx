@@ -170,7 +170,7 @@ export function WorkPage() {
         <h1>{data?.stage?.name ?? "Work"}</h1>
       </div>
       {data && <div className="page-heading-actions">
-        {data.stage && <button type="button" className="quiet-button" onClick={() => change({ stage: "" })}>Clear machine</button>}
+        {data.stage && <button type="button" className="quiet-button" onClick={() => change({ stage: "" })}>Clear stage</button>}
         <Caps className="work-caption">{data.caption}</Caps>
       </div>}
     </header>

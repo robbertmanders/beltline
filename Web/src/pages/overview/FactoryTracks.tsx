@@ -7,8 +7,7 @@ export function nodeKey(node: FactoryTrackNode): string {
 }
 
 /**
- * The tracks, the return lanes and their names, as the daemon drew them. The Floor's machines and boxes share
- * them. Each track is drawn once, at the daemon's width; a focused belt's tracks change colour in place and are
+ * The tracks, the return lanes and their names, as the daemon drew them between the Floor's boxes. Each track is drawn once, at the daemon's width; a focused belt's tracks change colour in place and are
  * painted after the rest, so they are never stroked twice. Its lanes stay in full view while the rest dim.
  */
 export function FactoryTracks({ layout, focus }: { layout: FloorLayout; focus: string | null }) {

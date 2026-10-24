@@ -5,7 +5,6 @@ workspace: worktreeReadOnly
 slots: 2
 runner: pi
 model: openrouter/stealth/space-bunny-alpha
-machine: microscope
 tint: violet
 icon: scope
 outcomes:

@@ -9,10 +9,9 @@ import (
 
 // ReadRunViewSnapshot is the run page's pure shared projection plus the facts that
 // require the coordinator: clock, pause states, repository ambiguity and actions.
-// width is the run column's width in points (readRunViewSnapshot(id:width:), default 1080).
 // stage is the stage the page shows: the Adjust help is built for that stage alone (see runFocusStage).
 // Lock: exported entry point; takes c.mu.
-func (c *Coordinator) ReadRunViewSnapshot(id string, width float64, stage *string) *CoordinatorRunViewSnapshot {
+func (c *Coordinator) ReadRunViewSnapshot(id string, stage *string) *CoordinatorRunViewSnapshot {
 	c.Lock()
 	defer c.EndTurn()
 	run := c.book.Run(id)
@@ -30,36 +29,23 @@ func (c *Coordinator) ReadRunViewSnapshot(id string, width float64, stage *strin
 	}
 	ambiguous := core.RepoLabelAmbiguousNames(c.book.runs)
 	actions := c.runActionContextNow(*run).Actions()
-	agentFor := func(stage core.Stage) *core.Agent { return c.library.AgentFor(stage.Agent, *run) }
-	presentation := core.RunPresentationProject(*run, width, beltPaused, pause, now, ambiguous, actions, agentFor)
-	// The map is laid out in its card: the run column less its padding (28 each side) and the card's (12 each side).
-	plan := core.NewMapPlan(run.Layout(), core.MapMetricsRun(presentation.Compact))
-	contentWidth := plan.Width().ContentWidth(max(0, width-80))
-	look := c.settings.BeltLook
-	var boxes *core.RunBoxes
-	if look == core.BeltLookBoxes {
-		projected := core.RunBoxesProject(*run, presentation.Stages, ambiguous, func(stage core.Stage) core.StageLook {
-			return core.StageLookOf(stage, c.library.AgentFor(stage.Agent, *run))
-		})
-		boxes = &projected
-	}
+	presentation := core.RunPresentationProject(*run, beltPaused, pause, now, ambiguous, actions)
+	boxes := core.RunBoxesProject(*run, presentation.Stages, ambiguous, func(stage core.Stage) core.StageLook {
+		return core.StageLookOf(stage, c.library.AgentFor(stage.Agent, *run))
+	})
 	return &CoordinatorRunViewSnapshot{
 		Run:                   *run,
-		AvailableWidth:        width,
 		BeltPaused:            beltPaused,
 		Pause:                 pause,
 		Now:                   now,
 		AmbiguousRepositories: ambiguous,
 		Actions:               actions,
 		Presentation:          presentation,
-		Map:                   plan.RouteEndGeometry(contentWidth),
-		MapContentWidth:       contentWidth,
 		Worktrees:             runner.WorktreeTargetsFor(*run, c.paths.WorkFolder(*run)),
 		AdjustHelp:            c.adjustHelpFor(*run, runFocusStage(*run, stage)),
 		PanelFacts:            c.stagePanelFacts(*run, now, beltPaused, ambiguous),
 		// afkDefault(for:): the global switch, which a run in the global mode follows.
 		AfkGlobal: c.settings.Afk.Enabled,
-		Look:      look,
 		Boxes:     boxes,
 	}
 }

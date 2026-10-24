@@ -114,7 +114,7 @@ type AgentPresentation struct {
 	OutcomeTargets []AgentOutcomeTarget `json:"outcomeTargets"`
 	CanReset       bool                 `json:"canReset"`
 	ResetReason    *string              `json:"resetReason,omitzero"`
-	// Glyph is the icon a stage box of this agent shows: its own icon, else the one its machine suggests.
+	// Glyph is the icon a stage box of this agent shows: its own icon, else the chip.
 	Glyph StageIcon `json:"glyph"`
 	// Status is the editor's line about the version: a new agent, unsaved changes that
 	// Save would make into the next version, or the latest version.

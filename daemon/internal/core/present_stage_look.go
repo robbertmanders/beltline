@@ -1,5 +1,5 @@
-// The stage look a box or a line stop draws with: its icon and tint, and the trigger glyph. Paths
-// (MapPath) are the renderer-independent polylines the metro and run lines are drawn with.
+// The stage look a box draws with: its icon and tint, and the trigger glyph. Paths (MapPath) are the
+// renderer-independent polylines the boxes' tracks are drawn with.
 
 package core
 

@@ -18,24 +18,11 @@ const (
 	StageStatusLookPlain   StageStatusLook = "plain"
 )
 
-// StageStatusFace is the machine face drawn for a stage's status.
-type StageStatusFace string
-
-const (
-	StageStatusFaceIdle   StageStatusFace = "idle"
-	StageStatusFaceRun    StageStatusFace = "run"
-	StageStatusFaceWait   StageStatusFace = "wait"
-	StageStatusFaceHappy  StageStatusFace = "happy"
-	StageStatusFaceHeld   StageStatusFace = "held"
-	StageStatusFacePaused StageStatusFace = "paused"
-	StageStatusFaceTodo   StageStatusFace = "todo"
-)
-
-// StageStatus is how a stage looks for one run: the status above its machine and the face.
+// StageStatus is how a stage looks for one run: its status text, its colour, and whether a pause holds it.
 type StageStatus struct {
-	Text string          `json:"text"`
-	Look StageStatusLook `json:"look"`
-	Face StageStatusFace `json:"face"`
+	Text   string          `json:"text"`
+	Look   StageStatusLook `json:"look"`
+	Paused bool            `json:"paused"`
 }
 
 // StatusStep is where a stage stands for one run; skipped is
@@ -54,12 +41,6 @@ const (
 	StatusStepTodo    StatusStep = "todo"
 	StatusStepSkipped StatusStep = "skipped"
 )
-
-// Dimmed says whether the run's machine map draws a stage at this step dimmed:
-// the run has not reached it, or a route it didn't take skipped it.
-func (step StatusStep) Dimmed() bool {
-	return step == StatusStepTodo || step == StatusStepSkipped
-}
 
 // StatusStepOf is the step of the stage with stageID in run.
 func StatusStepOf(run Run, stageID string) StatusStep {
@@ -139,7 +120,8 @@ type StatusLegRow struct {
 	Stage string          `json:"stage"`
 	State RunState        `json:"state"`
 	Look  StageStatusLook `json:"look"`
-	Face  StageStatusFace `json:"face"`
+	// Paused is whether a pause holds the leg's stage.
+	Paused bool `json:"paused"`
 }
 
 // StatusLegs are the legs of a split run, one per route taken. Each leg's row reads
@@ -154,7 +136,7 @@ func StatusLegs(run Run, paused bool, pause Pause, now time.Time) []StatusLegRow
 		stage := leg.Stage(run)
 		if stage == nil || leg.IsFinished() {
 			rows = append(rows, StatusLegRow{ID: leg.ID, Route: leg.RouteName(layout), Stage: "finished", State: leg.State,
-				Look: StageStatusLookDone, Face: StageStatusFaceHappy})
+				Look: StageStatusLookDone})
 			continue
 		}
 		status := StatusStage(run, *stage, paused, pause, now)
@@ -164,7 +146,7 @@ func StatusLegs(run Run, paused bool, pause Pause, now time.Time) []StatusLegRow
 			joined := strings.Join(path, " / ")
 			route = &joined
 		}
-		rows = append(rows, StatusLegRow{ID: leg.ID, Route: route, Stage: stage.Name, State: leg.State, Look: status.Look, Face: status.Face})
+		rows = append(rows, StatusLegRow{ID: leg.ID, Route: route, Stage: stage.Name, State: leg.State, Look: status.Look, Paused: status.Paused})
 	}
 	return rows
 }
@@ -181,9 +163,9 @@ func statusUnderlying(run Run, stage Stage, paused bool, pause Pause, now time.T
 	switch StatusStepOf(run, stage.ID) {
 	case StatusStepDone:
 		if attempt != nil && attempt.EndedAt != nil {
-			return StageStatus{Text: "✓ " + StatusDuration(attempt.EndedAt.Sub(attempt.StartedAt.Time).Seconds()), Look: StageStatusLookDone, Face: StageStatusFaceHappy}
+			return StageStatus{Text: "✓ " + StatusDuration(attempt.EndedAt.Sub(attempt.StartedAt.Time).Seconds()), Look: StageStatusLookDone}
 		}
-		return StageStatus{Text: "✓ DONE", Look: StageStatusLookDone, Face: StageStatusFaceHappy}
+		return StageStatus{Text: "✓ DONE", Look: StageStatusLookDone}
 	case StatusStepRunning:
 		elapsed := 0.0
 		if attempt != nil {
@@ -200,7 +182,7 @@ func statusUnderlying(run Run, stage Stage, paused bool, pause Pause, now time.T
 				}
 				text = strconv.Itoa(open) + " OF " + strconv.Itoa(len(observation.Children)) + " DONE"
 			}
-			return StageStatus{Text: text, Look: StageStatusLookRunning, Face: StageStatusFaceWait}
+			return StageStatus{Text: text, Look: StageStatusLookRunning}
 		}
 		if stage.Kind() == StageKindWatch {
 			text := "LOOKING FOR THE PR"
@@ -209,11 +191,11 @@ func statusUnderlying(run Run, stage Stage, paused bool, pause Pause, now time.T
 			} else if pull := run.PullRequest(); pull != nil {
 				text = "WATCHING #" + strconv.Itoa(pull.Number)
 			}
-			return StageStatus{Text: text, Look: StageStatusLookRunning, Face: StageStatusFaceWait}
+			return StageStatus{Text: text, Look: StageStatusLookRunning}
 		}
 		// A suspended agent is still running; only its clock waits.
 		if pause.IsPaused {
-			return StageStatus{Text: "PAUSED", Look: StageStatusLookRunning, Face: StageStatusFacePaused}
+			return StageStatus{Text: "PAUSED", Look: StageStatusLookRunning, Paused: true}
 		}
 		number := 1
 		if attempt != nil {
@@ -223,28 +205,28 @@ func statusUnderlying(run Run, stage Stage, paused bool, pause Pause, now time.T
 		if number > 1 {
 			word = "RETRY"
 		}
-		return StageStatus{Text: word + " " + StatusClock(elapsed), Look: StageStatusLookRunning, Face: StageStatusFaceRun}
+		return StageStatus{Text: word + " " + StatusClock(elapsed), Look: StageStatusLookRunning}
 	case StatusStepWaiting:
-		return StageStatus{Text: "WAITING FOR YOU", Look: StageStatusLookWaiting, Face: StageStatusFaceWait}
+		return StageStatus{Text: "WAITING FOR YOU", Look: StageStatusLookWaiting}
 	case StatusStepQueued:
 		stopped := paused || pause.IsPaused
 		if stopped {
-			return StageStatus{Text: "PAUSED", Look: StageStatusLookPlain, Face: StageStatusFacePaused}
+			return StageStatus{Text: "PAUSED", Look: StageStatusLookPlain, Paused: true}
 		}
-		return StageStatus{Text: "QUEUED", Look: StageStatusLookPlain, Face: StageStatusFaceIdle}
+		return StageStatus{Text: "QUEUED", Look: StageStatusLookPlain}
 	case StatusStepHeld:
 		reason := ValueOr(run.Reason, "held")
-		return StageStatus{Text: UppercasedFull(reason), Look: StageStatusLookHeld, Face: StageStatusFaceHeld}
+		return StageStatus{Text: UppercasedFull(reason), Look: StageStatusLookHeld}
 	case StatusStepParked:
-		return StageStatus{Text: "PARKED", Look: StageStatusLookPlain, Face: StageStatusFacePaused}
+		return StageStatus{Text: "PARKED", Look: StageStatusLookPlain, Paused: true}
 	case StatusStepDropped:
-		return StageStatus{Text: "DROPPED", Look: StageStatusLookPlain, Face: StageStatusFacePaused}
+		return StageStatus{Text: "DROPPED", Look: StageStatusLookPlain, Paused: true}
 	case StatusStepRedo:
-		return StageStatus{Text: "WILL REDO", Look: StageStatusLookPlain, Face: StageStatusFaceTodo}
+		return StageStatus{Text: "WILL REDO", Look: StageStatusLookPlain}
 	case StatusStepTodo:
-		return StageStatus{Text: "NOT STARTED", Look: StageStatusLookPlain, Face: StageStatusFaceTodo}
+		return StageStatus{Text: "NOT STARTED", Look: StageStatusLookPlain}
 	case StatusStepSkipped:
-		return StageStatus{Text: "NOT TAKEN", Look: StageStatusLookPlain, Face: StageStatusFaceTodo}
+		return StageStatus{Text: "NOT TAKEN", Look: StageStatusLookPlain}
 	}
 	return StageStatus{}
 }

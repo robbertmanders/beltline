@@ -83,13 +83,12 @@ func (c *Coordinator) ReadOverviewView(now *time.Time, loc *time.Location, width
 	c.Lock()
 	defer c.EndTurn()
 	snapshot := c.viewsSharedNow(now)
-	look := c.settings.BeltLook
 	belts := snapshot.OverviewBelts()
 	track := c.floorTrackOf(belts, snapshot.Runs)
-	// A stage is drawn as its agent's machine or icon; without the agent every agent stage is a plain box.
+	// A stage is drawn with its agent's icon; without the agent every agent stage is a plain box.
 	return core.NewOverviewView(core.OverviewViewArgs{
 		Belts: belts, Runs: snapshot.Runs, Now: snapshot.Now, Location: loc,
-		Pause: snapshot.Pause, Look: &look, Width: width, Track: &track,
+		Pause: snapshot.Pause, Width: width, Track: &track,
 		Agent: func(stage core.Stage) *core.Agent { return c.library.Agent(stage.Agent) },
 	})
 }
@@ -136,8 +135,8 @@ func (c *Coordinator) ReadWorkView(query core.WorkQuery, now *time.Time, loc *ti
 		view.ShadowGroups = append(view.ShadowGroups, core.WorkGroupPresentationOf(group, pausedBelts, snapshot.Pause, ambiguous, snapshot.Now))
 	}
 	if query.Stage != nil {
-		if machine := track.Machine(*query.Stage); machine != nil {
-			view.Stage = &core.WorkStage{ID: machine.ID, Name: machine.Name}
+		if merged := track.Stage(*query.Stage); merged != nil {
+			view.Stage = &core.WorkStage{ID: merged.ID, Name: merged.Name}
 		}
 	}
 	for _, record := range snapshot.Belts {

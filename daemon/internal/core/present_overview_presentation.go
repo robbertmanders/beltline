@@ -26,7 +26,7 @@ func OverviewBeltFromBelt(belt Belt, archived, paused bool) OverviewBelt {
 	return OverviewBelt{ID: belt.ID, Name: belt.Name, Summary: belt.Summary(), Layout: belt.Layout(), Archived: archived, Paused: paused}
 }
 
-// OverviewPresentationShowsOnFloor reports whether a belt is on the Floor and its Metro:
+// OverviewPresentationShowsOnFloor reports whether a belt is on the Floor:
 // every live belt, plus an archived belt while it still has an active run.
 func OverviewPresentationShowsOnFloor(archived bool, beltID string, runs []Run) bool {
 	if !archived {
@@ -51,8 +51,7 @@ func OverviewPresentationFloorBelts(belts []OverviewBelt, runs []Run) []Overview
 	return floor
 }
 
-// OverviewPresentationTrack is the factory track the Floor and Metro draw, from the eligible
-// belts.
+// OverviewPresentationTrack is the factory track the Floor draws, from the eligible belts.
 func OverviewPresentationTrack(belts []OverviewBelt) FactoryTrack {
 	tracked := make([]FactoryTrackBelt, 0, len(belts))
 	for _, belt := range belts {
@@ -62,8 +61,8 @@ func OverviewPresentationTrack(belts []OverviewBelt) FactoryTrack {
 }
 
 // OverviewRun is an active run as the Overview's cards name it: its subject, repository,
-// where it is, and the stage a click opens it at. Floor chips, Metro dots and
-// the Summary rows all look their runs up here.
+// where it is, and the stage a click opens it at. Floor chips and the Summary rows
+// look their runs up here.
 type OverviewRun struct {
 	ID    string `json:"id"`
 	Ref   string `json:"ref"`
@@ -79,18 +78,13 @@ type OverviewRun struct {
 }
 
 // OverviewView is everything the Overview shows for one read: the global counts, the Summary,
-// and the Floor in the look the belts are drawn in.
-// Only the drawing of Look is laid out: machines, boxes, or the
-// metro, never more than one.
+// and the Floor.
 type OverviewView struct {
-	Look    BeltLook
 	Summary RunCounts
 	Today   OverviewSummary
 	Floor   OverviewFloor
 	// FactoryTrack is the track the Floor was built from.
 	FactoryTrack FactoryTrack
-	// MetroLayout is the metro's placement; nil for the machines and the boxes.
-	MetroLayout *MetroLayout
 	// Runs is every active run the Overview names, by id.
 	Runs map[string]OverviewRun
 	// Greeting is the greeting for the clock the view was read at.
@@ -98,25 +92,18 @@ type OverviewView struct {
 }
 
 // OverviewViewArgs are the parameters of NewOverviewView. Nil pointers and a nil Location
-// are the defaults: the local calendar, the standard (boxes) look, the metro
-// map's character width, and the Floor drawn at its minimum column.
+// are the defaults: the local calendar, and the Floor drawn at its minimum column.
 type OverviewViewArgs struct {
-	Belts     []OverviewBelt
-	Runs      []Run
-	Now       time.Time
-	Location  *time.Location
-	Pause     Pause
-	CharWidth *float64
-	Look      *BeltLook
-	Width     *float64
-	Agent     func(stage Stage) *Agent
+	Belts    []OverviewBelt
+	Runs     []Run
+	Now      time.Time
+	Location *time.Location
+	Pause    Pause
+	Width    *float64
+	Agent    func(stage Stage) *Agent
 	// Track is OverviewPresentationTrack of the floor belts when the caller keeps it; nil builds it.
 	Track *FactoryTrack
 }
-
-// MetroMapMetricsCharWidth is the one character-width metric the metro map and the API
-// layout share.
-const MetroMapMetricsCharWidth float64 = 6.6
 
 // NewOverviewView builds the Overview for one read.
 func NewOverviewView(a OverviewViewArgs) OverviewView {
@@ -124,13 +111,10 @@ func NewOverviewView(a OverviewViewArgs) OverviewView {
 	if loc == nil {
 		loc = time.Local
 	}
-	look := ValueOr(a.Look, BeltLookStandard)
-	charWidth := ValueOr(a.CharWidth, MetroMapMetricsCharWidth)
 	agent := a.Agent
 	if agent == nil {
 		agent = func(Stage) *Agent { return nil }
 	}
-	// Locals first: the layouts' closures must not capture self before every property is set.
 	floorBelts := OverviewPresentationFloorBelts(a.Belts, a.Runs)
 	var track FactoryTrack
 	if a.Track != nil {
@@ -138,7 +122,7 @@ func NewOverviewView(a OverviewViewArgs) OverviewView {
 	} else {
 		track = OverviewPresentationTrack(floorBelts)
 	}
-	// The layouts look runs up per machine, and only active runs sit at one.
+	// The layout looks runs up per box, and only active runs sit at one.
 	active := floorRuns(a.Runs)
 	paused := map[string]struct{}{}
 	for _, belt := range a.Belts {
@@ -146,25 +130,11 @@ func NewOverviewView(a OverviewViewArgs) OverviewView {
 			paused[belt.ID] = struct{}{}
 		}
 	}
-	var layout *FloorLayout
-	switch look {
-	case BeltLookMachines:
-		placed := NewFloorLayout(track, nil, a.Width, func(machine FactoryTrackMachine) float64 {
-			return FactoryCellHeight(machine, track.RunsAt(machine, active))
-		})
-		layout = &placed
-	case BeltLookBoxes:
-		metrics := OverviewBoxesMetrics()
-		placed := NewFloorLayout(track, &metrics, a.Width, func(machine FactoryTrackMachine) float64 {
-			return OverviewBoxesHeight(len(track.RunsAt(machine, active)))
-		})
-		layout = &placed
-	case BeltLookMetro:
-		layout = nil
-	}
+	layout := NewFloorLayout(track, OverviewBoxesMetrics(), a.Width, func(merged FactoryTrackStage) float64 {
+		return OverviewBoxesHeight(len(track.RunsAt(merged, active)))
+	})
 
 	view := OverviewView{
-		Look:         look,
 		Summary:      RunSummaryCounts(a.Runs, a.Now, loc),
 		Today:        NewOverviewSummary(a.Runs, a.Now, loc, paused, a.Pause),
 		FactoryTrack: track,
@@ -175,16 +145,10 @@ func NewOverviewView(a OverviewViewArgs) OverviewView {
 		Runs:     a.Runs,
 		Now:      a.Now,
 		Location: loc,
-		Pause:    a.Pause,
-		Look:     look,
 		Layout:   layout,
 		Agent:    agent,
 	})
 	view.Greeting = OverviewSummaryGreeting(a.Now, loc)
-	if look == BeltLookMetro {
-		metro := NewMetroLayout(MetroLayoutArgs{Track: track, Runs: active, CharWidth: &charWidth, Paused: paused, Pause: a.Pause})
-		view.MetroLayout = &metro
-	}
 	ambiguous := RepoLabelAmbiguousNames(a.Runs)
 	view.Runs = map[string]OverviewRun{}
 	for i := range a.Runs {
@@ -234,14 +198,4 @@ func (v OverviewView) OrderedRuns() []OverviewRun {
 	}
 	sort.Slice(runs, func(i, j int) bool { return runs[i].ID < runs[j].ID })
 	return runs
-}
-
-// FactoryCellHeight is the height a machine's cell takes on the floor: its tag and chips.
-func FactoryCellHeight(machine FactoryTrackMachine, runs []Run) float64 {
-	chips := min(len(runs), OverviewFloorChipLimit)
-	extra := 0
-	if machine.Mixed() {
-		extra = 26
-	}
-	return float64(140+extra) + float64(chips*26)
 }

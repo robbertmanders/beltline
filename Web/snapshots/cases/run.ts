@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { sidebarState, type SnapshotCase, type RunSelector } from "../caseTypes";
 
 const sessionsPanel = '[data-column="sessions"]';
@@ -10,46 +8,8 @@ const runRoute = (runId: string) => `/runs/${encodeURIComponent(runId)}`;
 const stageRoute = (runId: string, stage: string, attempt?: string) =>
   `/runs/${encodeURIComponent(runId)}?stage=${encodeURIComponent(stage)}${attempt ? `&attempt=${encodeURIComponent(attempt)}` : ""}`;
 
-/** The golden run view of acme/web#61, which shipped on the simple route, so its metro line has no current station. */
-interface MetroViewGolden {
-  run: { state: string; stageId: string };
-  stages: { id: string; step: string; status: { face: string; look: string; text: string }; compactStatus: { face: string; look: string; text: string } }[];
-  metro: {
-    segments: { state: string; path: { subpaths: { x: number; y: number }[][] } }[];
-    stations: { id: string; x: number; state: string; look: string; status: string }[];
-  };
-}
-
-const metroGolden = JSON.parse(readFileSync(resolve(process.cwd(), "../daemon/testdata/golden/views-run-metro.json"), "utf8")) as MetroViewGolden;
-const metroRun: RunSelector = { beltId: "issues", number: 61 };
-const metroViewPath = `/api/v1/views/run/${encodeURIComponent("issues:acme/web#61")}`;
-
-/** The golden view with verify running: the stations and line after it are still to come, and it is the current station. */
-function runningMetroView(): string {
-  const view = structuredClone(metroGolden);
-  const verify = view.metro.stations.find(station => station.id === "verify");
-  if (!verify) throw new Error("the metro golden has no verify station");
-  view.run.state = "running";
-  view.run.stageId = "verify";
-  for (const station of view.metro.stations) {
-    if (station.state === "done" && station.x > verify.x) Object.assign(station, { state: "todo", look: "plain", status: "" });
-  }
-  Object.assign(verify, { state: "current", look: "running", status: "RUNNING 2m" });
-  for (const segment of view.metro.segments) {
-    if (segment.state === "done" && segment.path.subpaths[0]![0]!.x >= verify.x) segment.state = "todo";
-  }
-  for (const panel of view.stages) {
-    if (panel.id === "verify") {
-      panel.step = "current";
-      Object.assign(panel.status, { look: "running", text: "RUNNING 2m" });
-      Object.assign(panel.compactStatus, { look: "running", text: "RUNNING 2m" });
-    }
-  }
-  return JSON.stringify(view);
-}
-
 /**
- * The Run page draws the daemon-provided belt (boxes by default), stage panel, output and artifacts, so its cases wait on
+ * The Run page draws the daemon-provided belt as stage boxes, its stage panel, output and artifacts, so its cases wait on
  * the Run content itself rather than the old resource scaffold. The default demo run is the seeded
  * `acme/platform#139` run; a case can name a different seeded run with `run` and the harness resolves
  * it from `/api/v1/runs`. Its last saved agent output is `spec-1`, which the demo seeds with long
@@ -57,37 +17,6 @@ function runningMetroView(): string {
  */
 export const runCases: SnapshotCase[] = [
   { id: "run-open", route: runRoute, sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }), readiness: "run" },
-  {
-    // The metro look with a finished station selected: its glyph is blue, and the button draws no wash.
-    id: "run-metro-selected",
-    route: (runId: string) => stageRoute(runId, "triage"),
-    run: metroRun,
-    sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
-    readiness: "run",
-    reducedMotion: "reduce",
-    apiResponses: [{ path: metroViewPath, status: 200, body: JSON.stringify(metroGolden) }],
-    metroCheck: { stage: "triage", current: false }
-  },
-  {
-    // The metro look with the running current station selected: it keeps its gold glyph, halo and pulse.
-    id: "run-metro-current-selected",
-    route: (runId: string) => stageRoute(runId, "verify"),
-    run: metroRun,
-    sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
-    readiness: "run",
-    reducedMotion: "reduce",
-    apiResponses: [{ path: metroViewPath, status: 200, body: runningMetroView() }],
-    metroCheck: { stage: "verify", current: true }
-  },
-  {
-    // The machines look: the same belt as machines on a track, from the machines golden at any width.
-    id: "run-machines",
-    route: runRoute,
-    run: metroRun,
-    sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
-    readiness: "run",
-    apiResponses: [{ path: metroViewPath, status: 200, body: readFileSync(resolve(process.cwd(), "../daemon/testdata/golden/views-run-machines.json"), "utf8") }]
-  },
   { id: "run-closed", route: runRoute, sidebar: sidebarState({ navigationOpen: false, sessionsOpen: false }), readiness: "run" },
   {
     // A new snapshot starts with Sessions closed, clicks the real button, and captures the panel once it is ready.

@@ -2,8 +2,7 @@
 //
 // A belt drawn as stage boxes, in points: the trigger and every stage in a
 // column of its own, a fork's routes on rows below the line, and hooked
-// tracks between them (straight, turning on rounded corners, as the
-// machines' tracks do). The run page, the belt editor and the Market's
+// tracks between them (straight, or turning on rounded corners). The run page, the belt editor and the Market's
 // package preview all draw belts this way; each adds its own words and
 // states to the nodes by id. The app only draws it.
 

@@ -259,7 +259,7 @@ func TestStatusesKeepTheUnderlyingStageAndTheFloorCountsAUserPause(t *testing.T)
 	}
 	paused := pausedRunning()
 	over := StatusStage(paused, paused.Stages[0], false, PauseLive, engineT0)
-	if !strings.HasPrefix(over.Text, "PAUSED ·") || over.Face != StageStatusFacePaused {
+	if !strings.HasPrefix(over.Text, "PAUSED ·") || !over.Paused {
 		t.Fatalf("paused status = %+v", over)
 	}
 	if got := StatusLocation(paused, false, PauseLive).Text; got != "Triage · paused by you" {
@@ -286,12 +286,6 @@ func TestStatusesKeepTheUnderlyingStageAndTheFloorCountsAUserPause(t *testing.T)
 	}
 	if got := StatusLocation(queued, false, PauseLive).Text; got != "Triage · queued to continue" {
 		t.Fatalf("queued location = %q", got)
-	}
-	if got := StatusColumn([]Run{paused, engineRunningAgent()}, nil, PauseLive).Text; !strings.Contains(got, "PAUSED") {
-		t.Fatalf("column with a paused run = %q", got)
-	}
-	if got := StatusColumn([]Run{paused}, nil, PauseLive).Text; got != "1 PAUSED" {
-		t.Fatalf("paused column = %q", got)
 	}
 	if got := AttemptPanelCanContinue(paused, paused.Attempts[0], true); got == nil || *got != "Paused by you" {
 		t.Fatalf("can continue = %v, want Paused by you", got)
@@ -320,7 +314,7 @@ func TestASplitRunReadsPausedTooAndNamesItsRouteAgainWhenLive(t *testing.T) {
 	}
 	// Paused, every leg's row reads paused and so does the run's one line.
 	paused := slices.ContainsFunc(StatusLegs(run, false, pause, engineT0), func(row StatusLegRow) bool {
-		return row.Face == StageStatusFacePaused
+		return row.Paused
 	})
 	if !paused {
 		t.Fatal("no leg row reads paused")
@@ -340,7 +334,7 @@ func TestASplitRunReadsPausedTooAndNamesItsRouteAgainWhenLive(t *testing.T) {
 			break
 		}
 	}
-	if running == nil || running.Face != StageStatusFaceRun {
-		t.Fatalf("running leg = %+v, want the run face", running)
+	if running == nil || running.Look != StageStatusLookRunning || running.Paused {
+		t.Fatalf("running leg = %+v, want it running", running)
 	}
 }

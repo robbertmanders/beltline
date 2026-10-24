@@ -5,7 +5,6 @@ workspace: worktree
 slots: 1
 runner: pi
 model: openrouter/stealth/space-bunny-alpha
-machine: drill
 tint: teal
 icon: wrench
 outcomes:

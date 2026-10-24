@@ -36,7 +36,7 @@ function trackKey(edge: { from: string; to: string; route?: string }): string {
 }
 
 /**
- * The run's belt as stage boxes on hooked tracks (BoxMapView), in the same card and header as the machines. The
+ * The run's belt as stage boxes on hooked tracks (BoxMapView), in a card with the run's metadata above it. The
  * daemon places every box and track and says each one's words, state and chip; the page only draws them and
  * reports a click on a stage. The trigger's box is not a stage, so selecting it does nothing.
  */

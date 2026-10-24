@@ -32,7 +32,7 @@ func TestTriggerKindsReadAsTheirSubtitles(t *testing.T) {
 // rbBoxes is the run's boxes as the Swift tests build them: the run's presentation at 1080 points, then
 // RunBoxes.project over its stage panels.
 func rbBoxes(run Run) RunBoxes {
-	view := RunPresentationProject(run, 1080, false, PauseLive, engineT0, nil, nil, nil)
+	view := RunPresentationProject(run, false, PauseLive, engineT0, nil, nil)
 	return RunBoxesProject(run, view.Stages, nil, boxTestLook)
 }
 

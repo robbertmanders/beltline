@@ -11,20 +11,20 @@ import { useElementWidth } from "../../components/useElementWidth";
 import { usePreferences } from "../../state/usePreferences";
 import { Floor } from "./Floor";
 import "./overview.css";
-import { beltWorkHref, hoveredAfter, machineWorkHref, resolveFocus, runHref, togglePin, validPin } from "./focus";
+import { beltWorkHref, hoveredAfter, stageWorkHref, resolveFocus, runHref, togglePin, validPin } from "./focus";
 import { Summary } from "./Summary";
 import { Caps, Segmented } from "../../components/Paper";
 
 export const overviewApiPath = "/api/v1/views/overview";
 
-/** The two views the page has. A fresh page load lands on Summary; the view is not kept between visits. The Floor is drawn in the belt look Settings holds. */
+/** The two views the page has. A fresh page load lands on Summary; the view is not kept between visits. */
 export const overviewModes = [
   { value: "summary", label: "Summary" },
   { value: "floor", label: "Floor" }
 ] as const;
 export type OverviewMode = (typeof overviewModes)[number]["value"];
 
-/** The Overview page. The daemon sends the Summary and the Floor in its belt look, and lays the Floor out at the page's width; this page shows them, pins and dims them. */
+/** The Overview page. The daemon sends the Summary and the Floor, and lays the Floor out at the page's width; this page shows them, pins and dims them. */
 export function OverviewPage() {
   const runtime = useRuntime();
   const navigate = useNavigate();
@@ -80,7 +80,7 @@ export function OverviewPage() {
       <p className="loaded-state screen-reader-only" role="status">Overview loaded</p>
       {result.isError && <div className="stale-error" role="status"><p>Showing the last loaded view; refresh failed.</p><p>{message}</p><ProblemItems problems={problems} /></div>}
       <OverviewBody data={data} mode={mode} runs={runs} focus={focus} pinned={pinned} hover={hover} pin={pin}
-        openRun={openRun} openRunById={openRunById} openMachine={machine => navigate(machineWorkHref(machine))}
+        openRun={openRun} openRunById={openRunById} openStage={stage => navigate(stageWorkHref(stage))}
         openBelt={belt => navigate(beltWorkHref(belt))} />
     </>}
   </article>;
@@ -96,12 +96,12 @@ interface BodyProps {
   pin: (belt: string) => void;
   openRun: (chip: OverviewFloorChip) => void;
   openRunById: (runId: string, stage?: string | null) => void;
-  openMachine: (machineId: string) => void;
+  openStage: (stageId: string) => void;
   openBelt: (beltId: string) => void;
 }
 
-function OverviewBody({ data, mode, runs, focus, pinned, hover, pin, openRun, openRunById, openMachine, openBelt }: BodyProps) {
+function OverviewBody({ data, mode, runs, focus, pinned, hover, pin, openRun, openRunById, openStage, openBelt }: BodyProps) {
   if (mode === "summary") return <Summary today={data.today} runs={runs} onOpenRun={openRunById} />;
-  return <Floor look={data.look} floor={data.floor} metroLayout={data.metroLayout} runs={runs} focus={focus} pinned={pinned}
-    onHover={hover} onPin={pin} onOpenRun={openRun} onOpenRunById={openRunById} onOpenMachine={openMachine} onOpenBelt={openBelt} />;
+  return <Floor floor={data.floor} runs={runs} focus={focus} pinned={pinned}
+    onHover={hover} onPin={pin} onOpenRun={openRun} onOpenStage={openStage} onOpenBelt={openBelt} />;
 }

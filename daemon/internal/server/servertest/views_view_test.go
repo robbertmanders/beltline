@@ -43,15 +43,15 @@ func TestWorkAnswersTheSharedViewForEachQuery(t *testing.T) {
 		break
 	}
 	track := f.Coordinator.ReadOverviewView(nil, nil, nil).FactoryTrack
-	var machine string
-	for i := range track.Machines {
-		if slices.ContainsFunc(runs, track.Machines[i].Contains) {
-			machine = track.Machines[i].ID
+	var merged string
+	for i := range track.Stages {
+		if slices.ContainsFunc(runs, track.Stages[i].Contains) {
+			merged = track.Stages[i].ID
 			break
 		}
 	}
-	if belt == "" || machine == "" {
-		t.Fatal("the seeded views have no belt or machine with a run")
+	if belt == "" || merged == "" {
+		t.Fatal("the seeded views have no belt or stage with a run")
 	}
 
 	all := core.WorkQueryDefault()
@@ -59,7 +59,7 @@ func TestWorkAnswersTheSharedViewForEachQuery(t *testing.T) {
 	withBelt := all
 	withBelt.Belt = belt
 	withStage := all
-	withStage.Stage = &machine
+	withStage.Stage = &merged
 	withSearch := all
 	withSearch.Search = title
 	queries := []struct {
@@ -69,7 +69,7 @@ func TestWorkAnswersTheSharedViewForEachQuery(t *testing.T) {
 		{"", core.WorkQueryDefault()},
 		{"filter=&groupBy=&belt=&stage=&search=", core.WorkQueryDefault()},
 		{"filter=all&belt=" + url.QueryEscape(belt), withBelt},
-		{"filter=all&stage=" + url.QueryEscape(machine), withStage},
+		{"filter=all&stage=" + url.QueryEscape(merged), withStage},
 		{"filter=all&search=" + url.QueryEscape("  "+title+"  "), withSearch},
 	}
 	for _, filter := range core.AllWorkFilter {
@@ -149,40 +149,27 @@ func TestWaitingReturnsTheCoordinatorsListWithoutCallingOutward(t *testing.T) {
 	}
 }
 
-// TestOverviewAnswersTheSharedViewAndSendsOnlyTheChosenLook checks the Overview against the shared view, and
-// that each belt look sends only its own drawing.
-func TestOverviewAnswersTheSharedViewAndSendsOnlyTheChosenLook(t *testing.T) {
+// TestOverviewAnswersTheSharedView checks the Overview against the shared view, and that its Floor sends
+// its boxes and their layout.
+func TestOverviewAnswersTheSharedView(t *testing.T) {
 	t.Parallel()
 	f := Start(t, Options{})
 	f.SeedViews()
-	for _, look := range []string{"boxes", "machines", "metro"} {
-		if look != "boxes" {
-			patched := f.Do(Request{Method: "POST", Path: "/api/v1/settings/patch", Token: ContractToken,
-				Body: []byte(`{"beltLook":"` + look + `"}`)})
-			if patched.Status != 200 {
-				t.Fatalf("beltLook %s: status %d", look, patched.Status)
-			}
-		}
-		reply := getCase(f, "/api/v1/views/overview")
-		if !bytes.Equal(reply.Body, mustMarshal(t, api.NewOverviewResponse(f.Coordinator.ReadOverviewView(nil, nil, nil)))) {
-			t.Fatalf("%s: not the shared overview", look)
-		}
-		members, err := jsonx.Members(reply.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
-		var floor map[string]json.RawMessage
-		if err := json.Unmarshal(members["floor"], &floor); err != nil {
-			t.Fatal(err)
-		}
-		_, boxes := floor["boxes"]
-		_, machines := floor["machines"]
-		_, metro := members["metroLayout"]
-		if boxes != (look == "boxes") || machines != (look == "machines") || metro != (look == "metro") {
-			t.Fatalf("%s: sends boxes %v machines %v metro %v", look, boxes, machines, metro)
-		}
-		if look != "boxes" {
-			CheckGolden(t, "overview "+look, "views-overview-"+look+".json", reply, f.Root)
+	reply := getCase(f, "/api/v1/views/overview")
+	if !bytes.Equal(reply.Body, mustMarshal(t, api.NewOverviewResponse(f.Coordinator.ReadOverviewView(nil, nil, nil)))) {
+		t.Fatal("not the shared overview")
+	}
+	members, err := jsonx.Members(reply.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var floor map[string]json.RawMessage
+	if err := json.Unmarshal(members["floor"], &floor); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"boxes", "layout"} {
+		if _, ok := floor[key]; !ok {
+			t.Fatalf("the floor sends no %s", key)
 		}
 	}
 }

@@ -25,17 +25,17 @@ type floorLayoutPlan struct {
 // floorLayoutLaneTolerance is floating-point slack for the spacing between lanes, in points.
 const floorLayoutLaneTolerance = 1e-6
 
-// newFloorLayoutPlan measures every node of track: entrances and waypoints by the metrics, machines by cell.
-func newFloorLayoutPlan(track FactoryTrack, metrics FloorLayoutMetrics, cell func(machine FactoryTrackMachine) float64) floorLayoutPlan {
+// newFloorLayoutPlan measures every node of track: entrances and waypoints by the metrics, stages by cell.
+func newFloorLayoutPlan(track FactoryTrack, metrics FloorLayoutMetrics, cell func(merged FactoryTrackStage) float64) floorLayoutPlan {
 	heights := map[FactoryTrackNode]float64{}
 	for _, layer := range track.Layers {
 		for _, node := range layer {
 			switch node.Kind {
 			case FactoryTrackNodeEntrance:
 				heights[node] = metrics.EntranceHeight
-			case FactoryTrackNodeMachine:
-				if machine := track.Machine(node.ID); machine != nil {
-					heights[node] = cell(*machine)
+			case FactoryTrackNodeStage:
+				if merged := track.Stage(node.ID); merged != nil {
+					heights[node] = cell(*merged)
 				} else {
 					heights[node] = metrics.Track
 				}
@@ -47,14 +47,14 @@ func newFloorLayoutPlan(track FactoryTrack, metrics FloorLayoutMetrics, cell fun
 	return floorLayoutPlan{Track: track, Metrics: metrics, Heights: heights}
 }
 
-// isMachine reports whether a node is a machine.
-func isMachine(node FactoryTrackNode) bool {
-	return node.Kind == FactoryTrackNodeMachine
+// isStage reports whether a node is a stage.
+func isStage(node FactoryTrackNode) bool {
+	return node.Kind == FactoryTrackNodeStage
 }
 
 // offset is the track's height within a node.
 func (p floorLayoutPlan) offset(node FactoryTrackNode) float64 {
-	if isMachine(node) {
+	if isStage(node) {
 		return p.Metrics.Track
 	}
 	return p.Heights[node] / 2
@@ -106,7 +106,7 @@ func (p floorLayoutPlan) tops() map[FactoryTrackNode]float64 {
 				if len(near) == 0 {
 					want = top[node] + p.offset(node)
 				} else {
-					want = metroSumF(near) / float64(len(near))
+					want = floorLayoutSum(near) / float64(len(near))
 				}
 				desired = append(desired, want-p.offset(node))
 			}
@@ -180,16 +180,16 @@ func (p floorLayoutPlan) spread(desired []float64, heights []float64) []float64 
 	return out
 }
 
-// lanes places each return lane just below the machines it passes under, in the first gap it fits,
+// lanes places each return lane just below the stages it passes under, in the first gap it fits,
 // and below the lanes it overlaps.
 func (p floorLayoutPlan) lanes(placed map[FactoryTrackNode]FloorLayoutPlaced, column float64) []floorLayoutLanePlan {
 	half := p.Metrics.Thickness / 2
-	// The machines are walked in layer order, so the lanes come out the same on every run.
-	var machines []FloorLayoutPlaced
+	// The stages are walked in layer order, so the lanes come out the same on every run.
+	var boxes []FloorLayoutPlaced
 	for _, layer := range p.Track.Layers {
 		for _, node := range layer {
-			if at, ok := placed[node]; ok && isMachine(node) {
-				machines = append(machines, at)
+			if at, ok := placed[node]; ok && isStage(node) {
+				boxes = append(boxes, at)
 			}
 		}
 	}
@@ -202,7 +202,7 @@ func (p floorLayoutPlan) lanes(placed map[FactoryTrackNode]FloorLayoutPlaced, co
 		}
 		right, left := a.X+column/2, b.X-column/2
 		var under []FloorLayoutPlaced
-		for _, cell := range machines {
+		for _, cell := range boxes {
 			if cell.X >= b.X && cell.X <= a.X {
 				under = append(under, cell)
 			}
@@ -250,8 +250,8 @@ func (p floorLayoutPlan) point(node FactoryTrackNode, placed map[FactoryTrackNod
 	return at.X, at.Anchor, true
 }
 
-// path is straight out of one machine and into the next, turning a rounded corner each way where it
-// changes rows: by the machine it splits from, by the one it joins at, or halfway.
+// path is straight out of one stage and into the next, turning a rounded corner each way where it
+// changes rows: by the stage it splits from, by the one it joins at, or halfway.
 func (p floorLayoutPlan) path(stretch FactoryTrackTrack, positions map[FactoryTrackNode]FloorLayoutPlaced, track FactoryTrack) string {
 	ax, ay, okA := p.point(stretch.From, positions)
 	bx, by, okB := p.point(stretch.To, positions)
@@ -261,41 +261,18 @@ func (p floorLayoutPlan) path(stretch FactoryTrackTrack, positions map[FactoryTr
 	if !(math.Abs(ay-by) > 0.5) {
 		return svgLine([]svgPoint{{X: ax, Y: ay}, {X: bx, Y: by}})
 	}
-	var start, end, x float64
-	if width := p.Metrics.Box; width != nil {
-		// A box covers the track at its middle, so the track starts at each box's edge and turns in the gap.
-		start = ax + boxHalf(isMachine(stretch.From), *width)
-		end = bx - boxHalf(isMachine(stretch.To), *width)
-		x = (start + end) / 2
-	} else {
-		room := min(p.Metrics.Machine/2, (bx-ax)/4)
-		start = ax + boolOffset(isMachine(stretch.From), room)
-		end = bx - boolOffset(isMachine(stretch.To), room)
-		switch track.Bend(stretch) {
-		case FactoryTrackBendOut:
-			x = start
-		case FactoryTrackBendIn:
-			x = end
-		default:
-			x = (start + end) / 2
-		}
-	}
+	// A box covers the track at its middle, so the track starts at each box's edge and turns in the gap.
+	start := ax + boxHalf(isStage(stretch.From), p.Metrics.Box)
+	end := bx - boxHalf(isStage(stretch.To), p.Metrics.Box)
+	x := (start + end) / 2
 	radius := max(0, min(p.Metrics.Corner, math.Abs(by-ay)/2, x-ax, bx-x))
 	return svgRounded([]svgPoint{{X: ax, Y: ay}, {X: x, Y: ay}, {X: x, Y: by}, {X: bx, Y: by}}, radius)
 }
 
-// boxHalf is half a box's width where the node is a machine, else zero.
-func boxHalf(machine bool, width float64) float64 {
-	if machine {
+// boxHalf is half a box's width where the node is a stage, else zero.
+func boxHalf(merged bool, width float64) float64 {
+	if merged {
 		return width / 2
-	}
-	return 0
-}
-
-// boolOffset is value where the node is a machine, else zero.
-func boolOffset(machine bool, value float64) float64 {
-	if machine {
-		return value
 	}
 	return 0
 }
@@ -314,4 +291,13 @@ func (p floorLayoutPlan) lanePath(lane floorLayoutLanePlan) (path string, arrow 
 		svgLineTo + svgNumber(tip.X-9) + " " + svgNumber(tip.Y-6) +
 		svgLineTo + svgNumber(tip.X-9) + " " + svgNumber(tip.Y+6) + " Z"
 	return path, arrow
+}
+
+// floorLayoutSum is the sum of values, added from zero in order.
+func floorLayoutSum(values []float64) float64 {
+	sum := 0.0
+	for _, v := range values {
+		sum += v
+	}
+	return sum
 }

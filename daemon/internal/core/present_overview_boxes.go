@@ -1,14 +1,13 @@
 //
-// The boxes Floor: every merged stage as one stage box, each belt's entrance
-// card on the left, and up to three run tags under each box. The layout is
-// FloorLayout's, with these metrics, so the tracks are the same hooked routes
-// the machines' tracks are; the browser draws the boxes where they say.
+// The Floor: every merged stage as one stage box, each belt's entrance card on
+// the left, and up to three run tags under each box. The layout is
+// FloorLayout's, with these metrics; the browser draws the boxes where they say.
 
 package core
 
 import "strconv"
 
-// Sizes of the boxes Floor, in points.
+// Sizes of the Floor, in points.
 const (
 	// OverviewBoxesBoxWidth is a box's width: the run page's size.
 	OverviewBoxesBoxWidth = 148.0
@@ -28,17 +27,19 @@ const (
 // run tags need air above and below, each return lane keeps its label clear of the boxes above it and of the
 // next lane, and columns keep the turns apart.
 func OverviewBoxesMetrics() FloorLayoutMetrics {
-	metrics := FloorLayoutMetricsDefault()
-	metrics.EntranceWidth = 220
-	metrics.EntranceHeight = 112
-	metrics.MinColumn = 216
-	metrics.Gap = 22
-	metrics.Lane = 26
-	metrics.Clearance = 12
-	metrics.Track = OverviewBoxesStatusHeight + OverviewBoxesBoxHeight/2
-	box := OverviewBoxesBoxWidth
-	metrics.Box = &box
-	return metrics
+	return FloorLayoutMetrics{
+		EntranceWidth:  220,
+		EntranceHeight: 112,
+		MinColumn:      216,
+		Track:          OverviewBoxesStatusHeight + OverviewBoxesBoxHeight/2,
+		Waypoint:       14,
+		Gap:            22,
+		Thickness:      8,
+		Corner:         10,
+		Lane:           26,
+		Clearance:      12,
+		Box:            OverviewBoxesBoxWidth,
+	}
 }
 
 // Copy used by OverviewBoxes. Literal text is exact.

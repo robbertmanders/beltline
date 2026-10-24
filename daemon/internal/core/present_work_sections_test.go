@@ -33,7 +33,7 @@ func wpStageIndexOfKind(run Run, kind StageKind) int {
 func TestStageResolvesAgainstTheFloorAndUnknownSelectsNothing(t *testing.T) {
 	t.Parallel()
 	belt := DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true)
-	machine := factoryTrackKey(belt.Stages[0].Name)
+	merged := factoryTrackKey(belt.Stages[0].Name)
 	track := NewFactoryTrack([]FactoryTrackBelt{{ID: belt.ID, Name: belt.Name, Layout: belt.Layout()}})
 	first := wpMakeRun("first", RunStateRunning, 0, "issues", "Issues", "acme/billing", "T", 1, "")
 	first.StageID = belt.Stages[0].ID
@@ -42,13 +42,13 @@ func TestStageResolvesAgainstTheFloorAndUnknownSelectsNothing(t *testing.T) {
 	runs := []Run{first, second}
 
 	query := wpQuery(WorkFilterAll)
-	query.Stage = new(machine)
+	query.Stage = new(merged)
 	if got := wpIDs(WorkPresentationRows(runs, query, &track)); !reflect.DeepEqual(got, []string{"first", "second"}) {
-		t.Fatalf("selected machine = %v", got)
+		t.Fatalf("selected stage = %v", got)
 	}
-	query.Stage = new("no-such-machine")
+	query.Stage = new("no-such-stage")
 	if got := WorkPresentationRows(runs, query, &track); len(got) != 0 {
-		t.Fatalf("unknown machine = %v, want none", wpIDs(got))
+		t.Fatalf("unknown stage = %v, want none", wpIDs(got))
 	}
 	plain := wpQuery(WorkFilterAll)
 	if got := WorkPresentationRows(runs, plain, nil); len(got) != 2 {

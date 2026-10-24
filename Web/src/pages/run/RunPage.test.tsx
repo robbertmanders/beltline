@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -25,7 +25,7 @@ const emptySessions = {
   ghostty: { enabled: false, reason: "This run has no session to open in Ghostty." }
 };
 
-/** The run page's daemon: the run view (its answer may depend on the width asked for), sessions, outputs and commands. */
+/** The run page's daemon: the run view, sessions, outputs and commands. */
 function stubDaemon(routes: Record<string, Handler | object> = {}) {
   const view = routes[viewPath] ?? fixtureRoute("views-run.json");
   return daemonRoutes({
@@ -43,28 +43,6 @@ function stubDaemon(routes: Record<string, Handler | object> = {}) {
 
 function renderRun(search = "") {
   return render(<AppProviders><MemoryRouter initialEntries={[`/runs/${encodeURIComponent(runId)}${search}`]}><AppRoutes /></MemoryRouter></AppProviders>);
-}
-
-/** Measures the run column at `width` and returns a function that fires its ResizeObserver with a new width. */
-function mockRunWidth(initialWidth = 800) {
-  let columnWidth = initialWidth;
-  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
-    const width = this.classList.contains("run-page") ? columnWidth : 1200;
-    return { x: 0, y: 0, top: 0, left: 0, right: width, bottom: 0, width, height: 0, toJSON: () => ({}) } as DOMRect;
-  });
-  let resizeColumn = () => {};
-  class FakeResizeObserver {
-    constructor(private readonly callback: () => void) {}
-    observe(element: HTMLElement): void {
-      if (element.classList.contains("run-page")) resizeColumn = this.callback;
-    }
-    disconnect(): void {}
-  }
-  vi.stubGlobal("ResizeObserver", FakeResizeObserver);
-  return (width: number) => {
-    columnWidth = width;
-    act(() => resizeColumn());
-  };
 }
 
 /** Measured bounds for the workspace and the main column, and a ResizeObserver a test can fire by hand. */
@@ -94,18 +72,12 @@ beforeEach(() => {
 });
 
 describe("Run page", () => {
-  it("keeps the advanced stage when the run is reopened and when the column's width changes, and loads the latest width while an earlier read is pending", async () => {
+  it("keeps the advanced stage when the run is reopened", async () => {
     const user = userEvent.setup();
-    const resize = mockRunWidth();
     const current = viewOf();
     const old = { ...current, run: { ...current.run, stageId: "plan-epic" } };
-    let holdLayout = false;
-    let releaseLayout: (() => void) | undefined;
-    const daemon = stubDaemon({
-      [viewPath]: () => json(old),
-      [`${viewPath}?width=785`]: () => json(current),
-      [`${viewPath}?width=800`]: () => holdLayout ? new Promise<Response>(resolve => { releaseLayout = () => resolve(json(current)); }) : json(old)
-    });
+    let reads = 0;
+    stubDaemon({ [viewPath]: () => { reads += 1; return json(reads === 1 ? old : current); } });
     function Navigation() {
       const navigate = useNavigate();
       return <>
@@ -115,63 +87,20 @@ describe("Run page", () => {
     }
     render(<AppProviders><MemoryRouter initialEntries={[`/runs/${encodeURIComponent(runId)}`]}><Navigation /><AppRoutes /></MemoryRouter></AppProviders>);
     await screen.findByRole("region", { name: "Stage 1: Plan the epic" });
-    resize(785);
-    await waitFor(() => expect(daemon.requests.some(request => request.path === `${viewPath}?width=785`)).toBe(true));
     await user.click(screen.getByRole("button", { name: "Leave run" }));
-    holdLayout = true;
     await user.click(screen.getByRole("button", { name: "Reopen run" }));
-    const panel = await screen.findByRole("region", { name: "Stage 5: Watch the ticket" });
-    resize(800);
-    await waitFor(() => expect(releaseLayout).toBeDefined());
+    await screen.findByRole("region", { name: "Stage 5: Watch the ticket" });
     expect(screen.queryByRole("region", { name: "Stage 1: Plan the epic" })).toBeNull();
-    await act(async () => releaseLayout!());
-    expect(screen.getByRole("region", { name: "Stage 5: Watch the ticket" })).toBe(panel);
   });
 
-  it("keeps the run and focused input mounted while a new width's layout is loading", async () => {
-    const resize = mockRunWidth();
-    const view = viewOf();
-    const stage = view.stages.find(item => item.id === "plan-epic")!;
-    stage.attempts.push({ ...stage.attempts[0]!, id: "plan-epic-2", number: 2, caption: "Attempt 2 of 2" });
-    let release: (() => void) | undefined;
-    stubDaemon({
-      [viewPath]: () => json(view),
-      [`${viewPath}?width=785&stage=plan-epic`]: () => new Promise<Response>(resolve => { release = () => resolve(json({ ...view, cost: { ...view.cost, line: "$0.12 · partial" } })); })
-    });
-    renderRun("?stage=plan-epic&attempt=plan-epic-1");
-    const headingNode = await heading();
-    const panel = await screen.findByRole("region", { name: "Stage 1: Plan the epic" });
-    const attempt = within(panel).getByLabelText("Select attempt of Plan the epic");
-    attempt.focus();
-    resize(785);
-    await waitFor(() => expect(release).toBeDefined());
-    expect(screen.queryByText("Loading run…")).toBeNull();
-    expect(headingNode.isConnected).toBe(true);
-    expect(panel.isConnected).toBe(true);
-    expect(document.activeElement).toBe(attempt);
-    await act(async () => release!());
-    expect(await screen.findByText("COST $0.12 · partial")).toBeTruthy();
-  });
-
-  it("aborts the earlier width's read, and does not keep the previous run on screen when navigating to another", async () => {
+  it("does not keep the previous run on screen when navigating to another", async () => {
     const user = userEvent.setup();
-    const resize = mockRunWidth();
-    const view = viewOf();
-    let oldSignal: AbortSignal | null | undefined;
-    const daemon = stubDaemon({
-      [`${viewPath}?width=800`]: request => { oldSignal = request.signal; return new Promise<Response>(() => {}); },
-      [`${viewPath}?width=785`]: () => json(view),
-      "/api/v1/views/run/another-run*": () => new Promise<Response>(() => {})
-    });
+    stubDaemon({ "/api/v1/views/run/another-run*": () => new Promise<Response>(() => {}) });
     function SwitchRun() {
       const navigate = useNavigate();
       return <button onClick={() => navigate("/runs/another-run")}>Open another run</button>;
     }
     render(<AppProviders><MemoryRouter initialEntries={[`/runs/${encodeURIComponent(runId)}`]}><SwitchRun /><AppRoutes /></MemoryRouter></AppProviders>);
-    await waitFor(() => expect(daemon.requests.some(request => request.path === `${viewPath}?width=800`)).toBe(true));
-    resize(785);
-    await screen.findByRole("region", { name: "Stage 5: Watch the ticket" });
-    expect(oldSignal?.aborted).toBe(true);
     const headingNode = await heading();
     await user.click(screen.getByRole("button", { name: "Open another run" }));
     expect(await screen.findByText("Loading run…")).toBeTruthy();
@@ -237,31 +166,15 @@ describe("Run page", () => {
 
   it("shows a Done run with the daemon's Done caption, and no AFK control", async () => {
     const done = viewOf();
-    expect(done.boxes).toBeDefined();
     done.run = { ...done.run, state: "done" } as RunViewResponse["run"];
     done.active = false;
-    if (done.boxes) done.boxes = { ...done.boxes, caption: "Done" };
+    done.boxes = { ...done.boxes, caption: "Done" };
     stubDaemon({ [viewPath]: () => json(JSON.stringify(done)) });
     const { container } = renderRun();
     await heading();
     await waitFor(() => expect(container.querySelector(".run-line-header")?.textContent).toContain("Done"));
     expect(container.querySelector(".run-line-header")?.textContent).not.toContain("Now at");
     expect(screen.queryByRole("button", { name: "Run AFK mode" })).toBeNull();
-  });
-
-  it("draws the machines look from the daemon's map, and the boxes look only when it is chosen; the AFK button hides once the run has finished", async () => {
-    const machines = stubDaemon({ [viewPath]: () => json(JSON.parse(goldenText("views-run-machines.json"))) });
-    const finished = renderRun();
-    await waitFor(() => expect(finished.container.querySelector(".run-map")).toBeTruthy());
-    expect(finished.container.querySelector(".box-map")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Run AFK mode" })).toBeNull();
-    finished.unmount();
-    expect(machines.requests.length).toBeGreaterThan(0);
-    stubDaemon();
-    const boxes = renderRun();
-    await waitFor(() => expect(boxes.container.querySelector(".box-map")).toBeTruthy());
-    expect(boxes.container.querySelector(".run-map")).toBeNull();
-    expect(await screen.findByRole("button", { name: "Run AFK mode" })).toBeTruthy();
   });
 
   it("shows only the shortcut buttons the daemon lists, and the daemon's live watch notes in the selected watch panel", async () => {

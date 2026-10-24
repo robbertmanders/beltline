@@ -119,7 +119,7 @@ describe("Work page", () => {
     const daemon = workDaemon(() => json(JSON.stringify(body)));
     renderWork("/work?stage=review");
     expect(await screen.findByRole("heading", { level: 1, name: "Review" })).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Clear machine" }));
+    await user.click(screen.getByRole("button", { name: "Clear stage" }));
     await waitFor(() => expect(daemon.queries().at(-1)).toBe(workPath));
   });
 

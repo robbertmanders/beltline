@@ -19,7 +19,7 @@ var outsideHarness = map[string]string{
 }
 
 // extraGoldens are the golden files no registry endpoint names: the error bodies, the WebSocket
-// messages, and the variants a test records for one endpoint (a layout, a look, an empty fixture or
+// messages, and the variants a test records for one endpoint (a layout, an empty fixture or
 // a refusal). Each maps to the test that checks it; a golden file missing from both lists is orphaned.
 var extraGoldens = map[string]string{
 	"error-failure.json":                   "server server_error_test.go",
@@ -40,16 +40,12 @@ var extraGoldens = map[string]string{
 	"views-work-empty.json":                "servertest views_empty_test.go",
 	"views-insights-empty.json":            "servertest views_empty_test.go",
 	"views-insights-belt.json":             "servertest servertest_contract_views.go (viewsInsights)",
-	"views-overview-machines.json":         "servertest views_view_test.go (look loop)",
-	"views-overview-metro.json":            "servertest views_view_test.go (look loop)",
 	"views-run-straight.json":              "servertest run_view_read_test.go (layout loop)",
 	"views-run-forked.json":                "servertest run_view_read_test.go (layout loop)",
 	"views-run-nested.json":                "servertest run_view_read_test.go (layout loop)",
 	"views-run-held.json":                  "servertest run_view_read_test.go (layout loop)",
 	"views-run-parked.json":                "servertest run_view_read_test.go (layout loop)",
 	"views-run-split.json":                 "servertest run_view_read_test.go",
-	"views-run-machines.json":              "servertest run_view_read_test.go",
-	"views-run-metro.json":                 "servertest run_view_read_test.go",
 }
 
 // TestEveryRegistryEndpointIsExercisedOnce checks each registry case is served by exactly one

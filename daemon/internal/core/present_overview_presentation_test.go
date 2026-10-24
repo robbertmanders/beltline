@@ -4,7 +4,6 @@ package core
 
 import (
 	"reflect"
-	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -325,101 +324,25 @@ func TestSummaryUsesTheSuppliedClockAndCalendarAndMatchesRunSummary(t *testing.T
 	}
 }
 
-// TestOverviewFloorCountsChipsAndCollapsesBeyondFive
-func TestOverviewFloorCountsChipsAndCollapsesBeyondFive(t *testing.T) {
-	t.Parallel()
-	var many []Run
-	for index := range 7 {
-		many = append(many, ovRun("chip-"+strconv.Itoa(index), "issues", RunStateQueued))
-	}
-	look := BeltLookMachines
-	view := NewOverviewView(OverviewViewArgs{Belts: []OverviewBelt{obOverviewBelt("issues")}, Runs: many, Now: ovNow, Location: time.UTC, Look: &look})
-	var machine *OverviewFloorMachine
-	for index := range view.Floor.Machines {
-		if view.Floor.Machines[index].RunCount == 7 {
-			machine = &view.Floor.Machines[index]
-			break
-		}
-	}
-	if machine == nil {
-		t.Fatal("no machine holds the seven runs")
-	}
-	if len(machine.Chips) != OverviewFloorChipLimit-1 {
-		t.Errorf("chips = %d, want %d", len(machine.Chips), OverviewFloorChipLimit-1)
-	}
-	if machine.More != 3 {
-		t.Errorf("more = %d, want 3", machine.More)
-	}
-	if len(view.Runs) != 7 {
-		t.Errorf("runs = %d, want 7", len(view.Runs))
-	}
-}
-
 // TestOverviewFloorWidthSpreadsColumnsAndNeverGoesBelowMinimum
 func TestOverviewFloorWidthSpreadsColumnsAndNeverGoesBelowMinimum(t *testing.T) {
 	t.Parallel()
 	belt := DefaultsBelt([]string{"a/b"}, "agent", DefaultsBuiltInAgents(), true)
 	track := OverviewPresentationTrack([]OverviewBelt{OverviewBeltFromBelt(belt, false, false)})
 	narrowWidth := 100.0
-	narrow := NewFloorLayout(track, nil, &narrowWidth, func(FactoryTrackMachine) float64 { return 96 })
-	if narrow.Column != MapWidthFloorMinimumColumn {
-		t.Errorf("narrow column = %v, want the minimum %v", narrow.Column, MapWidthFloorMinimumColumn)
+	narrow := NewFloorLayout(track, OverviewBoxesMetrics(), &narrowWidth, func(FactoryTrackStage) float64 { return 96 })
+	if narrow.Column != OverviewBoxesMetrics().MinColumn {
+		t.Errorf("narrow column = %v, want the minimum %v", narrow.Column, OverviewBoxesMetrics().MinColumn)
 	}
 	wideWidth := 2000.0
-	wide := NewFloorLayout(track, nil, &wideWidth, func(FactoryTrackMachine) float64 { return 96 })
+	wide := NewFloorLayout(track, OverviewBoxesMetrics(), &wideWidth, func(FactoryTrackStage) float64 { return 96 })
 	if wide.Column <= narrow.Column {
 		t.Errorf("wide column = %v, want more than the narrow %v", wide.Column, narrow.Column)
 	}
 }
 
-// TestMetroCardsAndLabelTargetsComeFromTheRunsNotTheBrowser
-func TestMetroCardsAndLabelTargetsComeFromTheRunsNotTheBrowser(t *testing.T) {
-	t.Parallel()
-	source := DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true)
-	waiting := NewRun(RunArgs{Belt: source, Subject: Subject{Kind: SubjectKindIssue, Repo: "acme/billing", Number: 7, Title: "Fix"}, Now: ovNow})
-	waiting.ID = "waiting"
-	waiting.BeltID = source.ID
-	waiting.BeltName = source.Name
-	waiting.State = RunStateWaiting
-	running := waiting
-	running.ID = "running"
-	running.State = RunStateRunning
-	track := OverviewPresentationTrack([]OverviewBelt{OverviewBeltFromBelt(source, false, false)})
-	layout := NewMetroLayout(MetroLayoutArgs{Track: track, Runs: []Run{running, waiting}})
-	var dot *MetroLayoutDot
-	for index := range layout.Dots {
-		if reflect.DeepEqual(layout.Dots[index].RunIDs, []string{"running"}) {
-			dot = &layout.Dots[index]
-			break
-		}
-	}
-	if dot == nil {
-		t.Fatal("no dot for the running run")
-	}
-	if dot.Card.Headline != "#7 Fix" {
-		t.Errorf("headline = %q, want #7 Fix", dot.Card.Headline)
-	}
-	if dot.Card.Hint != "Click to open" {
-		t.Errorf("hint = %q, want Click to open", dot.Card.Hint)
-	}
-	for _, label := range layout.Labels {
-		if !slices.Contains(label.RunIDs, "waiting") {
-			continue
-		}
-		if label.OpenRunID == nil || *label.OpenRunID != "waiting" {
-			t.Errorf("label %q opens %v, want waiting", label.Text, label.OpenRunID)
-		}
-	}
-	for _, line := range layout.Lines {
-		if len(line.Paths()) == 0 || len(line.EndBars()) != len(line.Ends()) {
-			t.Errorf("line %s has %d paths, %d end bars and %d ends", line.BeltID, len(line.Paths()), len(line.EndBars()), len(line.Ends()))
-		}
-	}
-}
-
-// TestOverviewBuildsTheSharedTrackAndUsesTheSixPointSixMetric checks the shared track and the six-point-six metric.
-// the metro test, which needs no demo.
-func TestOverviewBuildsTheSharedTrackAndUsesTheSixPointSixMetric(t *testing.T) {
+// TestOverviewBuildsTheSharedTrack checks the Overview lays its Floor out on the track of its belts.
+func TestOverviewBuildsTheSharedTrack(t *testing.T) {
 	t.Parallel()
 	source := DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true)
 	docs := source
@@ -427,47 +350,27 @@ func TestOverviewBuildsTheSharedTrackAndUsesTheSixPointSixMetric(t *testing.T) {
 	docs.Name = "Docs"
 	belts := []OverviewBelt{OverviewBeltFromBelt(source, false, false), OverviewBeltFromBelt(docs, false, false)}
 	runs := []Run{ovRun("one", "issues", RunStateRunning)}
-	metro := BeltLookMetro
-	view := NewOverviewView(OverviewViewArgs{Belts: belts, Runs: runs, Now: ovNow, Look: &metro})
-	if view.MetroLayout == nil {
-		t.Fatal("metro layout is nil for the metro look")
-	}
+	view := NewOverviewView(OverviewViewArgs{Belts: belts, Runs: runs, Now: ovNow})
 	if got := []string{view.FactoryTrack.Belts[0].ID, view.FactoryTrack.Belts[1].ID}; !reflect.DeepEqual(got, []string{"issues", "docs"}) {
 		t.Fatalf("track belts = %v, want [issues docs]", got)
 	}
-	want := NewMetroLayout(MetroLayoutArgs{Track: view.FactoryTrack, Runs: runs})
-	if view.MetroLayout.Width != want.Width || view.MetroLayout.Height != want.Height {
-		t.Errorf("metro %vx%v, want the shared layout's %vx%v", view.MetroLayout.Width, view.MetroLayout.Height, want.Width, want.Height)
-	}
-	if MetroMapMetricsCharWidth != 6.6 {
-		t.Errorf("MetroMapMetricsCharWidth = %v, want 6.6", MetroMapMetricsCharWidth)
-	}
-	seven := 7.0
-	wider := NewOverviewView(OverviewViewArgs{Belts: belts, Runs: runs, Now: ovNow, Look: &metro, CharWidth: &seven})
-	if wider.MetroLayout.Width == view.MetroLayout.Width {
-		t.Errorf("a 7.0 character width gives the same metro width %v; the metric is not in use", wider.MetroLayout.Width)
-	}
-	if len(view.MetroLayout.Stations) == 0 {
-		t.Error("empty runs left no stations on the floor's track")
+	if len(view.Floor.Boxes) != len(view.FactoryTrack.Stages) {
+		t.Errorf("boxes = %d, want one per merged stage (%d)", len(view.Floor.Boxes), len(view.FactoryTrack.Stages))
 	}
 }
 
 // TestEmptyFloorAndEmptyRunsProduceEmptyGeometry
 func TestEmptyFloorAndEmptyRunsProduceEmptyGeometry(t *testing.T) {
 	t.Parallel()
-	metro := BeltLookMetro
-	view := NewOverviewView(OverviewViewArgs{Now: ovNow, Look: &metro})
+	view := NewOverviewView(OverviewViewArgs{Now: ovNow})
 	if view.Summary.Total != 0 {
 		t.Errorf("summary total = %d, want 0", view.Summary.Total)
 	}
-	if len(view.FactoryTrack.Belts) != 0 || len(view.FactoryTrack.Machines) != 0 {
-		t.Errorf("track has belts or machines: %+v", view.FactoryTrack)
+	if len(view.FactoryTrack.Belts) != 0 || len(view.FactoryTrack.Stages) != 0 {
+		t.Errorf("track has belts or merged stages: %+v", view.FactoryTrack)
 	}
-	if view.MetroLayout == nil {
-		t.Fatal("metro layout is nil for the metro look")
-	}
-	if len(view.MetroLayout.Lines) != 0 || len(view.MetroLayout.Dots) != 0 || len(view.MetroLayout.Labels) != 0 {
-		t.Errorf("empty metro has lines, dots or labels: %d %d %d", len(view.MetroLayout.Lines), len(view.MetroLayout.Dots), len(view.MetroLayout.Labels))
+	if len(view.Floor.Boxes) != 0 || len(view.Floor.Layout.Tracks) != 0 || len(view.Floor.Layout.Lanes) != 0 {
+		t.Errorf("empty floor has boxes, tracks or lanes: %d %d %d", len(view.Floor.Boxes), len(view.Floor.Layout.Tracks), len(view.Floor.Layout.Lanes))
 	}
 }
 

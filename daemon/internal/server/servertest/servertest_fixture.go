@@ -55,8 +55,6 @@ func noEnvironment(string) string { return "" }
 
 // Options say what a contract fixture's copy of the demo changes.
 type Options struct {
-	// Look, when set, is the belt look the settings hold (the machines and metro goldens).
-	Look core.BeltLook
 	// Empty starts over an empty data folder with default settings, as a first start has none
 	// .
 	Empty bool
@@ -164,13 +162,6 @@ func startFixture(t testing.TB, opts Options, scope fixtureScope) *Fixture {
 		services, libraryURL = setup.Services, setup.LibraryURL
 	}
 	storage := store.NewStorage(store.Paths{Root: f.Root})
-	if opts.Look != "" {
-		settings := storage.LoadSettings()
-		settings.BeltLook = opts.Look
-		if err := storage.SaveSettings(settings); err != nil {
-			t.Fatalf("settings: %v", err)
-		}
-	}
 	if opts.Settings != nil {
 		settings := storage.LoadSettings()
 		opts.Settings(&settings)

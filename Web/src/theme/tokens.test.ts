@@ -143,8 +143,7 @@ describe("Theme CSS token port", () => {
     ["--slate", "--track", 3], ["--button-edge", "--card", 2.5], ["--button-edge", "--paper", 2.5],
     // A checked checkbox's fill against an unchecked box.
     ["--control-on", "--card", 3],
-    ...tints.map((tint): [string, string, number] => ["--machine-outline", tint, 3]), ["--machine-outline", "--card", 3],
-    ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((line): [string, string, number] => [`--metro-line-${line}`, "--paper", 3])
+    ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((line): [string, string, number] => [`--series-${line}`, "--paper", 3])
   ];
 
   it("keeps Dark's text at 4.5:1 or better on every surface it is drawn on", () => {
@@ -170,21 +169,6 @@ describe("Theme CSS token port", () => {
     expect(tick).toBeDefined();
     expect(contrast(`#${tick}`, "--control-on", "dark")).toBeGreaterThanOrEqual(3);
     expect(contrast(`#${tick}`, "--control-on", "light")).toBeGreaterThanOrEqual(3);
-  });
-
-  it("keeps Dark's upcoming Metro tracks at 3:1 against the card for every line colour", () => {
-    // The run's Metro fades an upcoming track by mixing its line colour with the card, so the mix is read from its CSS.
-    const metroCss = readFileSync(resolve(process.cwd(), "src/pages/run/runMetro.css"), "utf8");
-    const share = /:root\[data-theme="dark"\] \.run-metro-line-todo \{ stroke: color-mix\(in srgb, var\(--line\) (\d+)%, var\(--card\)\)/.exec(metroCss)?.[1];
-    expect(share).toBeDefined();
-    const card = resolveToken("--card", "dark");
-    const failing = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(line => {
-      const colour = resolveToken(`--metro-line-${line}`, "dark");
-      const faded = composite({ ...colour, a: Number(share) / 100 }, card);
-      const hex = `#${[faded.r, faded.g, faded.b].map(channel => Math.round(channel).toString(16).padStart(2, "0")).join("")}`;
-      return [line, contrast(hex, "--card", "dark")] as const;
-    }).filter(([, ratio]) => ratio < 3);
-    expect(failing).toEqual([]);
   });
 
   it("draws the needs badge's ! in on-accent ink, as the held badge already does", () => {

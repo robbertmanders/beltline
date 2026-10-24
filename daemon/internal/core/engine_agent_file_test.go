@@ -189,6 +189,17 @@ Look for {security}.`
 	if strings.Contains(AgentFileWrite(agent), "writes:") {
 		t.Fatal("a writes line is written")
 	}
+	// A machine, from before agents had icons, gives the icon it drew as, and is not written back.
+	if agent.Icon == nil || *agent.Icon != StageIconEye {
+		t.Fatalf("icon = %v, want the reader's eye", agent.Icon)
+	}
+	if file := AgentFileWrite(agent); strings.Contains(file, "machine:") || !strings.Contains(file, "icon: eye") {
+		t.Fatalf("written file keeps the machine or loses the icon:\n%s", file)
+	}
+	withIcon, err := AgentFileParse(strings.Replace(text, "machine: reader", "machine: reader\nicon: flag", 1), "security", 3)
+	if err != nil || withIcon.Icon == nil || *withIcon.Icon != StageIconFlag {
+		t.Fatalf("an icon beside a machine = %v (%v), want flag", withIcon.Icon, err)
+	}
 	if agent.Version != 3 {
 		t.Fatalf("version = %d", agent.Version)
 	}

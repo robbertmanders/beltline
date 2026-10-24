@@ -4,7 +4,6 @@ import { describeTarget } from "./caseTypes";
 import { resolveRunSelector, type DemoRun } from "./runSelector";
 import { assertNoColumnOverflows, findColumnOverflows } from "./overflow";
 import { applyFixture } from "./captureFixtures";
-import { checkMetroLine } from "./metroLineChecks";
 import { assertStageLine, expectStageCardsInView, stageFormCases, stageLineCases } from "./stageLineChecks";
 
 const origin = process.env.BELTLINE_SNAPSHOT_ORIGIN;
@@ -37,15 +36,8 @@ async function demoRuns(context: BrowserContext): Promise<DemoRun[]> {
 async function ready(page: Page, runId: string | undefined, readiness: "shell" | "gallery" | "run"): Promise<void> {
   if (readiness === "gallery") {
     await expect(page.getByRole("heading", { name: "Theme gallery" })).toBeVisible();
-    for (const heading of ["Tokens", "Fonts", "Fields", "Machines"]) await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
-    await expect(page.getByRole("checkbox", { name: "Freeze animation" })).toBeChecked();
-    await expect(page.getByRole("checkbox", { name: "Dimmed" })).not.toBeChecked();
-    await expect(page.getByLabel("Machine tint")).toHaveValue("blue");
-    await expect(page.getByLabel("Machine size")).toHaveValue("0");
+    for (const heading of ["Tokens", "Fonts", "Fields"]) await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Native", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("heading", { name: /Native comparison/ })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "All 91 machine states" })).toBeVisible();
-    await expect.poll(() => page.locator("#machines svg").count()).toBeGreaterThanOrEqual(91);
     expect(await page.evaluate(() => scrollY)).toBe(0);
     await page.evaluate(() => document.fonts.ready);
     await expect.poll(() => page.evaluate(() => document.readyState)).toBe("complete");
@@ -69,7 +61,7 @@ async function ready(page: Page, runId: string | undefined, readiness: "shell" |
   await page.evaluate(() => document.fonts.ready);
   await expect(page.locator(".app-frame")).toHaveAttribute("data-connection-status", "connected");
   if (readiness === "run") {
-    await expect(page.locator(".run-line :is(.box-map, .run-map[data-ready='true'], .run-metro-canvas[data-ready='true'])").first()).toBeVisible();
+    await expect(page.locator(".run-line .box-map").first()).toBeVisible();
     await expect(page.locator(".stage-panel").first()).toBeVisible();
     await expect(page.getByRole("status", { name: /Loading run|Loading output|Loading artifacts/ })).toHaveCount(0);
     return;
@@ -207,7 +199,6 @@ async function capture(browser: Browser, item: SnapshotCase, size: { width: numb
       await expect(page.locator(item.readyMarker), `${item.id} readiness marker ${item.readyMarker} should exist once`).toHaveCount(1);
       await expect(page.locator(item.readyMarker), `${item.id} readiness marker ${item.readyMarker} should be visible`).toBeVisible();
     }
-    if (item.metroCheck) await checkMetroLine(page, item.id, item.metroCheck, item.appearance);
     if (item.expectedText) await expect(page.getByText(item.expectedText, { exact: false })).toBeVisible();
     if (item.expectedPreferences) {
       const stored = await readPreferences(page);

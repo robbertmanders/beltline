@@ -42,25 +42,6 @@ function GeneralCard({ settings }: { settings: SettingsResponse }) {
   </section>;
 }
 
-const beltLooks = [
-  { value: "boxes", label: "Boxes" },
-  { value: "machines", label: "Machines" },
-  { value: "metro", label: "Metro" }
-] as const;
-
-/** How the Floor and the run pages draw belts. */
-function BeltLookCard({ settings }: { settings: SettingsResponse }) {
-  const command = useCommand();
-  return <section className="settings-card" aria-label="Belt look">
-    <p className="paper-tag paper-tag--strong">Belt look</p>
-    <div className="belt-look-control">
-      <Segmented label="Belt look" options={beltLooks} value={settings.beltLook} onChange={look => command.submit(settingsPatchRequest({ beltLook: look }))} />
-    </div>
-    <p className="muted-line">How the Overview's Floor and each run's page draw belts: stage boxes, machines on a track, or a metro line.</p>
-    {command.error ? <ErrorProblems error={command.error} /> : null}
-  </section>;
-}
-
 function DataCard({ settings }: { settings: SettingsResponse }) {
   const revealLabel = useRevealLabel();
   const command = useCommand();
@@ -133,7 +114,6 @@ export function SettingsPage() {
     {settings.data && <>
       <AllowedModelsCard />
       <GeneralCard settings={settings.data} />
-      <BeltLookCard settings={settings.data} />
       <DataCard settings={settings.data} />
       <QuitCard />
       <LibraryRepositoriesCard settings={settings.data} />

@@ -1,12 +1,11 @@
-// The run view cases: the shared projection at
-// each width and layout fixture, the machines and metro looks, and the width rejections.
+// The run view cases: the shared projection for each layout fixture, and the
+// Overview's width rejections.
 package servertest
 
 import (
 	"bytes"
 	"net/http"
 	"reflect"
-	"strconv"
 	"testing"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
@@ -31,40 +30,32 @@ func decodeRunView(t *testing.T, reply Reply) api.RunViewResponse {
 // notFound is the 404 every missing run view answers with.
 var notFound = Expect{Status: http.StatusNotFound, ContentType: "application/json"}
 
-// TestRunViewUsesSharedProjectionForWidthsAndLayoutFixtures ports
+// TestRunViewUsesSharedProjectionForLayoutFixtures ports
 // RunReadTests.runViewUsesSharedProjectionForWidthsAndLayoutFixtures.
-func TestRunViewUsesSharedProjectionForWidthsAndLayoutFixtures(t *testing.T) {
+func TestRunViewUsesSharedProjectionForLayoutFixtures(t *testing.T) {
 	t.Parallel()
 	f := Start(t, Options{})
 	run := f.Coordinator.ReadRun(f.ActionRunID)
 	if run == nil {
 		t.Fatal("the action run is gone")
 	}
-	for _, width := range []float64{420, 620, 621, 1080} {
-		reply := f.Do(Request{Method: "GET", Path: runViewPath(run.ID) + "?width=" + formatWidth(width), Token: ContractToken})
-		if reply.Status != http.StatusOK {
-			t.Fatalf("width %v: status %d", width, reply.Status)
-		}
-		snapshot := f.Coordinator.ReadRunViewSnapshot(run.ID, width, nil)
-		if snapshot == nil {
-			t.Fatalf("width %v: no snapshot", width)
-		}
-		if !bytes.Equal(reply.Body, mustMarshal(t, api.NewRunViewResponse(*snapshot))) {
-			t.Fatalf("width %v: the response is not the shared projection", width)
-		}
-		response := decodeRunView(t, reply)
-		if response.Look != "boxes" {
-			t.Fatalf("width %v: look %q, want boxes", width, response.Look)
-		}
-		if response.Map != nil {
-			t.Fatalf("width %v: a boxes look sends no map", width)
-		}
-		if response.Boxes == nil || len(response.Boxes.Map.Nodes) != len(run.Stages)+1 {
-			t.Fatalf("width %v: the boxes do not hold the trigger and every stage", width)
-		}
-		if !reflect.DeepEqual(response.Actions, f.Coordinator.RunActions(*run)) {
-			t.Fatalf("width %v: actions differ from the coordinator's", width)
-		}
+	reply := f.Do(Request{Method: "GET", Path: runViewPath(run.ID), Token: ContractToken})
+	if reply.Status != http.StatusOK {
+		t.Fatalf("status %d", reply.Status)
+	}
+	snapshot := f.Coordinator.ReadRunViewSnapshot(run.ID, nil)
+	if snapshot == nil {
+		t.Fatal("no snapshot")
+	}
+	if !bytes.Equal(reply.Body, mustMarshal(t, api.NewRunViewResponse(*snapshot))) {
+		t.Fatal("the response is not the shared projection")
+	}
+	response := decodeRunView(t, reply)
+	if len(response.Boxes.Map.Nodes) != len(run.Stages)+1 {
+		t.Fatal("the boxes do not hold the trigger and every stage")
+	}
+	if !reflect.DeepEqual(response.Actions, f.Coordinator.RunActions(*run)) {
+		t.Fatal("actions differ from the coordinator's")
 	}
 
 	type layoutCase struct {
@@ -94,7 +85,7 @@ func TestRunViewUsesSharedProjectionForWidthsAndLayoutFixtures(t *testing.T) {
 		if reply.Status != http.StatusOK {
 			t.Fatalf("%s: status %d", layout.name, reply.Status)
 		}
-		snapshot := f.Coordinator.ReadRunViewSnapshot(example.ID, 1080, nil)
+		snapshot := f.Coordinator.ReadRunViewSnapshot(example.ID, nil)
 		if snapshot == nil {
 			t.Fatalf("%s: no snapshot", layout.name)
 		}
@@ -110,9 +101,6 @@ func TestRunViewUsesSharedProjectionForWidthsAndLayoutFixtures(t *testing.T) {
 		t.Fatalf("split: status %d", splitReply.Status)
 	}
 	split := decodeRunView(t, splitReply)
-	if split.Boxes == nil {
-		t.Fatal("split: no boxes")
-	}
 	if !reflect.DeepEqual(split.Boxes.TakenRoutes, []string{"scope:simple", "scope:thorough"}) {
 		t.Fatalf("split: taken routes %v", split.Boxes.TakenRoutes)
 	}
@@ -140,69 +128,12 @@ func TestRunViewUsesSharedProjectionForWidthsAndLayoutFixtures(t *testing.T) {
 	CheckGoldenAs(t, notFound, "erased run view", "error-not-found.json", erased, f.Root)
 }
 
-// formatWidth writes a whole-point width as the query takes it.
-func formatWidth(width float64) string { return strconv.Itoa(int(width)) }
-
-// TestMachinesLookSendsTheMachineMapInsteadOfBoxes checks the machines look sends the machine map and no boxes.
-func TestMachinesLookSendsTheMachineMapInsteadOfBoxes(t *testing.T) {
-	t.Parallel()
-	f := Start(t, Options{Look: core.BeltLookMachines})
-	run := firstRun(t, f, func(r core.Run) bool { return len(r.Layout().Forks) > 0 && !r.Layout().Nested() })
-	reply := f.Do(Request{Method: "GET", Path: runViewPath(run.ID), Token: ContractToken})
-	if reply.Status != http.StatusOK {
-		t.Fatalf("status %d", reply.Status)
-	}
-	response := decodeRunView(t, reply)
-	if response.Look != "machines" {
-		t.Fatalf("look %q, want machines", response.Look)
-	}
-	if response.Boxes != nil || response.Metro != nil {
-		t.Fatal("a machines look sends neither boxes nor metro")
-	}
-	if response.Map == nil || len(response.Map.Tracks) == 0 {
-		t.Fatal("a machines look sends a map with tracks")
-	}
-	snapshot := f.Coordinator.ReadRunViewSnapshot(run.ID, 1080, nil)
-	if snapshot == nil {
-		t.Fatal("no snapshot")
-	}
-	if !bytes.Equal(reply.Body, mustMarshal(t, api.NewRunViewResponse(*snapshot))) {
-		t.Fatal("the response is not the shared projection")
-	}
-	CheckGolden(t, "run view machines", "views-run-machines.json", reply, f.Root)
-}
-
-// TestMetroLookSendsTheRunsMetroLine ports RunReadTests.metroLookSendsTheRunsMetroLine.
-func TestMetroLookSendsTheRunsMetroLine(t *testing.T) {
-	t.Parallel()
-	f := Start(t, Options{Look: core.BeltLookMetro})
-	run := firstRun(t, f, func(r core.Run) bool { return len(r.Layout().Forks) > 0 && !r.Layout().Nested() })
-	reply := f.Do(Request{Method: "GET", Path: runViewPath(run.ID), Token: ContractToken})
-	if reply.Status != http.StatusOK {
-		t.Fatalf("status %d", reply.Status)
-	}
-	response := decodeRunView(t, reply)
-	if response.Look != "metro" {
-		t.Fatalf("look %q, want metro", response.Look)
-	}
-	if response.Map != nil || response.Boxes != nil {
-		t.Fatal("a metro look sends neither map nor boxes")
-	}
-	if response.Metro == nil || len(response.Metro.Stations) == 0 {
-		t.Fatal("a metro look sends a metro line with stations")
-	}
-	CheckGolden(t, "run view metro", "views-run-metro.json", reply, f.Root)
-}
-
-// TestRunViewRejectsInvalidWidthsWithTheShared422Shape ports RunReadTests.runViewRejectsInvalidWidthsWithTheShared422Shape.
-func TestRunViewRejectsInvalidWidthsWithTheShared422Shape(t *testing.T) {
+// TestOverviewRejectsInvalidWidthsWithTheShared422Shape checks the Overview's width query: a finite positive
+// number of points, given at most once.
+func TestOverviewRejectsInvalidWidthsWithTheShared422Shape(t *testing.T) {
 	t.Parallel()
 	f := ReadOnlyFixture(t)
-	run := f.Coordinator.ReadRun(f.ActionRunID)
-	if run == nil {
-		t.Fatal("the action run is gone")
-	}
-	path := runViewPath(run.ID) + "?width="
+	path := "/api/v1/views/overview?width="
 	message := "Width must be a finite positive number of points."
 	for _, value := range []string{"nan", "infinity", "-infinity", "0", "-1", "nope"} {
 		reply := f.Do(Request{Method: "GET", Path: path + value, Token: ContractToken})
@@ -211,16 +142,4 @@ func TestRunViewRejectsInvalidWidthsWithTheShared422Shape(t *testing.T) {
 	duplicateMessage := "Width must be provided once as a finite positive number of points."
 	duplicate := f.Do(Request{Method: "GET", Path: path + "420&width=620", Token: ContractToken})
 	require422Problem(t, duplicate, duplicateMessage, []string{duplicateMessage})
-}
-
-// firstRun is the first run of the coordinator's list that satisfies predicate; the test fails when none does.
-func firstRun(t *testing.T, f *Fixture, predicate func(core.Run) bool) core.Run {
-	t.Helper()
-	for _, run := range f.Coordinator.ReadRuns() {
-		if predicate(run) {
-			return run
-		}
-	}
-	t.Fatal("the fixture has no run of the wanted layout")
-	return core.Run{}
 }

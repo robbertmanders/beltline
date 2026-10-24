@@ -72,16 +72,16 @@
   --bar: #ECE8E0;
   --hover: #F7F6F3;
 
-  --metro-line-0: #4F6FA5;
-  --metro-line-1: #3E7A52;
-  --metro-line-2: #A88228;
-  --metro-line-3: #7B5EA7;
-  --metro-line-4: #B5523F;
-  --metro-line-5: #2E7F7C;
-  --metro-line-6: #9C4A78;
-  --metro-line-7: #56657A;
-  --metro-line-8: #8A5F3A;
-  --metro-line-9: #6B7F35;
+  --series-0: #4F6FA5;
+  --series-1: #3E7A52;
+  --series-2: #A88228;
+  --series-3: #7B5EA7;
+  --series-4: #B5523F;
+  --series-5: #2E7F7C;
+  --series-6: #9C4A78;
+  --series-7: #56657A;
+  --series-8: #8A5F3A;
+  --series-9: #6B7F35;
 
   --tint-blue: #CFDDF0;
   --tint-sand: #F5E0BE;
@@ -93,8 +93,8 @@
   --tint-coral: #F5C3B4;
   --tint-grey: #E4E0D8;
 
-  /* A belt's shadow version and its runs: violet, metro line 3 on its tint. */
-  --shadow-ink: var(--metro-line-3);
+  /* A belt's shadow version and its runs: violet, series colour 3 on its tint. */
+  --shadow-ink: var(--series-3);
   --shadow-wash: var(--tint-violet);
 
   --tone-good-fg: var(--green);
@@ -127,7 +127,6 @@
   --trigger-fill-selected: #25385A;
   --trigger-caption: #9FB0C8;
   --trigger-detail: #C9D6EA;
-  --machine-outline: #1B2A3E;
   --outline-soft: #CFC8BA;
   --fork-wash: rgba(230, 237, 246, 0.5);
   --gold-text: #6B5314;
@@ -148,7 +147,6 @@
   --control-edge: #c9c5bc;
   /* A checked checkbox's fill; the tick drawn on it in fields.css must stay legible on this. */
   --control-on: #ecebe8;
-  --glass-wash: #FFFFFF80;
   --row-hover: #F9F8F5;
   --row-needs: #EEF3FA;
   --row-held: #FBEFEC;
@@ -181,11 +179,6 @@
   --gold-line: var(--gold-lamp);
   --running-line: var(--gold);
   --held-line: var(--red);
-  /* Machine drawing parts beyond the outline and the body tint. */
-  --machine-shadow: var(--machine-outline);
-  --machine-screen: var(--screen);
-  --machine-gold: #E8B83E;
-  --machine-glass: #F4F8FD;
   /* The bright top edge on the glass menus. */
   --sheet-highlight: rgba(255, 255, 255, 0.72);
 
@@ -284,16 +277,16 @@
   --bar: #2D3A4E;
   --hover: #232F40;
 
-  --metro-line-0: #7FA3D6;
-  --metro-line-1: #6DBB8A;
-  --metro-line-2: #E0B95A;
-  --metro-line-3: #B09AE0;
-  --metro-line-4: #E88E79;
-  --metro-line-5: #5FC2BE;
-  --metro-line-6: #D98CBA;
-  --metro-line-7: #9AAABF;
-  --metro-line-8: #C49A6C;
-  --metro-line-9: #A8C160;
+  --series-0: #7FA3D6;
+  --series-1: #6DBB8A;
+  --series-2: #E0B95A;
+  --series-3: #B09AE0;
+  --series-4: #E88E79;
+  --series-5: #5FC2BE;
+  --series-6: #D98CBA;
+  --series-7: #9AAABF;
+  --series-8: #C49A6C;
+  --series-9: #A8C160;
 
   --on-accent: #101A27;
   --slate-text: var(--slate);
@@ -305,7 +298,6 @@
   --trigger-fill-selected: #34476A;
   --trigger-caption: #B8C5D5;
   --trigger-detail: #D5E0EE;
-  --machine-outline: #C9D6EA;
   --outline-soft: #6F7F98;
   --fork-wash: rgba(157, 187, 228, 0.1);
   --gold-text: #F0D58A;
@@ -325,7 +317,6 @@
   --red-edge: #7A4540;
   --control-edge: #7D8BA1;
   --control-on: #9DBBE4;
-  --glass-wash: #24314280;
   --row-hover: #202B3B;
   --row-needs: #1F2D42;
   --row-held: #33221F;
@@ -353,13 +344,9 @@
   --gold-line: #7A6630;
   --running-line: #7A6630;
   --held-line: #8A4A42;
-  --machine-shadow: #000000;
-  --machine-screen: #0C1320;
-  --machine-gold: #D9AC3C;
-  --machine-glass: #33496A;
   --sheet-highlight: rgba(255, 255, 255, 0.08);
 
-  /* Deep washes under stage glyphs and machine bodies, so light ink and outlines read on them. */
+  /* Deep washes under stage glyphs, so light ink and outlines read on them. */
   --tint-blue: #2C4468;
   --tint-sand: #4A3B24;
   --tint-gold: #4A3E17;
