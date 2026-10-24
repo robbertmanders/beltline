@@ -11,11 +11,7 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/server/api"
 )
 
-// viewRunDefaultWidth is the width the run view draws at when none is sent.
-const viewRunDefaultWidth = 1080
-
 // AddViewRun GET api/v1/views/run/{id}.
-// The optional width is the browser's width in points for the run's belt map.
 // Lock: the handler calls ReadRunViewSnapshot, which takes the lock.
 func AddViewRun(mux *http.ServeMux, c *coordinator.Coordinator) {
 	mux.Handle("GET /api/v1/views/run/{id}", JSONRoute(c, func(r *http.Request) (any, error) {
@@ -23,12 +19,7 @@ func AddViewRun(mux *http.ServeMux, c *coordinator.Coordinator) {
 		if err != nil {
 			return nil, err
 		}
-		width, err := viewWidth(r)
-		if err != nil {
-			return nil, err
-		}
-		drawn := core.ValueOr(width, float64(viewRunDefaultWidth))
-		snapshot := c.ReadRunViewSnapshot(id, drawn, ReadRouteSupportQuery("stage", r.URL.RawQuery))
+		snapshot := c.ReadRunViewSnapshot(id, ReadRouteSupportQuery("stage", r.URL.RawQuery))
 		if snapshot == nil {
 			return nil, api.MissingResource{}
 		}
@@ -91,7 +82,7 @@ func AddViewWaiting(mux *http.ServeMux, c *coordinator.Coordinator) {
 	}))
 }
 
-// viewWidth is the width query the Overview and run reads share: at most one
+// viewWidth is the Overview read's width query: at most one
 // `width`, a finite positive number of points. Nil when the query has none.
 func viewWidth(r *http.Request) (*float64, error) {
 	widths := ReadRouteSupportQueryValues("width", r.URL.RawQuery)

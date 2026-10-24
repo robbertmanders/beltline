@@ -12,7 +12,7 @@ import { stubDaemon } from "../../test/daemon";
 const overviewPath = "/api/v1/views/overview";
 
 type OverviewBody = Record<string, any>;
-/** The golden for each belt look the daemon can draw the Floor in: the demo's default is boxes. */
+/** The demo's Overview, as the daemon sends it. */
 const overviewGolden = (): OverviewBody => JSON.parse(goldenText("views-overview.json")) as OverviewBody;
 
 /** The overview's daemon: each read of the overview is answered by `answer`, which gets the read's number. */
@@ -29,7 +29,7 @@ function renderOverview(entry = "/overview") {
 /** Waits until the page has its answer: a drawn view, or an error. */
 const answered = () => waitFor(() => expect(document.querySelector(".overview-summary, .overview-floor, .error-panel")).not.toBeNull());
 const modeButton = (name: string) => screen.getByRole("button", { name });
-/** The boxes Floor's belt card pin, which the demo's default look draws. */
+/** A belt card's pin on the Floor. */
 const pinButton = (belt: string) => document.querySelector<HTMLButtonElement>(`.box-belt[data-belt='${belt}'] .box-belt-pin`)!;
 /** Stores a full preferences record, since the stored shape is strict and a partial one reads as the defaults. */
 const storePin = (floorPinnedBeltId: string | null) => savePreferences({ ...defaultPreferences, floorPinnedBeltId });
@@ -57,7 +57,6 @@ describe("Overview page", () => {
     expect(screen.getByText(overviewGolden().caption)).toBeTruthy();
     expect(modeButton("Summary").getAttribute("aria-pressed")).toBe("true");
     expect(modeButton("Floor").getAttribute("aria-pressed")).toBe("false");
-    expect(screen.queryByRole("button", { name: "Metro" })).toBeNull();
   });
 
   it("renders all six Summary sections with the daemon's limits and order", async () => {
@@ -98,26 +97,6 @@ describe("Overview page", () => {
     expect(document.querySelector(".overview-summary")).not.toBeNull();
     expect(overview.reads()).toBe(1);
     expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).floorPinnedBeltId).toBe("issues");
-  });
-
-  it("draws the Floor in the belt look the daemon sends, and only that one", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    stubOverview(() => json(goldenText("views-overview-machines.json")));
-    const machines = renderOverview();
-    await answered();
-    await user.click(modeButton("Floor"));
-    expect(document.querySelectorAll(".factory-machine").length).toBeGreaterThan(0);
-    expect(document.querySelector(".box-floor")).toBeNull();
-    expect(document.querySelector(".metro-scroll")).toBeNull();
-    machines.unmount();
-    cleanup();
-    stubOverview(() => json(goldenText("views-overview-metro.json")));
-    renderOverview();
-    await answered();
-    await user.click(modeButton("Floor"));
-    expect(document.querySelector(".metro-scroll")).not.toBeNull();
-    expect(document.querySelector(".factory-machine")).toBeNull();
-    expect(document.querySelector(".box-floor")).toBeNull();
   });
 
   it("pins a belt from the Floor, saves it, and restores it after a remount", async () => {

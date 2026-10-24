@@ -48,7 +48,7 @@ The daemon owns every fact and decision: which actions a run allows, whether a b
 
 ## The pages
 
-- **Overview**: a Summary (spend today, sessions, what's running, what shipped, what needs you) and a Floor with every belt as a lane, drawn as boxes, machines or a metro map, as **Settings → General** chooses.
+- **Overview**: a Summary (spend today, sessions, what's running, what shipped, what needs you) and a Floor with every belt as a lane of stage boxes, where belts that share a stage meet.
 - **Work**: every run, grouped and filtered, with the ones that need you highlighted.
 - **Run**: one run's belt, each stage's output and your decisions, and its agent sessions live.
 - **Belts** and **Agents**: searchable card grids of your library, each opening its editor.

@@ -1,6 +1,6 @@
 // The run page's projection: its header facts, cost, links, watch notes and
-// stages. The stage facts and inline spans are in api_run_views_facts.go, the
-// map, Markdown blocks and attempt output and artifacts in api_run_views_map.go.
+// stages. An attempt's output as Markdown blocks and its artifacts are in
+// api_run_views_output.go.
 package api
 
 import (
@@ -12,21 +12,12 @@ import (
 // RunViewResponse is the complete daemon-owned run page projection. Navigation
 // and selected attempts are intentionally left to each client.
 //
-// Map, Boxes and Metro are sent only for their look (omitted otherwise);
 // HeldAnswer, FirstVerdict and PauseCopy are omitted when nil.
 type RunViewResponse struct {
 	Run core.Run `json:"run"`
-	// AvailableWidth is the width the page has for the belt's drawing.
-	AvailableWidth float64 `json:"availableWidth"`
-	// Look is how the belt is drawn: `boxes`, `machines` or `metro` (BeltLook).
-	Look string `json:"look"`
-	// Map is the belt as machines on a track. Sent only for the `machines` look.
-	Map *core.RunMap `json:"map,omitzero"`
-	// Boxes is the belt as stage boxes. Sent only for the `boxes` look.
-	Boxes *core.RunBoxes `json:"boxes,omitzero"`
-	// Metro is the belt as a metro line. Sent only for the `metro` look.
-	Metro    *core.RunMetro `json:"metro,omitzero"`
-	Metadata string         `json:"metadata"`
+	// Boxes is the belt as stage boxes.
+	Boxes    core.RunBoxes `json:"boxes"`
+	Metadata string        `json:"metadata"`
 	// Heading is the tag over the title: the belt's name and the run's repository, short.
 	Heading string `json:"heading"`
 	// Reference is the subject's reference: `#139`, or a ticket key.
@@ -66,8 +57,6 @@ type RunViewResponse struct {
 func NewRunViewResponse(snapshot coordinator.CoordinatorRunViewSnapshot) RunViewResponse {
 	out := RunViewResponse{
 		Run:            snapshot.Run,
-		AvailableWidth: snapshot.AvailableWidth,
-		Look:           string(snapshot.Look),
 		Boxes:          snapshot.Boxes,
 		Metadata:       snapshot.Presentation.Metadata,
 		Reference:      snapshot.Run.Subject.Ref(),
@@ -91,19 +80,6 @@ func NewRunViewResponse(snapshot coordinator.CoordinatorRunViewSnapshot) RunView
 		Active:              snapshot.Run.State.IsActive(),
 		QuickActions:        core.RunQuickActions(snapshot.Run, snapshot.Presentation.Actions),
 		Menu:                core.RunMenu(snapshot.Run, snapshot.Presentation.Actions),
-	}
-	if snapshot.Look == core.BeltLookMachines {
-		runMap := core.NewRunMap(core.RunMapArgs{
-			Run: snapshot.Run, Geometry: snapshot.Map, Compact: snapshot.Presentation.Compact,
-			AvailableWidth: snapshot.AvailableWidth, ContentWidth: snapshot.MapContentWidth,
-			Panels: snapshot.Presentation.Stages, Paused: snapshot.Pause.IsPaused || snapshot.BeltPaused,
-			Ambiguous: snapshot.AmbiguousRepositories,
-		})
-		out.Map = &runMap
-	}
-	if snapshot.Look == core.BeltLookMetro {
-		metro := core.RunMetroLayoutMap(snapshot.Run, snapshot.Presentation.Stages)
-		out.Metro = &metro
 	}
 	out.Heading = core.RunPresentationHeading(snapshot.Run, snapshot.AmbiguousRepositories)
 	for _, link := range snapshot.Presentation.Links {

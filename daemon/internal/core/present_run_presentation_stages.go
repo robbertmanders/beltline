@@ -13,7 +13,6 @@ type runPresentationProjection struct {
 	pause                 Pause
 	now                   time.Time
 	ambiguousRepositories map[string]struct{}
-	agentForStage         func(stage Stage) *Agent
 }
 
 // stagePanel is one stage's panel on the run page.
@@ -32,11 +31,6 @@ func (in runPresentationProjection) stagePanel(stage Stage) RunPresentationStage
 		summary := RunPresentationWatchingSummary(run, stage, in.ambiguousRepositories)
 		liveWatch = &summary
 	}
-	var agent *Agent
-	if in.agentForStage != nil {
-		agent = in.agentForStage(stage)
-	}
-	look := MachineLookOf(stage, agent)
 	var emptyMessage *string
 	if defaultAttempt == nil {
 		message := RunPresentationEmptyMessage(stage, run, step)
@@ -50,13 +44,10 @@ func (in runPresentationProjection) stagePanel(stage Stage) RunPresentationStage
 		Kind:             stage.Kind(),
 		Step:             step,
 		Status:           status,
-		CompactStatus:    RunPresentationCompactStatus(status),
 		DefaultAttempt:   defaultAttempt,
 		Attempts:         runPresentationAttemptEntries(attempts, step),
 		EmptyMessage:     emptyMessage,
 		LiveWatchSummary: liveWatch,
-		Machine:          look.Machine,
-		Tint:             look.Tint,
 		Worker:           &worker,
 	}
 }

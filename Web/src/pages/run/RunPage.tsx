@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiRequest } from "../../api/client";
@@ -7,7 +7,6 @@ import { continueSessionRequest, eraseRequest, runCommandRequest } from "../../a
 import { apiQueryKey, resourcesForPath } from "../../api/resources";
 import type { ContinueSessionResponse, RunResponse, RunStage, RunViewResponse } from "../../api/wire.gen";
 import { useCommand } from "../../api/useCommand";
-import { useRefetchWhen } from "../../api/useRefetchWhen";
 import { useRuntime } from "../../app/runtime";
 import { ProblemItems } from "../../components/ProblemList";
 import { useElementWidth } from "../../components/useElementWidth";
@@ -19,8 +18,6 @@ import { Caps, Chip, Tag } from "../../components/Paper";
 import { RunLinkRows } from "./RunLinks";
 import { RunMenu } from "./RunMenu";
 import { RunBoxes } from "./RunBoxes";
-import { RunMetroMap } from "./RunMetroMap";
-import { RunMap } from "./RunMap";
 import { RunStagePanel } from "./RunStagePanel";
 import { SessionsSidebar } from "./SessionsSidebar";
 
@@ -34,7 +31,6 @@ export function RunPage() {
   const params = useParams();
   const navigate = useNavigate();
   const runtime = useRuntime();
-  const queryClient = useQueryClient();
   const { preferences, update } = usePreferences();
   const command = useCommand();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,8 +38,6 @@ export function RunPage() {
   const [adjustOpen, setAdjustOpen] = useState(false);
   const drafts = useDraftState();
   const runId = params.id ?? "";
-  const [columnRef, measuredWidth] = useElementWidth<HTMLElement>();
-  const width = measuredWidth > 0 ? measuredWidth : widthFallback;
   const [workspaceRef, measuredWorkspaceWidth] = useElementWidth<HTMLDivElement>();
   const workspaceWidth = measuredWorkspaceWidth > 0 ? measuredWorkspaceWidth : widthFallback;
   const viewPath = `/api/v1/views/run/${encodeURIComponent(runId)}`;
@@ -53,20 +47,14 @@ export function RunPage() {
   // the URL does not name is the run's current stage, which the daemon picks as the page does.
   const stageParam = searchParams.get("stage");
   const viewQuery = useQuery({
-    // Width changes the drawing, not the run's identity. Separate width caches can restore an old stage.
     queryKey: apiQueryKey(viewPath, stageParam ?? ""),
-    queryFn: ({ signal }) => apiRequest<RunViewResponse>(`${viewPath}?width=${width}${stageParam === null ? "" : `&stage=${encodeURIComponent(stageParam)}`}`, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryFn: ({ signal }) => apiRequest<RunViewResponse>(`${viewPath}${stageParam === null ? "" : `?stage=${encodeURIComponent(stageParam)}`}`, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: viewEnabled,
-    // Keep the view on screen while another stage or width loads, but never another run.
+    // Keep the view on screen while another stage loads, but never another run.
     placeholderData: (previousData, previousQuery) => previousQuery?.queryKey[1] === viewPath ? previousData : undefined,
     retry: false,
     meta: { resourceDeps: resourcesForPath(viewPath) }
   });
-  useRefetchWhen(() => {
-    // Also cancel an initial read without data: refetch alone would reuse its old-width request.
-    void queryClient.cancelQueries({ queryKey: ["api", viewPath] });
-    return viewQuery.refetch();
-  }, width, viewEnabled);
   const view = viewQuery.data;
 
   useEffect(() => { document.title = "Beltline — Run"; }, []);
@@ -178,7 +166,7 @@ export function RunPage() {
   } : null;
 
   return <div className="run-workspace" ref={workspaceRef}>
-    <article className="page-content run-page" ref={columnRef}>
+    <article className="page-content run-page">
       {menuOpen && <div className="run-menu-scrim" onClick={() => setMenuOpen(false)} />}
       {runtime.canRead && viewQuery.isPending && <p className="loading-state" role="status">Loading run…</p>}
       {runtime.canRead && notFound && <section className="empty-panel" role="status">
@@ -226,9 +214,7 @@ export function RunPage() {
         </ul>
         <p className="route-note">Run controls apply to the whole run.</p>
       </section>}
-      {view && view.look === "boxes" && view.boxes && <RunBoxes boxes={view.boxes} metadata={view.metadata} selectedStageId={selectedStageId} onSelectStage={selectStage} opening={opening} />}
-      {view && view.look === "machines" && view.map && <RunMap map={view.map} metadata={view.metadata} stages={stages} selectedStageId={selectedStageId} onSelectStage={selectStage} opening={opening} />}
-      {view && view.look === "metro" && view.metro && <RunMetroMap metro={view.metro} metadata={view.metadata} selectedStageId={selectedStageId} onSelectStage={selectStage} opening={opening} />}
+      {view && <RunBoxes boxes={view.boxes} metadata={view.metadata} selectedStageId={selectedStageId} onSelectStage={selectStage} opening={opening} />}
       {view && controlsProps && <RunStagePanel runId={runId} run={view.run} panel={controlsProps.panel} stage={controlsProps.stage}
         selectedAttempt={selectedAttemptId} onSelectAttempt={selectAttempt} watchNotes={view.watchNotes}
         command={command} canRead={runtime.canRead} connection={runtime.connection}

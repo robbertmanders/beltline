@@ -1,7 +1,6 @@
 package core
 
-// OverviewMode is a look the Overview page has: the summary you land on, and the Floor,
-// which is drawn in the belt look Settings picks.
+// OverviewMode is a look the Overview page has: the summary you land on, and the Floor.
 type OverviewMode string
 
 const (

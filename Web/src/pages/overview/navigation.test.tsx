@@ -9,7 +9,7 @@ import { fixtureRoute, renderRoutes, stubDaemon } from "../../test/daemon";
 const overview = (): OverviewResponse => JSON.parse(goldenText("views-overview.json")) as OverviewResponse;
 const location = () => screen.getByLabelText("Location").textContent;
 
-/** Opens Overview on the Floor, where the machines, belts and chips it navigates from are drawn. */
+/** Opens Overview on the Floor, where the boxes, belts and tags it navigates from are drawn. */
 async function openFloor() {
   const user = userEvent.setup();
   stubDaemon({ "/api/v1/views/overview": fixtureRoute("views-overview.json"), "/api/v1/views/work": fixtureRoute("views-work.json") });
@@ -24,14 +24,14 @@ beforeEach(() => {
 });
 
 describe("Overview navigation", () => {
-  it("opens active Work filtered to a factory machine, with the search cleared", async () => {
+  it("opens active Work filtered to a merged stage, with the search cleared", async () => {
     const user = await openFloor();
-    const box = overview().floor.boxes![0]!;
-    await user.click(document.querySelector<HTMLButtonElement>(`[data-machine='${box.id}'] .stage-box`)!);
+    const box = overview().floor.boxes[0]!;
+    await user.click(document.querySelector<HTMLButtonElement>(`[data-stage='${box.id}'] .stage-box`)!);
     await waitFor(() => expect(location()).toBe(`/work?stage=${encodeURIComponent(box.id)}`));
   });
 
-  it("opens active Work for an entrance's belt with its station and search cleared", async () => {
+  it("opens active Work for an entrance's belt with its stage and search cleared", async () => {
     const user = await openFloor();
     await user.click(document.querySelector<HTMLButtonElement>(".box-belt[data-belt='issues'] .box-belt-runs")!);
     await waitFor(() => expect(location()).toBe("/work?belt=issues"));

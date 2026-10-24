@@ -32,7 +32,7 @@ type WorkQuery struct {
 	Filter WorkFilter
 	// Belt is a belt id, or "all".
 	Belt string
-	// Stage is a factory machine id; nil means every stage.
+	// Stage is a merged stage's id on the floor; nil means every stage.
 	Stage   *string
 	Search  string
 	GroupBy GroupBy
@@ -56,21 +56,21 @@ func (q WorkQuery) IsSearching() bool {
 }
 
 // WorkPresentationRows are the runs Work lists, in row order. A stage id resolves against the
-// Overview floor: an id no machine has selects nothing. A belt selects
+// Overview floor: an id no stage has selects nothing. A belt selects
 // its exact id, so an unknown belt selects nothing. The rows are copies of the runs' values
 // that share their storage, so read them only while runs cannot change; the presented rows
 // (WorkRowPresentationRow) share nothing.
 func WorkPresentationRows(runs []Run, query WorkQuery, track *FactoryTrack) []Run {
-	var machine *FactoryTrackMachine
+	var merged *FactoryTrackStage
 	if query.Stage != nil {
 		if track == nil {
 			return []Run{}
 		}
-		resolved := track.Machine(*query.Stage)
+		resolved := track.Stage(*query.Stage)
 		if resolved == nil {
 			return []Run{}
 		}
-		machine = resolved
+		merged = resolved
 	}
 	search := LowercasedFull(query.TrimmedSearch())
 	rows := []Run{}
@@ -78,7 +78,7 @@ func WorkPresentationRows(runs []Run, query WorkQuery, track *FactoryTrack) []Ru
 		if query.Belt != "all" && run.BeltID != query.Belt {
 			continue
 		}
-		if machine != nil && !machine.Contains(run) {
+		if merged != nil && !merged.Contains(run) {
 			continue
 		}
 		if search != "" {
@@ -321,7 +321,7 @@ type WorkView struct {
 	// ShadowGroups are the runs on a shadow version, which the Overview floor leaves out.
 	ShadowGroups []WorkGroupPresentation
 	Waiting      []WaitingSubject
-	// Stage is the machine the query selected, when it names one the floor has.
+	// Stage is the stage the query selected, when it names one the floor has.
 	Stage *WorkStage
 	// Belts is every belt the picker offers, archived ones marked.
 	Belts []WorkBelt
@@ -368,7 +368,7 @@ func workRowsOfGroups(groups []WorkGroupPresentation) []WorkRowPresentation {
 	return rows
 }
 
-// WorkStage is a machine the Work query selected, as the page names it.
+// WorkStage is a stage the Work query selected, as the page names it.
 type WorkStage struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

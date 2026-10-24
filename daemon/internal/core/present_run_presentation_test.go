@@ -13,10 +13,6 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
 
-// rpNoAgent is the agent lookup of the projections here: none of the stages pins a library agent
-// the presentation reads.
-func rpNoAgent(stage Stage) *Agent { return nil }
-
 // rpStageNamed is the first stage of run with the given id, nil when there is none.
 func rpStageNamed(view RunPresentationSnapshot, id string) *RunPresentationStagePanel {
 	for i := range view.Stages {
@@ -32,7 +28,7 @@ func TestProjectionSuppliesEveryStageAndKeepsActionsUnchanged(t *testing.T) {
 	t.Parallel()
 	run := engineSampleRun()
 	action := RunAction{ID: "park", Enabled: true}
-	view := RunPresentationProject(run, 1080, false, PauseLive, engineT0, nil, []RunAction{action}, rpNoAgent)
+	view := RunPresentationProject(run, false, PauseLive, engineT0, nil, []RunAction{action})
 	if view.RunID != run.ID {
 		t.Fatalf("run id = %q, want %q", view.RunID, run.ID)
 	}
@@ -83,7 +79,7 @@ func TestHistoricalSelectionRetainsResultAndNamesTheNewerRunningAttempt(t *testi
 	run.State = RunStateRunning
 	running := RunStateRunning
 	run.Legs[0].State = running
-	view := RunPresentationProject(run, 600, false, PauseLive, engineT0.Add(25*time.Second), nil, nil, rpNoAgent)
+	view := RunPresentationProject(run, false, PauseLive, engineT0.Add(25*time.Second), nil, nil)
 	stage := rpStageNamed(view, run.StageID)
 	if stage == nil {
 		t.Fatalf("no panel for stage %s", run.StageID)
@@ -110,9 +106,6 @@ func TestHistoricalSelectionRetainsResultAndNamesTheNewerRunningAttempt(t *testi
 	if first := stage.Attempts[0]; first.Detail == nil || *first.Detail != "The saved result" {
 		t.Fatalf("detail = %v", first.Detail)
 	}
-	if stage.CompactStatus.Text == stage.Status.Text {
-		t.Fatalf("compact status %q equals the full status", stage.CompactStatus.Text)
-	}
 }
 
 // TestGatePanelsUseDecisionStateAndEveryEmptyMessageComesFromPresentation
@@ -126,7 +119,7 @@ func TestGatePanelsUseDecisionStateAndEveryEmptyMessageComesFromPresentation(t *
 	note := "Ready to approve"
 	attempt := NewAttempt(AttemptArgs{StageID: "approve", Number: 1, StartedAt: jsonx.Date{Time: engineT0}, Note: &note, Folder: "gate"})
 	run.Attempts = []Attempt{attempt}
-	view := RunPresentationProject(run, 1080, false, PauseLive, engineT0, nil, nil, rpNoAgent)
+	view := RunPresentationProject(run, false, PauseLive, engineT0, nil, nil)
 	gate := rpStageNamed(view, "approve")
 	if gate == nil {
 		t.Fatal("no gate panel")

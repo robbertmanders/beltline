@@ -31,7 +31,6 @@ type SettingsResponse struct {
 	AllowedModels map[string][]string                  `json:"allowedModels"`
 	ModelCatalogs map[string]core.ModelCatalogSnapshot `json:"modelCatalogs"`
 	Afk           core.AfkSettings                     `json:"afk"`
-	BeltLook      core.BeltLook                        `json:"beltLook"`
 	ShowInsights  bool                                 `json:"showInsights"`
 	DataLocation  string                               `json:"dataLocation"`
 	Demo          bool                                 `json:"demo"`
@@ -66,7 +65,6 @@ func NewSettingsResponse(settings store.Settings, dataLocation string, demo bool
 		AllowedModels:         allowed,
 		ModelCatalogs:         catalogs,
 		Afk:                   settings.Afk,
-		BeltLook:              settings.BeltLook,
 		ShowInsights:          settings.ShowInsights,
 		DataLocation:          dataLocation,
 		Demo:                  demo,

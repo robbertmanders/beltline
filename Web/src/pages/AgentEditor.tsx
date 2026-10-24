@@ -19,7 +19,6 @@ const workspaceLabels: Record<(typeof workspaceValues)[number], string> = {
   worktree: "The run's worktree",
   worktreeReadOnly: "Read-only worktree"
 };
-const machines = ["sorter", "typewriter", "mailbox", "robot", "microscope", "reader", "van", "box", "telescope", "stamp", "crane", "drill", "radar"] as const;
 const tints = tintValues;
 /** The icons an agent may pick: the first sixteen of the daemon's icons (StageIcon.agentChoices). */
 export const agentIconChoices: readonly StageIcon[] = stageIconValues.slice(0, 16);
@@ -144,15 +143,10 @@ export function AgentEditor(props: AgentEditorProps) {
             <input className="paper-field" aria-label="Name" placeholder="Name" value={agent.name} onChange={event => change({ name: event.currentTarget.value })} />
           </label>
         </div>
-        <div className="agent-form-row">
-          <label className="agent-field"><span className="agent-field-label">Machine</span>
-            <select className="paper-field" aria-label="Machine" value={agent.machine} onChange={event => change({ machine: event.currentTarget.value as Agent["machine"] })}>
-              {machines.map(value => <option key={value} value={value}>{titleCase(value)}</option>)}
-            </select>
-          </label>
+        <div className="agent-form-row agent-form-row--pair">
           <label className="agent-field"><span className="agent-field-label">Icon</span>
             <select className="paper-field" aria-label="Icon" value={agent.icon ?? ""} onChange={event => change({ icon: event.currentTarget.value ? event.currentTarget.value as StageIcon : undefined })}>
-              <option value="">Default for the machine</option>
+              <option value="">Default (Chip)</option>
               {agentIconChoices.map(value => <option key={value} value={value}>{iconLabel(value)}</option>)}
             </select>
           </label>

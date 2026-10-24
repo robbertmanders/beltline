@@ -24,9 +24,9 @@ export function evolutionRequestPath(belt: string, choice: EvolutionChoice, show
   return `/api/v1/views/insights/evolution?${params.toString()}`;
 }
 
-const timeColors = ["var(--slate)", "var(--gold-lamp)", "var(--metro-line-5)", "var(--track)"] as const;
+const timeColors = ["var(--slate)", "var(--gold-lamp)", "var(--series-5)", "var(--track)"] as const;
 const touchColors = ["var(--slate-deep)", "var(--red)", "var(--shadow-ink)"] as const;
-const costColors = Array.from({ length: 8 }, (_, i) => `var(--metro-line-${i})`);
+const costColors = Array.from({ length: 8 }, (_, i) => `var(--series-${i})`);
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return <section className="insights-section" aria-label={title}>

@@ -5,7 +5,6 @@ workspace: readOnly
 slots: 2
 runner: pi
 model: openrouter/stealth/space-bunny-alpha
-machine: sorter
 tint: blue
 icon: funnel
 outcomes:

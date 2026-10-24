@@ -6,7 +6,7 @@
 // lane paths already drawn as SVG path data. Placement is here so the app and
 // the browser draw one layout: each layer keeps
 // its order and spacing, sits as near as it can to its tracks, and return
-// lanes drop below the machines they pass. The intrinsic drawing uses the
+// lanes drop below the stages they pass. The intrinsic drawing uses the
 // minimum column, so a narrower screen scrolls the map rather than squeezing it;
 // the app passes its width to spread the columns over a wider one.
 
@@ -20,43 +20,23 @@ type FloorLayoutMetrics struct {
 	EntranceWidth  float64
 	EntranceHeight float64
 	MinColumn      float64
-	// Track is where the track runs, from the top of a machine's cell.
+	// Track is where the track runs, from the top of a stage's cell.
 	Track    float64
 	Waypoint float64
 	Gap      float64
 	// Thickness is the width of every track, however many belts share it: a shared stretch is told
 	// apart by its colour and its belts, not by a heavier line.
 	Thickness float64
-	// Machine is the width the track runs straight at each side of a machine's middle.
-	Machine float64
 	// Corner is how round a track's corners are.
 	Corner float64
-	// Lane is the space between lanes that go back under the same machines.
+	// Lane is the space between lanes that go back under the same stages.
 	Lane float64
-	// Clearance is extra room between a machine's bottom and the return lanes that run under it, beyond the
+	// Clearance is extra room between a stage's bottom and the return lanes that run under it, beyond the
 	// track's half width, so a lane's label clears the node above it.
 	Clearance float64
-	// Box is the width of the boxes the nodes are drawn as, when they are boxes rather than machines: tracks
-	// then run from each box's edge and turn half way across the gap. Nil for machines.
-	Box *float64
-}
-
-// FloorLayoutMetricsDefault is the metrics with their default values.
-func FloorLayoutMetricsDefault() FloorLayoutMetrics {
-	return FloorLayoutMetrics{
-		EntranceWidth:  228,
-		EntranceHeight: 96,
-		MinColumn:      MapWidthFloorMinimumColumn,
-		Track:          96,
-		Waypoint:       14,
-		Gap:            18,
-		Thickness:      8,
-		Machine:        112,
-		Corner:         10,
-		Lane:           14,
-		Clearance:      0,
-		Box:            nil,
-	}
+	// Box is the width of the boxes the nodes are drawn as: tracks run from each box's edge and turn half
+	// way across the gap.
+	Box float64
 }
 
 // FloorLayoutPlaced is a node's box, as the drawing places it: its left edge (X is the centre
@@ -78,9 +58,9 @@ type FloorLayoutStroke struct {
 	Width float64          `json:"width"`
 }
 
-// FloorLayoutLaneRoute is a dotted lane back to an earlier machine, with its arrow head and the names of
+// FloorLayoutLaneRoute is a dotted lane back to an earlier stage, with its arrow head and the names of
 // the belts that take it, centred on LabelX, LabelY: down at Right, back along LabelY and up into the
-// earlier machine at Left.
+// earlier stage at Left.
 type FloorLayoutLaneRoute struct {
 	From   FactoryTrackNode `json:"from"`
 	To     FactoryTrackNode `json:"to"`
@@ -109,9 +89,8 @@ type FloorLayout struct {
 const floorLayoutLabelSeparator = " \u00b7 "
 
 // NewFloorLayout places track at width, or at the minimum column when width is nil or too narrow.
-// metrics nil is the default metrics. cellHeight gives each machine's cell height.
-func NewFloorLayout(track FactoryTrack, metrics *FloorLayoutMetrics, width *float64, cellHeight func(machine FactoryTrackMachine) float64) FloorLayout {
-	m := ValueOr(metrics, FloorLayoutMetricsDefault())
+// cellHeight gives each stage's cell height.
+func NewFloorLayout(track FactoryTrack, m FloorLayoutMetrics, width *float64, cellHeight func(merged FactoryTrackStage) float64) FloorLayout {
 	plan := newFloorLayoutPlan(track, m, cellHeight)
 	column := m.MinColumn
 	if width != nil {
@@ -183,7 +162,6 @@ func (l FloorLayout) Box(node FactoryTrackNode) *FloorLayoutPlaced {
 }
 
 // FloorLayoutMinimumWidth is the width a layout needs at the minimum column.
-func FloorLayoutMinimumWidth(track FactoryTrack, metrics *FloorLayoutMetrics) float64 {
-	m := ValueOr(metrics, FloorLayoutMetricsDefault())
+func FloorLayoutMinimumWidth(track FactoryTrack, m FloorLayoutMetrics) float64 {
 	return m.EntranceWidth + float64(float64(max(len(track.Layers)-1, 0))*m.MinColumn)
 }

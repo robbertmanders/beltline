@@ -1,23 +1,17 @@
-import { useEffect, useState, type ChangeEvent, type FocusEvent } from "react";
-import {
-  machineComponents, machineFaces, machineIds, machineTints,
-  type MachineFace, type MachineId, type MachineTint
-} from "../theme/machines/Machines";
+import { useEffect, useState } from "react";
+import { tintValues } from "../api/wire.gen";
 import "../theme/gallery.css";
 import archivoLicense from "../theme/fonts/OFL-Archivo.txt?url";
 import interLicense from "../theme/fonts/OFL-InterTight.txt?url";
 import plexLicense from "../theme/fonts/OFL-IBMPlexMono.txt?url";
 import { GallerySharedComponents } from "./GallerySharedComponents";
 
-const tintForNativeIndex: MachineTint[] = ["blue", "sand", "gold", "green", "violet", "rose", "teal", "coral", "grey", "blue", "sand", "gold", "green"];
-const machinesByState = machineIds.flatMap(machine => machineFaces.map(face => ({ machine, face })));
-
 const paletteNames = [
   "--desk", "--paper", "--side", "--card", "--ink", "--ink2", "--ink-soft", "--muted", "--rule", "--slate", "--slate-deep", "--slate-wash",
   "--green", "--green-wash", "--gold", "--gold-wash", "--gold-lamp", "--red", "--red-wash", "--screen", "--screen-text", "--screen-bar",
   "--grey-wash", "--segment", "--track", "--bar", "--hover",
-  ...Array.from({ length: 10 }, (_, index) => `--metro-line-${index}`),
-  ...machineTints.map(tint => `--tint-${tint}`),
+  ...Array.from({ length: 10 }, (_, index) => `--series-${index}`),
+  ...tintValues.map(tint => `--tint-${tint}`),
   "--tone-good-fg", "--tone-good-bg", "--tone-you-fg", "--tone-you-bg", "--tone-problem-fg", "--tone-problem-bg", "--tone-neutral-fg", "--tone-neutral-bg",
   "--status-done-fg", "--status-done-bg", "--status-running-fg", "--status-running-bg", "--status-waiting-fg", "--status-waiting-bg", "--status-held-fg", "--status-held-bg", "--status-plain-fg", "--status-plain-bg"
 ];
@@ -47,50 +41,19 @@ function SectionTitle({ number, title, note }: { number: string; title: string; 
   return <header className="gallery-section__heading"><span className="paper-tag">{number}</span><div><h2>{title}</h2><p>{note}</p></div></header>;
 }
 
-function SamplesGrid({ list, tint, size, dimmed, frozen, paused }: { list: Array<{ machine: MachineId; face: MachineFace }>; tint: MachineTint; size: { width: number; height: number }; dimmed: boolean; frozen: boolean; paused: boolean }) {
-  return <div className="gallery-machine-grid">{list.map(({ machine, face: sampleFace }) => {
-    const Machine = machineComponents[machine];
-    return <article className="gallery-machine-card" key={`${machine}-${sampleFace}`}>
-      <Machine face={sampleFace} tint={tint} width={size.width} height={size.height} dimmed={dimmed} frozen={frozen} paused={paused} />
-      <span className="gallery-machine-card__name">{machine}</span><span className="gallery-machine-card__state">{sampleFace}</span>
-    </article>;
-  })}</div>;
-}
-
-const sizeOptions = [
-  { label: "120 × 108", width: 120, height: 108 },
-  { label: "60 × 54", width: 60, height: 54 },
-  { label: "240 × 216", width: 240, height: 216 },
-  { label: "160 × 108 · letterboxed", width: 160, height: 108 }
-];
-
 export default function Gallery() {
-  const [tint, setTint] = useState<MachineTint>("blue");
-  const [sizeIndex, setSizeIndex] = useState(0);
-  const [dimmed, setDimmed] = useState(false);
-  const [frozen, setFrozen] = useState(true);
-  const [pausedByTextInput, setPausedByTextInput] = useState(false);
   const [segment, setSegment] = useState("Native");
-    const currentSize = sizeOptions[sizeIndex]!;
 
   useEffect(() => { document.title = "Beltline — Theme gallery"; }, []);
 
-  function focusCapture(event: FocusEvent<HTMLElement>) {
-    if (event.target instanceof HTMLInputElement && ["text", "search", "email", "url", "tel", "number"].includes(event.target.type)) setPausedByTextInput(true);
-  }
-  function blurCapture(event: FocusEvent<HTMLElement>) {
-    const next = event.relatedTarget;
-    if (!(next instanceof HTMLInputElement) || !["text", "search", "email", "url", "tel", "number"].includes(next.type)) setPausedByTextInput(false);
-  }
-
-  return <main id="top" data-column="gallery" className={`theme-gallery ${pausedByTextInput ? "theme-gallery--input-focused" : ""}`} onFocusCapture={focusCapture} onBlurCapture={blurCapture}>
+  return <main id="top" data-column="gallery" className="theme-gallery">
     <header className="gallery-header">
-      <div><p className="gallery-eyebrow">BELTLINE / DESIGN REVIEW</p><h1>Theme gallery</h1><p className="gallery-intro">Paper-and-slate tokens, shared controls and native machine drawings. This development route works without a daemon.</p></div>
-      <nav className="gallery-jumps" aria-label="Gallery sections"><a href="#tokens">Tokens</a><a href="#fonts">Fonts</a><a href="#fields">Fields</a><a href="#machines">Machines</a><a href="#components">Components</a></nav>
+      <div><p className="gallery-eyebrow">BELTLINE / DESIGN REVIEW</p><h1>Theme gallery</h1><p className="gallery-intro">Paper-and-slate tokens, fonts and shared controls. This development route works without a daemon.</p></div>
+      <nav className="gallery-jumps" aria-label="Gallery sections"><a href="#tokens">Tokens</a><a href="#fonts">Fonts</a><a href="#fields">Fields</a><a href="#components">Components</a></nav>
     </header>
 
     <section className="gallery-section" id="tokens" aria-labelledby="tokens-heading">
-      <SectionTitle number="01" title="Tokens" note="Palette, metro lines, machine tints, tone/status pairs, typography and shared measurements." />
+      <SectionTitle number="01" title="Tokens" note="Palette, series colours, stage tints, tone/status pairs, typography and shared measurements." />
       <h3 id="tokens-heading">Colour samples</h3><TokenCards names={paletteNames} colors />
       <h3>Type and size</h3><TokenCards names={typeNames} />
       <h3>Control measurements</h3><TokenCards names={measureNames} />
@@ -119,27 +82,6 @@ export default function Gallery() {
       </div>
     </section>
 
-    <section className="gallery-section" id="machines">
-      <SectionTitle number="04" title="Machines" note="Static SVG paths use the 120 × 108 native drawing space. State cues and motion stay explicit and labelled." />
-      <div className="gallery-machine-controls" aria-label="Machine gallery controls">
-        <label>Tint<select aria-label="Machine tint" value={tint} onChange={(event: ChangeEvent<HTMLSelectElement>) => setTint(event.target.value as MachineTint)}>{machineTints.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-        <label>Size<select aria-label="Machine size" value={sizeIndex} onChange={event => setSizeIndex(Number(event.target.value))}>{sizeOptions.map((item, index) => <option key={item.label} value={index}>{item.label}</option>)}</select></label>
-        <label className="gallery-toggle"><input type="checkbox" checked={dimmed} onChange={event => setDimmed(event.target.checked)} />Dimmed</label>
-        <label className="gallery-toggle"><input type="checkbox" checked={frozen} onChange={event => setFrozen(event.target.checked)} />Freeze animation</label>
-      </div>
-      <div className="gallery-native-comparison">
-        <h3>Native comparison · idle · frozen · 120 × 108</h3>
-        <div className="gallery-machine-grid gallery-machine-grid--native">{machineIds.map((machine, index) => {
-          const Machine = machineComponents[machine];
-          return <article className="gallery-machine-card" key={machine}>
-            <Machine face="idle" tint={tintForNativeIndex[index]!} width={120} height={108} frozen />
-            <span className="gallery-machine-card__name">{machine}</span><span className="gallery-machine-card__state">idle</span>
-          </article>;
-        })}</div>
-      </div>
-      <div className="gallery-state-heading"><h3>All 91 machine states</h3><span className="paper-caps">{currentSize.label} · {tint} tint · {dimmed ? "dimmed" : "full opacity"} · {frozen ? "frozen" : "animated"}{pausedByTextInput ? " · paused while typing" : ""}</span></div>
-      <SamplesGrid list={machinesByState} tint={tint} size={currentSize} dimmed={dimmed} frozen={frozen} paused={pausedByTextInput} />
-    </section>
     <GallerySharedComponents />
     <footer className="gallery-footer"><span>Theme tokens · paper palette in Light and Dark · development route only</span><a href="#top" onClick={event => { event.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Back to top ↑</a></footer>
   </main>;

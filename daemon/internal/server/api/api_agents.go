@@ -12,8 +12,7 @@ type AgentRecordResponse struct {
 	Archived  bool       `json:"archived"`
 	BuiltIn   bool       `json:"builtIn"`
 	BeltCount *int       `json:"beltCount,omitzero"`
-	// Glyph is the icon a stage box of this agent shows: its own, else the one
-	// its machine suggests.
+	// Glyph is the icon a stage box of this agent shows: its own, else the chip.
 	Glyph core.StageIcon `json:"glyph"`
 	// Detail is the library row's secondary line, such as "v3 · 2 belts".
 	Detail string `json:"detail"`

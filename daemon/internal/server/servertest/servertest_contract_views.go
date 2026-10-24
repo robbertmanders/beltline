@@ -132,7 +132,7 @@ func exerciseViewsArea(f *Fixture, t testing.TB, contractCase string) bool {
 		f.SeedViews()
 		reply := f.Do(Request{Method: "GET", Path: "/api/v1/views/run/" + f.ActionRunID, Token: ContractToken})
 		CheckGolden(t, "viewsRun", "views-run.json", reply, f.Root)
-		snapshot := f.Coordinator.ReadRunViewSnapshot(f.ActionRunID, 1080, nil)
+		snapshot := f.Coordinator.ReadRunViewSnapshot(f.ActionRunID, nil)
 		if snapshot == nil {
 			t.Fatalf("viewsRun: the action run has no view snapshot")
 		}

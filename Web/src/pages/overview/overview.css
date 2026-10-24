@@ -1,4 +1,4 @@
-/* The Overview: the Summary posts and the Floor in the belt look Settings picks. Colours come from the theme tokens; the daemon supplies
+/* The Overview: the Summary posts and the Floor. Colours come from the theme tokens; the daemon supplies
    every position in points, so these rules size and place only what the drawings already say. */
 
 .overview-page { min-width: 0; }
@@ -69,7 +69,7 @@
 .overview-row-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 13.5px/1.3 var(--font-body), sans-serif; }
 .overview-row .paper-chip { flex: none; margin-left: 8px; }
 
-/* Floor (FloorView, FactoryMap, Stations). */
+/* Floor (Floor.tsx, FactoryTracks.tsx). */
 .overview-floor { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 16px; border-radius: 14px; background: var(--card); box-shadow: var(--lift), var(--raise); }
 .overview-floor.needs-you { box-shadow: var(--lift), inset 0 0 0 2px var(--slate); }
 .overview-floor-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -85,99 +85,13 @@
 .factory-lane-line { fill: none; stroke: var(--slate); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 4 7; }
 .factory-lane-arrow { fill: var(--slate); }
 .factory-lane-label { position: absolute; transform: translate(-50%, -50%); font: 9px/1.3 var(--font-mono), monospace; letter-spacing: 0.6px; color: var(--slate-text); background: var(--slate-wash); border-radius: 999px; padding: 2px 7px; white-space: nowrap; transition: opacity 150ms ease-out; }
-.factory-node { position: absolute; }
-.factory-machine { padding: 0 6px; }
-.factory-machine-body { display: flex; flex-direction: column; align-items: center; gap: 6px; transition: opacity 150ms ease-out; }
-.factory-chips { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 22px; }
-.factory-more { font: 10.5px/1.4 var(--font-mono), monospace; color: var(--muted); border: 1.5px solid var(--rule); border-radius: 6px; padding: 2px 7px; }
 
-.overview-entrance { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; overflow: hidden; height: 100%; padding: 10px; background: var(--paper); border-radius: 10px; box-shadow: inset 0 0 0 1px var(--rule); cursor: pointer; transition: opacity 150ms ease-out; }
-.overview-entrance > * { flex: none; min-width: 0; max-width: 100%; }
-.overview-entrance.is-pinned { background: var(--slate-wash); }
-.overview-entrance.is-focused { box-shadow: inset 0 0 0 2px var(--slate); }
-.overview-entrance.is-dimmed { opacity: 0.7; }
-.overview-entrance-pin { all: unset; cursor: pointer; display: flex; gap: 6px; align-items: center; min-width: 0; max-width: 100%; }
-.overview-entrance-pin:focus-visible { outline: 3px solid var(--slate); outline-offset: 2px; }
-.overview-entrance-name { min-width: 0; font: 700 14px/1.25 var(--font-display), sans-serif; letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.overview-entrance-summary { font: 10px/1.4 var(--font-mono), monospace; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.overview-entrance-counts { display: flex; gap: 6px; align-items: center; overflow: hidden; white-space: nowrap; }
-.overview-entrance-counts .paper-caps { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.overview-entrance-runs { margin-top: auto; }
-
-.overview-station { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; background: transparent; border: 0; padding: 0; cursor: pointer; color: var(--ink); }
-.overview-machine { display: block; padding: 2px 4px; }
-.station-name { display: flex; align-items: baseline; gap: 5px; padding-top: 4px; white-space: nowrap; max-width: 100%; }
-.station-number { font: 500 10px/1 var(--font-mono), monospace; letter-spacing: 0.8px; color: var(--muted); }
-.station-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; font: 700 15px/1.2 var(--font-display), sans-serif; letter-spacing: -0.15px; }
-.overview-chip { font: 10.5px/1.4 var(--font-mono), monospace; font-variant-numeric: tabular-nums; padding: 2px 7px; border-radius: 6px; background: var(--card); color: var(--ink2); border: 1.5px solid var(--rule); cursor: pointer; white-space: nowrap; }
-.overview-chip-running { background: var(--gold-wash); border-color: var(--running-line); color: var(--ink); }
-.overview-chip-waiting { background: var(--slate); border-color: var(--slate); color: var(--on-accent); }
-.overview-chip-held { background: var(--red); border-color: var(--red); color: var(--on-accent); }
-.overview-chip-parked, .overview-chip-dropped { color: var(--muted); border-style: dashed; }
-
-/* Metro map. */
-.overview-metro { gap: 14px; }
-.metro-ground { display: flex; flex-direction: column; gap: 14px; padding: 14px 0; border-radius: 12px; min-width: 0;
-  background-color: color-mix(in srgb, var(--paper) 35%, transparent);
-  background-image: radial-gradient(circle at 9px 9px, color-mix(in srgb, var(--rule) 80%, transparent) 0.9px, transparent 1.2px);
-  background-size: 18px 18px; }
-.metro-scroll { position: relative; overflow-x: auto; max-width: 100%; }
-.metro-canvas { position: relative; }
-.metro-lines { position: absolute; left: 0; top: 0; overflow: visible; }
-.metro-line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.metro-return { fill: none; stroke-width: 2.5; stroke-dasharray: 5 4; stroke-linecap: round; }
-.metro-terminus { stroke: var(--ink); stroke-width: 5; stroke-linecap: round; }
-.metro-hit { fill: none; stroke: transparent; stroke-width: 10; pointer-events: stroke; }
-.metro-leader { stroke: var(--ink2); stroke-width: 1; stroke-dasharray: 2 2; }
-.metro-link { fill: var(--card); stroke: var(--ink); stroke-width: 2; }
-.metro-glyph { fill: var(--card); stroke: var(--ink); stroke-width: 2.4; }
-.metro-glyph-diamond { stroke-width: 2.2; stroke-linejoin: round; }
-.metro-interchange { fill: var(--card); stroke: var(--ink); stroke-width: 2.4; }
-.metro-pill, .metro-station-name, .metro-label, .metro-station-hit { position: absolute; border: 0; padding: 0; margin: 0; cursor: pointer; }
-.metro-pill { display: flex; align-items: center; justify-content: center; border-radius: 999px; color: var(--on-accent); font: 600 11px/1 var(--font-mono), monospace; white-space: nowrap; overflow: hidden; box-shadow: inset 0 0 0 2px transparent; }
-.metro-pill.is-pinned { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ink) 90%, transparent); }
-.metro-station-hit { background: transparent; }
-/* A route's name on its track: a bordered pill in its belt's colour, centred on the track it sits on. */
-.metro-route { position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--slate); border-radius: 6px; background: var(--card); color: var(--slate-text); font: 500 9px/1 var(--font-mono), monospace; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; overflow: hidden; pointer-events: none; }
-/* A station's status chip, above its glyph; the chip's own look and text come from the daemon. */
-.metro-status { position: absolute; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-.metro-station-name { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 3px; background: color-mix(in srgb, var(--card) 92%, transparent); color: var(--ink); font: 600 11px/13px var(--font-mono), monospace; white-space: nowrap; }
-.metro-label { display: flex; align-items: center; justify-content: center; border-radius: 999px; background: color-mix(in srgb, var(--card) 92%, transparent); color: var(--ink2); font: 10.5px/1 var(--font-mono), monospace; white-space: nowrap; }
-.metro-label.needs-you { color: var(--on-accent); font-weight: 600; }
-.metro-label.is-held { background: var(--red); color: var(--on-red); }
-.metro-label.is-waiting { background: var(--slate-deep); color: var(--on-slate-deep); }
-.metro-dot { position: absolute; display: grid; place-items: center; min-width: 16px; min-height: 16px; padding: 0; border: 0; background: transparent; cursor: pointer; transform: translate(-50%, -50%); transition: transform 120ms ease-out; }
-.metro-dot.is-pointed { transform: translate(-50%, -50%) scale(1.35); }
-.metro-dot-mark { position: relative; display: block; width: 8.5px; height: 8.5px; border-radius: 50%; border: 1.8px solid var(--dot-ring); background: var(--dot-fill); }
-.metro-dot.is-halo .metro-dot-mark { box-shadow: 0 0 0 3.25px color-mix(in srgb, var(--dot-ring) 28%, transparent); }
-.metro-dot-more { padding: 0 3px; border-radius: 999px; background: var(--card); color: var(--ink2); font: 600 9.5px/1.3 var(--font-mono), monospace; }
-.metro-dot-running { --dot-fill: var(--gold-lamp); --dot-ring: var(--gold); }
-.metro-dot-waiting { --dot-fill: var(--slate); --dot-ring: var(--slate-text); }
-.metro-dot-held { --dot-fill: var(--red); --dot-ring: var(--red); }
-.metro-dot-queued, .metro-dot-parked { --dot-fill: var(--card); --dot-ring: var(--ink2); }
-.metro-dot-parked .metro-dot-mark { border-style: dashed; }
-.metro-card { position: absolute; transform: translateY(-50%); display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; background: var(--card); border: 1px solid var(--rule); border-radius: 8px; box-shadow: 0 4px 16px rgba(27, 42, 62, 0.12); pointer-events: none; z-index: 2; }
-.metro-card-title { font: 600 12.5px/1.3 var(--font-body), sans-serif; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.metro-card-more { font: 600 11px/1.3 var(--font-mono), monospace; color: var(--ink); }
-.metro-card-detail { font: 10.5px/1.35 var(--font-mono), monospace; color: var(--ink2); }
-.metro-card-hint { font: 10px/1.3 var(--font-mono), monospace; color: color-mix(in srgb, var(--ink2) 80%, transparent); }
-.metro-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; list-style: none; margin: 0; padding: 0 16px; font: 10.5px/1.2 var(--font-mono), monospace; color: var(--ink2); }
-.metro-legend li { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.legend-sample { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 18px; }
-.legend-circle { width: 12px; height: 12px; border: 2px solid var(--ink); border-radius: 50%; background: var(--card); }
-.legend-diamond { width: 9px; height: 9px; border: 2px solid var(--ink); background: var(--card); transform: rotate(45deg); }
-.legend-square { width: 11px; height: 11px; border: 2px solid var(--ink); background: var(--card); }
-.legend-shared { width: 18px; height: 18px; border: 2px solid var(--ink); border-radius: 4px; background: var(--card); }
-.legend-return { width: 22px; border-top: 2.5px dashed var(--slate); }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--dot-ring); background: var(--dot-fill); }
-.legend-dot.metro-dot-parked { border-style: dashed; }
-.metro-legend .legend-rule { width: 1px; height: 14px; background: var(--rule); }
 /* In a narrow window the posts' captions wrap and their titles keep whole words,  */
 .overview-post .paper-caps { white-space: normal; }
 .overview-post > header h2 { white-space: nowrap; }
 .overview-post > header { flex-wrap: wrap; row-gap: 4px; }
 
-/* The boxes Floor (BoxFloor.tsx): a belt card on the left, each merged stage as a stage box with its status above
+/* The Floor's boxes (BoxFloor.tsx): a belt card on the left, each merged stage as a stage box with its status above
    and its run tags below. The daemon sizes every cell; these rules only set the words and the flow inside it. */
 .box-floor-entrance { position: absolute; left: 0; width: 196px; }
 .box-belt { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; overflow: hidden; height: 100%; box-sizing: border-box; padding: 10px;

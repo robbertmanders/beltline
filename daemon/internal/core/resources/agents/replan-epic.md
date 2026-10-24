@@ -5,7 +5,6 @@ workspace: readOnly
 slots: 1
 runner: pi
 model: openrouter/stealth/space-bunny-alpha
-machine: typewriter
 tint: violet
 icon: list
 outcomes:

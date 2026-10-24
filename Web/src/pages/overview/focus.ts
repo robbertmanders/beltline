@@ -2,7 +2,7 @@
 // geometry, membership, run status or ordering; the daemon supplies those. The pin is browser preference, and
 // hover is transient page state.
 
-/** The opacity an unrelated floor or metro item takes while a belt is in focus. */
+/** The opacity an unrelated floor item takes while a belt is in focus. */
 export const dimmedOpacity = 0.35;
 
 /** A pinned belt wins over a hovered one; with no pin, the hovered belt, if any, is the focus. */
@@ -44,12 +44,12 @@ export function runHref(runId: string, stage?: string | null): string {
   return stage ? `${path}?stage=${encodeURIComponent(stage)}` : path;
 }
 
-/** Active Work filtered to one factory machine across every belt. Search and belt are left at their defaults. */
-export function machineWorkHref(machineId: string): string {
-  return `/work?${new URLSearchParams({ stage: machineId }).toString()}`;
+/** Active Work filtered to one merged stage across every belt. Search and belt are left at their defaults. */
+export function stageWorkHref(stageId: string): string {
+  return `/work?${new URLSearchParams({ stage: stageId }).toString()}`;
 }
 
-/** Active Work for one belt, with the station and search cleared. */
+/** Active Work for one belt, with the stage and search cleared. */
 export function beltWorkHref(beltId: string): string {
   return `/work?${new URLSearchParams({ belt: beltId }).toString()}`;
 }

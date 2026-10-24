@@ -1,18 +1,17 @@
 //
 // The whole factory as one floor: every belt's stages merged by name (ignoring
-// case and whitespace) into shared machines, joined by the tracks the belts
+// case and whitespace) into shared merged stages, joined by the tracks the belts
 // take between them. A belt that comes to a name it already passed on the
-// way gets a second machine of that name, so it never seems to go back. Each belt enters on the left at its trigger; where belts
-// share a machine their tracks meet, and where they go different ways they
-// split again. Machines sit in layers, left to right, so every track runs
-// forwards; a track that would cross a layer without a machine passes through
+// way gets a second merged stage of that name, so it never seems to go back. Each belt enters on the left at its trigger; where belts
+// share a merged stage their tracks meet, and where they go different ways they
+// split again. Merged stages sit in layers, left to right, so every track runs
+// forwards; a track that would cross a layer without a merged stage passes through
 // a waypoint there, so it never runs behind one.
 
 package core
 
 import (
 	"slices"
-	"strings"
 
 	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
@@ -24,7 +23,7 @@ type FactoryTrackBelt struct {
 	Layout BeltLayout
 }
 
-// FactoryTrackMember is one stage of one belt that is part of a machine.
+// FactoryTrackMember is one stage of one belt that is part of a merged stage.
 type FactoryTrackMember struct {
 	BeltID   string
 	BeltName string
@@ -32,28 +31,15 @@ type FactoryTrackMember struct {
 	Stage    Stage
 }
 
-// Worker is the member's kind, agent and runner, joined with " · ".
-func (m FactoryTrackMember) Worker() string {
-	var parts []string
-	parts = append(parts, string(m.Stage.Kind()))
-	if m.Stage.Agent != nil {
-		parts = append(parts, m.Stage.Agent.ID)
-	}
-	if m.Stage.Runner != nil {
-		parts = append(parts, m.Stage.Runner.Label())
-	}
-	return strings.Join(parts, " · ")
-}
-
-// FactoryTrackMachine is one machine on the floor, shared by every belt with a stage of its name.
-type FactoryTrackMachine struct {
+// FactoryTrackStage is one merged stage on the floor, shared by every belt with a stage of its name.
+type FactoryTrackStage struct {
 	ID      string
 	Name    string
 	Members []FactoryTrackMember
 }
 
-// Belts are the belts that go through the machine, in the order they reach it.
-func (m FactoryTrackMachine) Belts() []string {
+// Belts are the belts that go through the merged stage, in the order they reach it.
+func (m FactoryTrackStage) Belts() []string {
 	seen := map[string]struct{}{}
 	out := []string{}
 	for _, member := range m.Members {
@@ -66,26 +52,8 @@ func (m FactoryTrackMachine) Belts() []string {
 	return out
 }
 
-// Mixed reports whether the members do not all share one worker key.
-func (m FactoryTrackMachine) Mixed() bool {
-	keys := map[string]struct{}{}
-	for _, member := range m.Members {
-		keys[member.Stage.WorkerKey()] = struct{}{}
-	}
-	return len(keys) > 1
-}
-
-// Workers is one line per member: "belt [id]: worker".
-func (m FactoryTrackMachine) Workers() string {
-	lines := make([]string, 0, len(m.Members))
-	for _, member := range m.Members {
-		lines = append(lines, member.BeltName+" ["+member.BeltID+"]: "+member.Worker())
-	}
-	return strings.Join(lines, "\n")
-}
-
-// Contains reports whether run is at one of the machine's stages.
-func (m FactoryTrackMachine) Contains(run Run) bool {
+// Contains reports whether run is at one of the merged stage's members.
+func (m FactoryTrackStage) Contains(run Run) bool {
 	return slices.ContainsFunc(m.Members, func(member FactoryTrackMember) bool {
 		return member.BeltID == run.BeltID && member.StageID == run.StageID
 	})
@@ -97,13 +65,13 @@ type FactoryTrackNodeKind string
 const (
 	// FactoryTrackNodeEntrance is a belt's entrance; ID is the belt id.
 	FactoryTrackNodeEntrance FactoryTrackNodeKind = "entrance"
-	// FactoryTrackNodeMachine is a machine; ID is the machine id.
-	FactoryTrackNodeMachine FactoryTrackNodeKind = "machine"
+	// FactoryTrackNodeStage is a merged stage; ID is its id.
+	FactoryTrackNodeStage FactoryTrackNodeKind = "stage"
 	// FactoryTrackNodeWaypoint is a waypoint a longer track passes through; Waypoint is its number.
 	FactoryTrackNodeWaypoint FactoryTrackNodeKind = "waypoint"
 )
 
-// FactoryTrackNode is something placed in a layer: a belt's entrance, a machine, or a waypoint
+// FactoryTrackNode is something placed in a layer: a belt's entrance, a merged stage, or a waypoint
 // a longer track passes through. It is comparable, so it can key a map.
 //
 // Encoding: {"kind": ..., "value": ...}, the value being the id, or the waypoint's number.
@@ -132,9 +100,9 @@ func FactoryTrackEntrance(beltID string) FactoryTrackNode {
 	return FactoryTrackNode{Kind: FactoryTrackNodeEntrance, ID: beltID}
 }
 
-// FactoryTrackMachineNode is the node of a machine.
-func FactoryTrackMachineNode(machineID string) FactoryTrackNode {
-	return FactoryTrackNode{Kind: FactoryTrackNodeMachine, ID: machineID}
+// FactoryTrackStageNode is the node of a merged stage.
+func FactoryTrackStageNode(stageID string) FactoryTrackNode {
+	return FactoryTrackNode{Kind: FactoryTrackNodeStage, ID: stageID}
 }
 
 // FactoryTrackWaypoint is the node of a waypoint.
@@ -162,16 +130,16 @@ type factoryTrackWalk struct {
 	Passed map[FactoryTrackNode]struct{}
 }
 
-// FactoryTrack is the whole factory's floor: machines, layers and the tracks between
+// FactoryTrack is the whole factory's floor: merged stages, layers and the tracks between
 // them, built from every belt.
 type FactoryTrack struct {
-	Belts    []FactoryTrackBelt
-	Machines []FactoryTrackMachine
-	// Layers are left to right: the entrances, then the machines, each layer top to bottom.
+	Belts  []FactoryTrackBelt
+	Stages []FactoryTrackStage
+	// Layers are left to right: the entrances, then the merged stages, each layer top to bottom.
 	Layers [][]FactoryTrackNode
 	// Tracks are stretches between neighbouring layers.
 	Tracks []FactoryTrackTrack
-	// Returns are where a belt goes back to a machine another belt has after this one: drawn as a lane under the floor.
+	// Returns are where a belt goes back to a merged stage another belt has after this one: drawn as a lane under the floor.
 	Returns []FactoryTrackTrack
 }
 

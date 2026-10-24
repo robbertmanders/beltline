@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,9 +5,6 @@ import { applyStoredAppearance } from "../state/theme";
 import { json } from "../test/response";
 import { goldenText } from "../test/golden";
 import { fixtureRoute, refusal, renderPage, stubDaemon, type DaemonRequest, type Handler } from "../test/daemon";
-
-// The belt look selector sizes itself in components.css; jsdom gets that stylesheet from disk, as Vitest leaves CSS unprocessed.
-const componentsCss = readFileSync(resolve(process.cwd(), "src/components/components.css"), "utf8");
 
 /** The daemon for Settings: its golden reads, with the routes a test changes. */
 function daemonFor(routes: Record<string, Handler> = {}) {
@@ -48,20 +43,6 @@ function notificationRoutes(confirmed: boolean, rejected = false): Record<string
 }
 
 describe("Settings cards", () => {
-  it("keeps the belt look selector sized to its options", async () => {
-    const style = document.createElement("style");
-    style.textContent = componentsCss;
-    document.head.append(style);
-    try {
-      await renderSettings();
-      const selector = screen.getByRole("group", { name: "Belt look" });
-      expect(selector.parentElement?.className).toBe("belt-look-control");
-      expect(getComputedStyle(selector.parentElement!).alignSelf).toBe("flex-start");
-    } finally {
-      style.remove();
-    }
-  });
-
   it("renders each tool row's state from the daemon", async () => {
     const tools = JSON.stringify({ tools: [
       { name: "gh", purpose: "GitHub", ok: true, detail: "installed", optional: false },

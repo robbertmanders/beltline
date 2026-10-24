@@ -30,7 +30,6 @@ type SettingsPatch struct {
 	Notifications       *bool                     `json:"notifications,omitzero"`
 	LibraryRepositories *[]core.LibraryRepository `json:"libraryRepositories,omitzero"`
 	Afk                 *AfkSettingsPatch         `json:"afk,omitzero"`
-	BeltLook            *core.BeltLook            `json:"beltLook,omitzero"`
 	ShowInsights        *bool                     `json:"showInsights,omitzero"`
 }
 
@@ -42,11 +41,8 @@ func (p *SettingsPatch) UnmarshalJSON(data []byte) error {
 	if err := decodeStrict(data, &w); err != nil {
 		return err
 	}
-	if err := rejectNulls(data, "login", "notifications", "libraryRepositories", "afk", "beltLook", "showInsights"); err != nil {
+	if err := rejectNulls(data, "login", "notifications", "libraryRepositories", "afk", "showInsights"); err != nil {
 		return err
-	}
-	if p := w.BeltLook; p != nil && !slices.Contains(core.AllBeltLook, *p) {
-		return fmt.Errorf("unknown belt look %q", *p)
 	}
 	*p = SettingsPatch(w)
 	return nil
@@ -201,9 +197,6 @@ func (c *Coordinator) applySettingsPatchNow(patch SettingsPatch) (store.Settings
 			return store.Settings{}, core.NewFailure("The library repositories are not valid.", problems...)
 		}
 		draft.LibraryRepositories = *patch.LibraryRepositories
-	}
-	if patch.BeltLook != nil {
-		draft.BeltLook = *patch.BeltLook
 	}
 	if patch.ShowInsights != nil {
 		draft.ShowInsights = *patch.ShowInsights

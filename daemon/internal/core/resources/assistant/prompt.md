@@ -34,8 +34,8 @@ key: helper
 workspace: worktree
 slots: 1
 runner: pi
-machine: box
 tint: teal
+icon: chip
 outcomes:
   - name: done
     when: The requested work is finished.

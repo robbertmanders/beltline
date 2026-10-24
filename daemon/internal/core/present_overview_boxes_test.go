@@ -97,11 +97,8 @@ func TestTheBoxMetricsKeepTheTrackAtTheBoxCentreAndTheColumnPitch(t *testing.T) 
 	if metrics.Gap != 22 {
 		t.Errorf("gap = %v", metrics.Gap)
 	}
-	if metrics.Box == nil || *metrics.Box != 148 {
+	if metrics.Box != 148 {
 		t.Errorf("box = %v, want 148", metrics.Box)
-	}
-	if FloorLayoutMetricsDefault().Box != nil {
-		t.Error("the machines keep their own routing, with no box width")
 	}
 }
 
@@ -130,29 +127,20 @@ func obRun(name, beltID string, state RunState) Run {
 	return run
 }
 
-// obView is the Overview of belts and runs in the given look.
-func obView(belts []OverviewBelt, runs []Run, look BeltLook) OverviewView {
-	return NewOverviewView(OverviewViewArgs{Belts: belts, Runs: runs, Now: ovNow, Look: &look})
+// obView is the Overview of belts and runs.
+func obView(belts []OverviewBelt, runs []Run) OverviewView {
+	return NewOverviewView(OverviewViewArgs{Belts: belts, Runs: runs, Now: ovNow})
 }
 
-// TestTheBoxesFloorSendsBoxesWithTheirTagsAndNoMachines
-func TestTheBoxesFloorSendsBoxesWithTheirTagsAndNoMachines(t *testing.T) {
+// TestTheFloorSendsBoxesWithTheirTags
+func TestTheFloorSendsBoxesWithTheirTags(t *testing.T) {
 	t.Parallel()
 	belts := []OverviewBelt{obOverviewBelt("issues"), obOverviewBelt("docs")}
 	var runs []Run
 	for index := range 5 {
 		runs = append(runs, obRun("chip-"+strconv.Itoa(index), "issues", RunStateRunning))
 	}
-	view := obView(belts, runs, BeltLookBoxes)
-	if view.Look != BeltLookBoxes {
-		t.Errorf("look = %v, want boxes", view.Look)
-	}
-	if len(view.Floor.Machines) != 0 {
-		t.Errorf("machines = %d, want none", len(view.Floor.Machines))
-	}
-	if view.MetroLayout != nil {
-		t.Error("the boxes look draws no metro")
-	}
+	view := obView(belts, runs)
 	var box, shared *OverviewFloorBox
 	for index := range view.Floor.Boxes {
 		if view.Floor.Boxes[index].RunCount == 5 && box == nil {
@@ -182,82 +170,21 @@ func TestTheBoxesFloorSendsBoxesWithTheirTagsAndNoMachines(t *testing.T) {
 	}
 }
 
-// TestTheMachinesLookKeepsItsFiveChipsAndSendsNoBoxes
-func TestTheMachinesLookKeepsItsFiveChipsAndSendsNoBoxes(t *testing.T) {
-	t.Parallel()
-	var runs []Run
-	for index := range 6 {
-		runs = append(runs, obRun("chip-"+strconv.Itoa(index), "issues", RunStateQueued))
-	}
-	view := obView([]OverviewBelt{obOverviewBelt("issues")}, runs, BeltLookMachines)
-	if len(view.Floor.Boxes) != 0 {
-		t.Errorf("boxes = %d, want none", len(view.Floor.Boxes))
-	}
-	var machine *OverviewFloorMachine
-	for index := range view.Floor.Machines {
-		if view.Floor.Machines[index].RunCount == 6 {
-			machine = &view.Floor.Machines[index]
-			break
-		}
-	}
-	if machine == nil {
-		t.Fatal("no machine holds the six runs")
-	}
-	if len(machine.Chips) != OverviewFloorChipLimit-1 {
-		t.Errorf("chips = %d, want %d", len(machine.Chips), OverviewFloorChipLimit-1)
-	}
-	if machine.More != 6-(OverviewFloorChipLimit-1) {
-		t.Errorf("more = %d, want %d", machine.More, 6-(OverviewFloorChipLimit-1))
-	}
-	if view.Floor.Layout == nil {
-		t.Error("the machines look draws a layout")
-	}
-	if view.MetroLayout != nil {
-		t.Error("the machines look draws no metro")
-	}
-}
-
-// TestTheMetroLookBuildsOnlyTheMetro
-func TestTheMetroLookBuildsOnlyTheMetro(t *testing.T) {
-	t.Parallel()
-	belts := []OverviewBelt{obOverviewBelt("issues")}
-	metro := obView(belts, nil, BeltLookMetro)
-	if metro.MetroLayout == nil {
-		t.Error("the metro look draws the metro")
-	}
-	if metro.Floor.Layout != nil {
-		t.Error("the metro look draws no factory layout")
-	}
-	if len(metro.Floor.Machines) != 0 || len(metro.Floor.Boxes) != 0 {
-		t.Error("the metro look builds neither machines nor boxes")
-	}
-	boxes := obView(belts, nil, BeltLookBoxes)
-	if boxes.MetroLayout != nil {
-		t.Error("the boxes look draws no metro")
-	}
-	if boxes.Floor.Layout == nil {
-		t.Error("the boxes look draws a factory layout")
-	}
-}
-
 // TestBoxFramesSitInTheirCellsAndInsideTheLayout
 func TestBoxFramesSitInTheirCellsAndInsideTheLayout(t *testing.T) {
 	t.Parallel()
 	belts := []OverviewBelt{obOverviewBelt("issues"), obOverviewBelt("docs")}
 	runs := []Run{obRun("one", "issues", RunStateHeld), obRun("two", "docs", RunStateWaiting)}
-	view := obView(belts, runs, BeltLookBoxes)
+	view := obView(belts, runs)
 	layout := view.Floor.Layout
-	if layout == nil {
-		t.Fatal("the boxes look draws a layout")
-	}
-	if layout.Metrics.Box == nil || *layout.Metrics.Box != OverviewBoxesBoxWidth {
+	if layout.Metrics.Box != OverviewBoxesBoxWidth {
 		t.Errorf("box metric = %v, want %v", layout.Metrics.Box, OverviewBoxesBoxWidth)
 	}
 	if len(view.Floor.Boxes) == 0 {
 		t.Fatal("the Floor has no boxes")
 	}
 	for _, box := range view.Floor.Boxes {
-		placed := layout.Box(FactoryTrackMachineNode(box.ID))
+		placed := layout.Box(FactoryTrackStageNode(box.ID))
 		if placed == nil {
 			t.Fatalf("box %s is not placed", box.ID)
 		}
@@ -325,7 +252,7 @@ func TestAReturnLaneLabelClearsTheBoxesAboveItAndTheLanesBesideIt(t *testing.T) 
 	}
 	track := NewFactoryTrack(tracked)
 	metrics := OverviewBoxesMetrics()
-	layout := NewFloorLayout(track, &metrics, nil, func(FactoryTrackMachine) float64 { return OverviewBoxesHeight(0) })
+	layout := NewFloorLayout(track, metrics, nil, func(FactoryTrackStage) float64 { return OverviewBoxesHeight(0) })
 	// A lane label is a 16 point pill centred on its lane, so it needs 8 points of air above and below.
 	const labelHalf = 8.0
 	if len(layout.Lanes) == 0 {
@@ -333,7 +260,7 @@ func TestAReturnLaneLabelClearsTheBoxesAboveItAndTheLanesBesideIt(t *testing.T) 
 	}
 	for _, lane := range layout.Lanes {
 		for _, node := range layout.Placed {
-			if node.X < lane.Left || node.X > lane.Right || !isMachine(node.Node) || node.Top+node.Height > lane.LabelY {
+			if node.X < lane.Left || node.X > lane.Right || !isStage(node.Node) || node.Top+node.Height > lane.LabelY {
 				continue
 			}
 			if lane.LabelY-labelHalf < node.Top+node.Height+labelHalf {

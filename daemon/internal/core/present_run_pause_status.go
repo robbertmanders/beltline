@@ -12,7 +12,7 @@ func RunPauseStatusOverlay(status StageStatus, run Run, stage Stage) StageStatus
 	}
 	if attempt := lastOpenAttemptAt(run, stage.ID); attempt != nil && attempt.Interruption != nil &&
 		attempt.Interruption.Continuation != nil && attempt.Interruption.Continuation.Status == AttemptInterruptionContinuationStatusQueued && run.Pause == nil {
-		return StageStatus{Text: "QUEUED TO CONTINUE", Look: StageStatusLookPlain, Face: StageStatusFacePaused}
+		return StageStatus{Text: "QUEUED TO CONTINUE", Look: StageStatusLookPlain, Paused: true}
 	}
 	if run.Pause == nil || !run.Pause.BlocksProgress() {
 		return status
@@ -20,20 +20,20 @@ func RunPauseStatusOverlay(status StageStatus, run Run, stage Stage) StageStatus
 	pause := run.Pause
 	switch pause.Phase {
 	case RunPausePhasePausing:
-		return StageStatus{Text: "PAUSING…", Look: status.Look, Face: StageStatusFacePaused}
+		return StageStatus{Text: "PAUSING…", Look: status.Look, Paused: true}
 	case RunPausePhaseIncomplete:
 		for _, attempt := range run.Attempts {
 			if attempt.StageID == stage.ID && attempt.IsOpen() && attempt.Interruption != nil &&
 				attempt.Interruption.Confirmation == AttemptInterruptionConfirmationFailed {
-				return StageStatus{Text: "PAUSE INCOMPLETE", Look: StageStatusLookHeld, Face: StageStatusFacePaused}
+				return StageStatus{Text: "PAUSE INCOMPLETE", Look: StageStatusLookHeld, Paused: true}
 			}
 		}
-		return StageStatus{Text: "PAUSED · " + status.Text, Look: status.Look, Face: StageStatusFacePaused}
+		return StageStatus{Text: "PAUSED · " + status.Text, Look: status.Look, Paused: true}
 	case RunPausePhaseReconcileFailed:
 		reason := ValueOr(pause.Reason, "COULD NOT READ THE SOURCE")
-		return StageStatus{Text: "PAUSED · " + reason, Look: StageStatusLookHeld, Face: StageStatusFacePaused}
+		return StageStatus{Text: "PAUSED · " + reason, Look: StageStatusLookHeld, Paused: true}
 	default:
-		return StageStatus{Text: "PAUSED · " + status.Text, Look: status.Look, Face: StageStatusFacePaused}
+		return StageStatus{Text: "PAUSED · " + status.Text, Look: status.Look, Paused: true}
 	}
 }
 

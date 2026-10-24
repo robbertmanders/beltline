@@ -2,25 +2,23 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { OverviewFloor, OverviewFloorChip, OverviewResponse, OverviewRun } from "../../api/wire.gen";
+import type { OverviewFloorChip, OverviewResponse, OverviewRun } from "../../api/wire.gen";
 import { BoxFloor, type BoxFloorProps } from "./BoxFloor";
 import { hoveredAfter, resolveFocus } from "./focus";
 import { golden } from "../../test/golden";
 
-/** The demo's default look: the boxes Floor, with its boxes sent. */
-type BoxesOverview = OverviewResponse & { floor: OverviewFloor & { boxes: NonNullable<OverviewFloor["boxes"]>; layout: NonNullable<OverviewFloor["layout"]> } };
-const overview = (): BoxesOverview => golden<BoxesOverview>("views-overview.json");
+const overview = (): OverviewResponse => golden<OverviewResponse>("views-overview.json");
 
 function runsOf(view: OverviewResponse): Map<string, OverviewRun> {
   return new Map(view.runs.map(run => [run.id, run]));
 }
 
 /** The page's own hover and pin rules, so a belt's focus runs the way the Overview runs it. */
-function Harness({ view, pinned: initialPin = null, onOpenRun = vi.fn(), onOpenMachine = vi.fn(), onOpenBelt = vi.fn() }: {
-  view: BoxesOverview;
+function Harness({ view, pinned: initialPin = null, onOpenRun = vi.fn(), onOpenStage = vi.fn(), onOpenBelt = vi.fn() }: {
+  view: OverviewResponse;
   pinned?: string | null;
   onOpenRun?: (chip: OverviewFloorChip) => void;
-  onOpenMachine?: (machineId: string) => void;
+  onOpenStage?: (stageId: string) => void;
   onOpenBelt?: (beltId: string) => void;
 }) {
   const [pinned, setPinned] = useState<string | null>(initialPin);
@@ -35,18 +33,18 @@ function Harness({ view, pinned: initialPin = null, onOpenRun = vi.fn(), onOpenM
     onHover: (belt, pointing) => setHovered(current => hoveredAfter(current, belt, pointing)),
     onPin: belt => setPinned(current => (current === belt ? null : belt)),
     onOpenRun,
-    onOpenMachine,
+    onOpenStage,
     onOpenBelt
   };
   return <BoxFloor {...props} />;
 }
 
 const dimmed = (element: Element | null) => element?.getAttribute("style")?.includes("opacity: 0.35") ?? false;
-const cell = (id: string) => document.querySelector<HTMLElement>(`.floor-box[data-machine='${id}']`)!;
+const cell = (id: string) => document.querySelector<HTMLElement>(`.floor-box[data-stage='${id}']`)!;
 
 afterEach(() => cleanup());
 
-describe("Boxes Floor drawing", () => {
+describe("Floor drawing", () => {
   it("shows each box's status above it and at most three run tags, then the count of the rest", () => {
     const view = overview();
     const busy = view.floor.boxes.find(box => box.runCount > 3);
@@ -110,15 +108,15 @@ describe("Boxes Floor focus and actions", () => {
     expect(document.querySelector(".box-belt[data-belt='issues']")!.classList.contains("is-pinned")).toBe(false);
   });
 
-  it("opens a box's machine when its stage box is clicked, and a run tag's run at its stage", async () => {
+  it("opens a box's stage when its stage box is clicked, and a run tag's run at its stage", async () => {
     const user = userEvent.setup();
     const view = overview();
-    const onOpenMachine = vi.fn();
+    const onOpenStage = vi.fn();
     const onOpenRun = vi.fn();
-    render(<Harness view={view} onOpenMachine={onOpenMachine} onOpenRun={onOpenRun} />);
+    render(<Harness view={view} onOpenStage={onOpenStage} onOpenRun={onOpenRun} />);
     const box = view.floor.boxes.find(item => item.chips.length > 0)!;
     await user.click(cell(box.id).querySelector<HTMLButtonElement>(".stage-box")!);
-    expect(onOpenMachine).toHaveBeenCalledWith(box.id);
+    expect(onOpenStage).toHaveBeenCalledWith(box.id);
     await user.click(cell(box.id).querySelector<HTMLButtonElement>(".floor-tag")!);
     expect(onOpenRun).toHaveBeenCalledWith(box.chips[0]);
   });

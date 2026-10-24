@@ -40,7 +40,7 @@ var tsOverrides = map[string]string{
 		`{ ticket: { key: string } }`,
 	"RouteSet":         `Record<string, string | string[]>`,
 	"RunPauseDeferred": `{ merged: { _0: string[] } } | { conflict: { _0: string[] } }`,
-	"FactoryTrackNode": `{ kind: "entrance" | "machine"; value: string } | { kind: "waypoint"; value: number }`,
+	"FactoryTrackNode": `{ kind: "entrance" | "stage"; value: string } | { kind: "waypoint"; value: number }`,
 	"MarkdownBlock": `{ type: "heading"; level: number; text: string } | { type: "item"; marker: string; text: string } | ` +
 		`{ type: "code" | "paragraph"; text: string }`,
 	"RunSnapshot": `Run & { actions: RunAction[] }`,

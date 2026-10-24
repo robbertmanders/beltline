@@ -4,7 +4,6 @@ import { Chip, NeedChip, type Look } from "../../components/Paper";
 import { StageBox, type BoxState } from "../../theme/stages/StageBox";
 import { focusOpacity } from "./focus";
 import { FactoryTracks, nodeKey } from "./FactoryTracks";
-import { chipLabel, runCardText } from "./Stations";
 
 export interface BoxFloorProps {
   layout: FloorLayout;
@@ -16,7 +15,7 @@ export interface BoxFloorProps {
   onHover: (belt: string, pointing: boolean) => void;
   onPin: (belt: string) => void;
   onOpenRun: (chip: OverviewFloorChip) => void;
-  onOpenMachine: (machineId: string) => void;
+  onOpenStage: (stageId: string) => void;
   onOpenBelt: (beltId: string) => void;
 }
 
@@ -24,7 +23,7 @@ export interface BoxFloorProps {
 const boxStates: Record<Look, BoxState> = { done: "done", running: "running", waiting: "needs", held: "held", plain: "idle" };
 
 /**
- * The boxes Floor as the daemon laid it out: each belt's card on the left, each merged stage as one box with its
+ * The Floor as the daemon laid it out: each belt's card on the left, each merged stage as one box with its
  * status above and its run tags below, and the tracks between them. The positions are the daemon's; the
  * browser only draws the boxes, lights a focused belt's tracks and dims what it does not touch.
  */
@@ -45,24 +44,24 @@ export function BoxFloor(props: BoxFloorProps) {
         </div>;
       })}
       {boxes.map(box => <BoxCell key={box.id} box={box} runs={runs} focus={focus}
-        onOpenRun={props.onOpenRun} onOpenMachine={props.onOpenMachine} />)}
+        onOpenRun={props.onOpenRun} onOpenStage={props.onOpenStage} />)}
     </div>
     {belts.length === 0 && <p className="empty-state" role="status">No belts are on the floor.</p>}
   </div>;
 }
 
 /** One merged stage: its status chip above, its stage box, and its run tags below, in the cell the daemon sized. */
-function BoxCell({ box, runs, focus, onOpenRun, onOpenMachine }: {
+function BoxCell({ box, runs, focus, onOpenRun, onOpenStage }: {
   box: OverviewFloorBox;
   runs: ReadonlyMap<string, OverviewRun>;
   focus: string | null;
   onOpenRun: (chip: OverviewFloorChip) => void;
-  onOpenMachine: (machineId: string) => void;
+  onOpenStage: (stageId: string) => void;
 }) {
-  return <div className="floor-box" data-machine={box.id} style={{ left: box.x, top: box.y, width: box.width, height: box.height, opacity: focusOpacity(box.belts, focus) }}>
+  return <div className="floor-box" data-stage={box.id} style={{ left: box.x, top: box.y, width: box.width, height: box.height, opacity: focusOpacity(box.belts, focus) }}>
     <StatusChip look={box.status.look as Look} text={box.status.text} />
     <StageBox icon={box.icon as StageIcon} tint={box.tint as Tint} caption={box.caption} title={box.name} state={boxStates[box.status.look as Look]}
-      label={`${box.name}: ${box.status.text.toLowerCase()}`} onClick={() => onOpenMachine(box.id)} />
+      label={`${box.name}: ${box.status.text.toLowerCase()}`} onClick={() => onOpenStage(box.id)} />
     <div className="floor-box-tags">
       {box.chips.map(chip => <RunTag key={chip.runId} chip={chip} run={runs.get(chip.runId)} onOpen={() => onOpenRun(chip)} />)}
       {box.more > 0 && <span className="floor-tag floor-tag-more">+{box.more}</span>}
@@ -74,6 +73,17 @@ function StatusChip({ look, text }: { look: Look; text: string }) {
   if (look === "waiting") return <span className="floor-box-status"><NeedChip>{text}</NeedChip></span>;
   if (look === "plain") return <span className="floor-box-status"><Chip tone="grey">{text}</Chip></span>;
   return <span className="floor-box-status"><Chip look={look}>{text}</Chip></span>;
+}
+
+/** A run tag's name: its reference and its belt's short name. */
+export function chipLabel(chip: OverviewFloorChip): string {
+  return [chip.ref, chip.belt].filter(Boolean).join(" · ");
+}
+
+/** The hover text for a run: its subject, repository, and where it is. */
+export function runCardText(run: OverviewRun | undefined, fallback: string): string {
+  if (!run) return fallback;
+  return `${run.ref} ${run.title} · ${run.repository} · ${run.location.text}`;
 }
 
 /** A run tag under a box: its reference and belt, lit by what the run needs. */

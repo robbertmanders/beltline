@@ -46,14 +46,10 @@ type RunPresentationStagePanel struct {
 	// Step goes out as the panel's step word (api.RunStageWire), which writes todo as notStarted.
 	Step             StatusStep                    `json:"-"`
 	Status           StageStatus                   `json:"status"`
-	CompactStatus    StageStatus                   `json:"compactStatus"`
 	DefaultAttempt   *string                       `json:"defaultAttempt,omitzero"`
 	Attempts         []RunPresentationAttemptEntry `json:"attempts"`
 	EmptyMessage     *string                       `json:"emptyMessage,omitzero"`
 	LiveWatchSummary *string                       `json:"liveWatchSummary,omitzero"`
-	// Machine is the daemon's machine drawing for this stage; Tint is the tint it uses.
-	Machine Machine `json:"machine"`
-	Tint    Tint    `json:"tint"`
 	// Worker is the runner or agent label shown under the stage name.
 	Worker *string `json:"worker,omitzero"`
 }
@@ -69,7 +65,6 @@ type RunPresentationWatchNote struct {
 type RunPresentationSnapshot struct {
 	RunID        string
 	DefaultStage string
-	Compact      bool
 	Metadata     string
 	FirstVerdict *string
 	Spend        Spend
@@ -90,19 +85,6 @@ const (
 	runPresentationMergedSuffix  = " to be merged."
 	runPresentationListSeparator = ", "
 )
-
-// RunPresentationCompactStatus is the status shortened for a compact run page.
-func RunPresentationCompactStatus(status StageStatus) StageStatus {
-	for _, word := range []string{"RUNNING ", "RETRY "} {
-		if strings.HasPrefix(status.Text, word) {
-			status.Text = "◐ " + status.Text[len(word):]
-		}
-	}
-	if status.Text == "WAITING FOR YOU" {
-		status.Text = "FOR YOU"
-	}
-	return status
-}
 
 // RunPresentationCaption is the caption over the belt: where the run is now, or what it finished as.
 func RunPresentationCaption(run Run, ambiguous map[string]struct{}) string {
@@ -228,7 +210,7 @@ func RunPresentationEmptyMessage(stage Stage, run Run, step StatusStep) string {
 }
 
 // RunPresentationWorker is who works stage for run, as the run page lists it under the
-// machine: on a stage that spreads its sessions, the runner the run took.
+// stage: on a stage that spreads its sessions, the runner the run took.
 func RunPresentationWorker(stage Stage, run Run) string {
 	switch stage.Kind() {
 	case StageKindGate:
@@ -298,10 +280,9 @@ func RunPresentationWatchingSummary(run Run, stage Stage, ambiguous map[string]s
 	return runPresentationWaitingFor + joinedNames + runPresentationMergedSuffix + " Right now: " + strings.Join(notes, runPresentationListSeparator) + "."
 }
 
-// RunPresentationProject is the run page's full projection for one run at availableWidth.
-// agentForStage gives the agent a stage uses (nil when it has none).
-func RunPresentationProject(run Run, availableWidth float64, pausedBelt bool, pause Pause, now time.Time,
-	ambiguousRepositories map[string]struct{}, actions []RunAction, agentForStage func(stage Stage) *Agent) RunPresentationSnapshot {
+// RunPresentationProject is the run page's full projection for one run.
+func RunPresentationProject(run Run, pausedBelt bool, pause Pause, now time.Time,
+	ambiguousRepositories map[string]struct{}, actions []RunAction) RunPresentationSnapshot {
 	in := runPresentationProjection{
 		run:                   run,
 		layout:                run.Layout(),
@@ -309,7 +290,6 @@ func RunPresentationProject(run Run, availableWidth float64, pausedBelt bool, pa
 		pause:                 pause,
 		now:                   now,
 		ambiguousRepositories: ambiguousRepositories,
-		agentForStage:         agentForStage,
 	}
 	panels := make([]RunPresentationStagePanel, 0, len(run.Stages))
 	for _, stage := range run.Stages {
@@ -319,7 +299,6 @@ func RunPresentationProject(run Run, availableWidth float64, pausedBelt bool, pa
 	return RunPresentationSnapshot{
 		RunID:        run.ID,
 		DefaultStage: run.StageID,
-		Compact:      RunLayoutCompact(availableWidth),
 		Metadata:     RunPresentationMetadata(run),
 		FirstVerdict: runPresentationFirstVerdict(run),
 		Spend:        spend,

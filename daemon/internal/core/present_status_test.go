@@ -74,8 +74,8 @@ func TestStagesBeforeTheCurrentOneAreDone(t *testing.T) {
 		t.Fatalf("approve = %s, want todo", got)
 	}
 	spec := StatusStage(r, r.Stages[1], false, PauseLive, presAt(75))
-	if spec.Text != "RUNNING 01:15" || spec.Face != StageStatusFaceRun {
-		t.Fatalf("spec = %+v, want RUNNING 01:15 on the run face", spec)
+	if spec.Text != "RUNNING 01:15" || spec.Look != StageStatusLookRunning {
+		t.Fatalf("spec = %+v, want RUNNING 01:15, running", spec)
 	}
 	if got := StatusStage(r, r.Stages[0], false, PauseLive, engineT0).Text; got != "✓ 0s" {
 		t.Fatalf("triage text = %q, want ✓ 0s", got)
@@ -101,36 +101,6 @@ func TestQueuedStagesShowWhetherTheBeltIsPaused(t *testing.T) {
 	}
 	if got := StatusLocation(r, false, PauseLive).Text; got != "Triage · queued" {
 		t.Fatalf("location = %q, want Triage · queued", got)
-	}
-}
-
-// TestMergedColumnStatusesAndPartialPause
-func TestMergedColumnStatusesAndPartialPause(t *testing.T) {
-	t.Parallel()
-	one := presRun(139, nil, true)
-	if got := StatusColumn([]Run{one}, nil, PauseLive).Text; got != "RUNNING · #139" {
-		t.Fatalf("one running = %q", got)
-	}
-	if got := StatusColumn([]Run{one, presRun(140, nil, true)}, nil, PauseLive).Text; got != "2 RUNNING" {
-		t.Fatalf("two running = %q", got)
-	}
-	one.State = RunStateHeld
-	waiting := presRun(140, nil, false)
-	waiting.State = RunStateWaiting
-	if got := StatusColumn([]Run{waiting, waiting, one}, nil, PauseLive).Text; got != "2 WAITING FOR YOU · 1 HELD" {
-		t.Fatalf("waiting and held = %q", got)
-	}
-	if got := StatusColumn(nil, nil, PauseLive).Text; got != "IDLE" {
-		t.Fatalf("empty column = %q", got)
-	}
-	queued := presRun(141, nil, false)
-	if got := StatusColumn([]Run{queued}, map[string]struct{}{queued.BeltID: {}}, PauseLive).Text; got != "1 PAUSED" {
-		t.Fatalf("paused belt = %q", got)
-	}
-	other := queued
-	other.BeltID = "other"
-	if got := StatusColumn([]Run{queued, other}, map[string]struct{}{queued.BeltID: {}}, PauseLive).Text; got != "1 QUEUED · 1 PAUSED" {
-		t.Fatalf("partial pause = %q", got)
 	}
 }
 
@@ -202,8 +172,8 @@ func TestAQueuedStageReadsPausedOnEveryBelt(t *testing.T) {
 	}
 }
 
-// TestLocationAndColumnAgreeWithTheStage
-func TestLocationAndColumnAgreeWithTheStage(t *testing.T) {
+// TestLocationAgreesWithTheStage
+func TestLocationAgreesWithTheStage(t *testing.T) {
 	t.Parallel()
 	queued := presRun(1, nil, false)
 	running := presRun(2, []string{"ready to spec"}, true)
@@ -216,12 +186,6 @@ func TestLocationAndColumnAgreeWithTheStage(t *testing.T) {
 	}
 	if got := StatusLocation(running, false, PauseLive).Text; got != "Spec · running" {
 		t.Fatalf("live location = %q", got)
-	}
-	if got := StatusColumn([]Run{queued}, nil, pause).Text; got != "1 PAUSED" {
-		t.Fatalf("paused column = %q", got)
-	}
-	if got := StatusColumn([]Run{queued}, nil, PauseLive).Text; got != "1 QUEUED" {
-		t.Fatalf("live column = %q", got)
 	}
 	// A watch has no agent to suspend, so it keeps saying it is running.
 	watch := DefaultsStage(StageTypeWatch, nil, nil, nil)
@@ -322,22 +286,6 @@ func TestStatusDurationBoundaries(t *testing.T) {
 	for _, c := range cases {
 		if got := StatusDuration(c.seconds); got != c.want {
 			t.Errorf("StatusDuration(%v) = %q, want %q", c.seconds, got, c.want)
-		}
-	}
-}
-
-func TestOnlyUnreachedAndSkippedStagesDimOnTheMap(t *testing.T) {
-	t.Parallel()
-	dimmed := map[StatusStep]bool{
-		StatusStepTodo:    true,
-		StatusStepSkipped: true,
-	}
-	for _, step := range []StatusStep{
-		StatusStepDone, StatusStepRunning, StatusStepWaiting, StatusStepQueued, StatusStepHeld,
-		StatusStepParked, StatusStepDropped, StatusStepRedo, StatusStepTodo, StatusStepSkipped,
-	} {
-		if got := step.Dimmed(); got != dimmed[step] {
-			t.Errorf("%s.Dimmed() = %v, want %v", step, got, dimmed[step])
 		}
 	}
 }

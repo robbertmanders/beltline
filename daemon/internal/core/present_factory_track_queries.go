@@ -1,5 +1,5 @@
-// The factory track's reads: the machine, belt and layer lookups, a stretch's bend,
-// the runs at a machine and the short names a run's chip shows. The types are in
+// The factory track's reads: the merged stage, belt and layer lookups,
+// the runs at a merged stage and the short names a run's chip shows. The types are in
 // present_factory_track.go; the build is in present_factory_track_build.go.
 
 package core
@@ -16,12 +16,12 @@ var factoryTrackGenericWords = map[string]struct{}{
 	"to": {}, "of": {}, "the": {}, "for": {}, "and": {},
 }
 
-// Machine is the machine with id, or nil.
-func (f FactoryTrack) Machine(id string) *FactoryTrackMachine {
-	for i := range f.Machines {
-		if f.Machines[i].ID == id {
-			machine := f.Machines[i]
-			return &machine
+// Stage is the merged stage with id, or nil.
+func (f FactoryTrack) Stage(id string) *FactoryTrackStage {
+	for i := range f.Stages {
+		if f.Stages[i].ID == id {
+			merged := f.Stages[i]
+			return &merged
 		}
 	}
 	return nil
@@ -38,13 +38,13 @@ func (f FactoryTrack) Belt(id string) *FactoryTrackBelt {
 	return nil
 }
 
-// MachineOf is the machine a belt's stage is part of, or nil.
-func (f FactoryTrack) MachineOf(stage, belt string) *FactoryTrackMachine {
-	for i := range f.Machines {
-		for _, member := range f.Machines[i].Members {
+// StageOf is the merged stage a belt's stage is part of, or nil.
+func (f FactoryTrack) StageOf(stage, belt string) *FactoryTrackStage {
+	for i := range f.Stages {
+		for _, member := range f.Stages[i].Members {
 			if member.StageID == stage && member.BeltID == belt {
-				machine := f.Machines[i]
-				return &machine
+				merged := f.Stages[i]
+				return &merged
 			}
 		}
 	}
@@ -62,54 +62,18 @@ func (f FactoryTrack) LayerOf(node FactoryTrackNode) *int {
 	return nil
 }
 
-// FactoryTrackBend is where a stretch changes rows.
-type FactoryTrackBend string
-
-const (
-	// FactoryTrackBendOut is a change right after the stretch's start, where the track splits.
-	FactoryTrackBendOut FactoryTrackBend = "out"
-	// FactoryTrackBendIn is a change right before the stretch's end, where tracks join.
-	FactoryTrackBendIn FactoryTrackBend = "in"
-	// FactoryTrackBendMiddle is a change halfway along the stretch.
-	FactoryTrackBendMiddle FactoryTrackBend = "middle"
-)
-
-// Bend is where a stretch changes rows: right after its start when the track splits there,
-// right before its end when tracks join there, else halfway.
-func (f FactoryTrack) Bend(stretch FactoryTrackTrack) FactoryTrackBend {
-	splitCount, joinCount := 0, 0
-	for _, track := range f.Tracks {
-		if track.From == stretch.From {
-			splitCount++
-		}
-		if track.To == stretch.To {
-			joinCount++
-		}
-	}
-	splits := splitCount > 1
-	joins := joinCount > 1
-	switch {
-	case splits == joins:
-		return FactoryTrackBendMiddle
-	case splits:
-		return FactoryTrackBendOut
-	default:
-		return FactoryTrackBendIn
-	}
-}
-
-// RunsAt is the active runs at a machine.
-func (f FactoryTrack) RunsAt(machine FactoryTrackMachine, runs []Run) []Run {
+// RunsAt is the active runs at a merged stage.
+func (f FactoryTrack) RunsAt(merged FactoryTrackStage, runs []Run) []Run {
 	out := []Run{}
 	for i := range runs {
-		if runs[i].State.IsActive() && machine.Contains(runs[i]) {
+		if runs[i].State.IsActive() && merged.Contains(runs[i]) {
 			out = append(out, runs[i])
 		}
 	}
 	return out
 }
 
-// factoryTrackKey is a stage or machine name as a key: trimmed of whitespace and lower-cased.
+// factoryTrackKey is a stage's name as a key: trimmed of whitespace and lower-cased.
 func factoryTrackKey(name string) string {
 	return LowercasedFull(strings.TrimSpace(name))
 }

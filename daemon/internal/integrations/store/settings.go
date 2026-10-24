@@ -51,8 +51,6 @@ type Settings struct {
 	ModelCatalogs map[string]core.ModelCatalogSnapshot `json:"modelCatalogs"`
 	// Afk is AFK mode: whether it is on, what it may do and what it runs on.
 	Afk core.AfkSettings `json:"afk"`
-	// BeltLook is how the Floor and the run pages draw belts.
-	BeltLook core.BeltLook `json:"beltLook"`
 	// ShowInsights is whether the navigation lists the Insights page.
 	ShowInsights bool `json:"showInsights"`
 }
@@ -69,7 +67,6 @@ func DefaultSettings() Settings {
 		AllowedModels:        map[string]map[string]struct{}{},
 		ModelCatalogs:        map[string]core.ModelCatalogSnapshot{},
 		Afk:                  core.DefaultAfkSettings(),
-		BeltLook:             core.BeltLookStandard,
 	}
 }
 
@@ -90,14 +87,13 @@ type settingsFields struct {
 	AllowedModels         json.RawMessage `json:"allowedModels,omitzero"`
 	ModelCatalogs         json.RawMessage `json:"modelCatalogs,omitzero"`
 	Afk                   json.RawMessage `json:"afk,omitzero"`
-	BeltLook              json.RawMessage `json:"beltLook,omitzero"`
 	ShowInsights          json.RawMessage `json:"showInsights,omitzero"`
 }
 
 // UnmarshalJSON reads settings with fallbacks. Login, notifications,
 // paused and pausedAt use decodeIfPresent with their
 // defaults, so a field of the wrong type fails the whole file. The backend,
-// model, thinking, pauses, permissions, catalogs, AFK settings, belt look and Insights switch
+// model, thinking, pauses, permissions, catalogs, AFK settings and Insights switch
 // use try?, so a bad one falls back alone. The permissions and the catalogs
 // are one try? over the whole dictionary: one bad entry drops all of them. The
 // library repositories are decoded entry by entry, so one bad entry drops alone.
@@ -132,7 +128,6 @@ func (s *Settings) UnmarshalJSON(data []byte) error {
 	next.AllowedModels = identifierSets(tryDecode(raw.AllowedModels, map[string][]string{}))
 	next.ModelCatalogs = tryDecode(raw.ModelCatalogs, map[string]core.ModelCatalogSnapshot{})
 	next.Afk = tryDecode(raw.Afk, core.DefaultAfkSettings())
-	next.BeltLook = tryDecode(raw.BeltLook, core.BeltLookStandard)
 	// Insights is off until you turn it on, also in a settings.json written before the switch existed.
 	next.ShowInsights = tryDecode(raw.ShowInsights, false)
 	*s = next
@@ -205,7 +200,6 @@ type settingsFile struct {
 	AllowedModels         map[string][]string                  `json:"allowedModels"`
 	ModelCatalogs         map[string]core.ModelCatalogSnapshot `json:"modelCatalogs"`
 	Afk                   core.AfkSettings                     `json:"afk"`
-	BeltLook              core.BeltLook                        `json:"beltLook"`
 	ShowInsights          bool                                 `json:"showInsights"`
 }
 
@@ -224,7 +218,6 @@ func (s Settings) MarshalJSON() ([]byte, error) {
 		AllowedModels:         sortedIdentifiers(s.AllowedModels),
 		ModelCatalogs:         nonNilCatalogs(s.ModelCatalogs),
 		Afk:                   s.Afk,
-		BeltLook:              s.BeltLook,
 		ShowInsights:          s.ShowInsights,
 	})
 }

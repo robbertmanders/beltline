@@ -34,7 +34,6 @@ runner: claude
 # Any model checked in Settings → Allowed models.
 model: claude-opus-5-5
 thinking: high
-machine: reader
 tint: rose
 icon: eye
 outcomes:
@@ -67,7 +66,7 @@ Write {review}: each finding with its file and line, and whether it blocks.
 | `model` | An allowed model of that runner. |
 | `thinking` | Optional: `low`, `medium`, `high` or `max`. Leave it out for the runner's default. |
 | `alternates` | Optional: a list of other `runner`, `model` and `thinking` settings that fresh sessions are spread across, to compare models. |
-| `machine`, `tint`, `icon` | How its stage is drawn: the machine on the Floor, its colour (`blue`, `sand`, `gold`, `green`, `violet`, `rose`, `teal`, `coral`, `grey`) and its icon. |
+| `tint`, `icon` | How its stage box is drawn: its colour (`blue`, `sand`, `gold`, `green`, `violet`, `rose`, `teal`, `coral`, `grey`) and its icon. An agent file from before icons that names a `machine` gets the icon that machine stood for. |
 | `outcomes` | Each with `name`, `when`, `tone` (`good`, `you`, `problem`, `neutral`) and `then` (`next`, `goto`, `route`, `retry`, `hold`, `park`, `done`, `ship`, `drop`), plus `to` for a `goto`, and optionally `withOutput`, `max` and `comment`. See [Outcomes](stages.md#outcomes). |
 
 `beltlined --check-library [folder]` checks every belt and agent in a data folder and prints what's wrong, without needing the daemon to stop.

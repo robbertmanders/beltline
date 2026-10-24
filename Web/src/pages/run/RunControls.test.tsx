@@ -62,7 +62,7 @@ function gateView(): RunViewResponse {
 
 describe("run controls", () => {
   it("waits for the selected stage's settings instead of retaining an earlier stage's defaults", async () => {
-    const view = golden<RunViewResponse>("views-run-metro.json");
+    const view = golden<RunViewResponse>("views-run-forked.json");
     const agent = view.stages.find(item => item.adjust)!;
     const help = agent.adjust!;
     const command = controller();
@@ -87,7 +87,7 @@ describe("run controls", () => {
 
   it("isolates adjustments by stage and run, preserves typing during refresh, and reloads saved settings on reopening", async () => {
     const user = userEvent.setup();
-    const view = golden<RunViewResponse>("views-run-metro.json");
+    const view = golden<RunViewResponse>("views-run-forked.json");
     const first = view.stages.find(item => item.adjust)!;
     const second = view.stages.find(item => item.id === "triage")!;
     second.adjust = { ...first.adjust!, runner: "copilot", model: "second-model", thinking: "high", brief: "Second stage brief" };
@@ -115,8 +115,8 @@ describe("run controls", () => {
 
   it("adjusts a stage's brief beside its placeholders and can restore the agent's brief", async () => {
     const user = userEvent.setup();
-    // The run page sends Adjust help for the stage it shows; the metro run is one whose current stage is an agent.
-    const view = golden<RunViewResponse>("views-run-metro.json");
+    // The run page sends Adjust help for the stage it shows; the forked run is one whose current stage is an agent.
+    const view = golden<RunViewResponse>("views-run-forked.json");
     const agentStage = view.stages.find(item => item.adjust)!;
     const adjust = agentStage.adjust!;
     view.actions = [...view.actions.filter(action => action.id !== "adjust-stage"), { id: "adjust-stage", enabled: true, stage: agentStage.id }];

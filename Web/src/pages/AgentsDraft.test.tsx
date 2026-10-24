@@ -117,7 +117,6 @@ describe("saving a draft", () => {
     change("Name", "Triage edited");
     change("Workspace", "worktreeReadOnly");
     change("Runs at once", "4");
-    change("Machine", "microscope");
     change("Colour", "violet");
     change("Brief", "A deliberately long edited brief that stays in the textarea.");
     fireEvent.change(screen.getAllByLabelText("Model")[0]!, { target: { value: "fixture-model" } });
@@ -159,7 +158,7 @@ describe("saving a draft", () => {
     const expected = structuredClone(initial);
     Object.assign(expected, {
       name: "Triage edited", workspace: "worktreeReadOnly", slots: 4, model: "fixture-model", thinking: "max",
-      machine: "microscope", tint: "violet", brief: "A deliberately long edited brief that stays in the textarea.",
+      tint: "violet", brief: "A deliberately long edited brief that stays in the textarea.",
       alternates: [{ runner: "pi", model: "opus-5.5-1m", thinking: "high" }],
       outcomes: [
         { name: "route to build", when: "The work needs a build.", tone: "problem", then: { do: "goto", withOutput: true, max: 3 }, to: ["build"] },
@@ -204,7 +203,7 @@ describe("saving a draft", () => {
     expect(screen.queryByText(/is not a function/)).toBeNull();
   });
 
-  it("saves the icon and colour the editor shows, and clears the icon back to the machine's default", async () => {
+  it("saves the icon and colour the editor shows, and clears the icon back to the default", async () => {
     const user = userEvent.setup();
     const { requests } = stubAgents();
     renderAgents();

@@ -354,13 +354,14 @@ func TestAStraightBeltAddsAtEveryIndexInTurn(t *testing.T) {
 	}
 }
 
-// TestAgentIconsFallBackToTheirMachine checks that agent icons fall back to their machine.
-func TestAgentIconsFallBackToTheirMachine(t *testing.T) {
+// TestAgentIconsFallBackToTheChip checks that an agent without an icon shows the chip, and that its icon
+// is written to and read from its file.
+func TestAgentIconsFallBackToTheChip(t *testing.T) {
 	t.Parallel()
-	sorter, blue := MachineSorter, TintBlue
-	agent := NewAgent(AgentArgs{ID: "a", Name: "A", Machine: &sorter, Tint: &blue})
-	if agent.Glyph() != StageIconFunnel {
-		t.Fatalf("glyph = %q, want funnel", agent.Glyph())
+	blue := TintBlue
+	agent := NewAgent(AgentArgs{ID: "a", Name: "A", Tint: &blue})
+	if agent.Glyph() != StageIconChip {
+		t.Fatalf("glyph = %q, want chip", agent.Glyph())
 	}
 	flag := StageIconFlag
 	agent.Icon = &flag

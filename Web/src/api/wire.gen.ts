@@ -28,9 +28,6 @@ export type AttemptLaunchMode = (typeof attemptLaunchModeValues)[number];
 export const backendValues = ["copilot", "pi", "claude", "codex", "cursor"] as const;
 export type Backend = (typeof backendValues)[number];
 
-export const beltLookValues = ["boxes", "machines", "metro"] as const;
-export type BeltLook = (typeof beltLookValues)[number];
-
 export const boxMapKindValues = ["trigger", "agent", "approval", "watch"] as const;
 export type BoxMapKind = (typeof boxMapKindValues)[number];
 
@@ -77,15 +74,6 @@ export type LibraryPublish = (typeof libraryPublishValues)[number];
 export const libraryRoleValues = ["backup", "shared"] as const;
 export type LibraryRole = (typeof libraryRoleValues)[number];
 
-export const machineValues = ["sorter", "typewriter", "mailbox", "robot", "microscope", "reader", "van", "box", "telescope", "stamp", "crane", "drill", "radar"] as const;
-export type Machine = (typeof machineValues)[number];
-
-export const metroLayoutGlyphValues = ["circle", "diamond", "square", "interchange"] as const;
-export type MetroLayoutGlyph = (typeof metroLayoutGlyphValues)[number];
-
-export const metroLayoutLookValues = ["running", "waiting", "held", "queued", "parked"] as const;
-export type MetroLayoutLook = (typeof metroLayoutLookValues)[number];
-
 export const pullRequestCheckStateValues = ["pending", "passing", "failing"] as const;
 export type PullRequestCheckState = (typeof pullRequestCheckStateValues)[number];
 
@@ -112,15 +100,6 @@ export type RunCommand = (typeof runCommandValues)[number];
 
 export const runMenuOpensValues = ["command", "send", "sendAgain", "confirm"] as const;
 export type RunMenuOpens = (typeof runMenuOpensValues)[number];
-
-export const runMetroGlyphValues = ["circle", "diamond", "square"] as const;
-export type RunMetroGlyph = (typeof runMetroGlyphValues)[number];
-
-export const runMetroStationStateValues = ["done", "current", "todo", "skip"] as const;
-export type RunMetroStationState = (typeof runMetroStationStateValues)[number];
-
-export const runMetroTravelValues = ["done", "todo", "skip"] as const;
-export type RunMetroTravel = (typeof runMetroTravelValues)[number];
 
 export const runPausePhaseValues = ["pausing", "paused", "incomplete", "resuming", "reconcileFailed"] as const;
 export type RunPausePhase = (typeof runPausePhaseValues)[number];
@@ -151,9 +130,6 @@ export type StageIcon = (typeof stageIconValues)[number];
 
 export const stageKindValues = ["agent", "gate", "watch"] as const;
 export type StageKind = (typeof stageKindValues)[number];
-
-export const stageStatusFaceValues = ["idle", "run", "wait", "happy", "held", "paused", "todo"] as const;
-export type StageStatusFace = (typeof stageStatusFaceValues)[number];
 
 export const stageStatusLookValues = ["done", "running", "waiting", "held", "plain"] as const;
 export type StageStatusLook = (typeof stageStatusLookValues)[number];
@@ -312,7 +288,6 @@ export interface Agent {
   model: string;
   thinking?: Thinking;
   alternates: SessionSettings[];
-  machine: Machine;
   tint: Tint;
   icon?: StageIcon;
   outcomes: AgentOutcome[];
@@ -1332,21 +1307,6 @@ export interface LibraryShareResponse {
   changed: boolean;
 }
 
-export interface MapCrate {
-  id: string;
-  reference: string;
-  state: string;
-  stageId?: string;
-  x: number;
-  y: number;
-}
-
-export interface MapGeometrySpan {
-  id: string;
-  start: number;
-  end: number;
-}
-
 export interface MapPath {
   subpaths: MapPoint[][];
   cornerRadius: number;
@@ -1363,128 +1323,6 @@ export interface Merge {
   checkout?: string;
   leg?: string;
   context?: string;
-}
-
-export interface MetroLayout {
-  dots: MetroLayoutDot[];
-  labels: MetroLayoutLabel[];
-  width: number;
-  height: number;
-  lines: MetroLayoutLine[];
-  stations: MetroLayoutStation[];
-}
-
-export interface MetroLayoutBar {
-  x: number;
-  top: number;
-  bottom: number;
-}
-
-export interface MetroLayoutBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface MetroLayoutBranch {
-  points: MetroLayoutPoint[];
-  from?: string;
-  to?: string;
-  stops: string[];
-  end?: MetroLayoutPoint;
-  back: boolean;
-}
-
-export interface MetroLayoutCard {
-  headline: string;
-  detail?: string;
-  hint: string;
-  left: number;
-  top: number;
-  width: number;
-}
-
-export interface MetroLayoutDot {
-  id: string;
-  runIds: string[];
-  beltId: string;
-  stationId: string;
-  look: MetroLayoutLook;
-  halo: boolean;
-  place: number;
-  overflow: number;
-  at: MetroLayoutPoint;
-  card: MetroLayoutCard;
-}
-
-export interface MetroLayoutLabel {
-  text: string;
-  box: MetroLayoutBox;
-  needsYou: boolean;
-  urgent?: MetroLayoutLook;
-  runIds: string[];
-  beltId: string;
-  above: boolean;
-  dot: MetroLayoutPoint;
-  openRunId?: string;
-}
-
-export interface MetroLayoutLine {
-  beltId: string;
-  name: string;
-  colour: number;
-  nameBox: MetroLayoutBox;
-  points: MetroLayoutPoint[];
-  branches: MetroLayoutBranch[];
-  returns: MetroLayoutPoint[][];
-  terminus: MetroLayoutPoint;
-  routes: MetroLayoutRoutePill[];
-  id: string;
-  paths: string[];
-  returnPaths: string[];
-  endBars: MetroLayoutBar[];
-}
-
-export interface MetroLayoutPoint {
-  x: number;
-  y: number;
-}
-
-export interface MetroLayoutRoutePill {
-  id: string;
-  fork: string;
-  route: string;
-  text: string;
-  box: MetroLayoutBox;
-}
-
-export interface MetroLayoutStation {
-  id: string;
-  name: string;
-  lines: string[];
-  glyph: MetroLayoutGlyph;
-  kind: MetroLayoutGlyph;
-  x: number;
-  stops: Record<string, number>;
-  nameBox: MetroLayoutBox;
-  pieces: MetroRange[];
-  status: MetroLayoutStatus;
-  top: number;
-  bottom: number;
-  belts: string[];
-  box: MetroLayoutBox;
-}
-
-export interface MetroLayoutStatus {
-  text: string;
-  look: StageStatusLook;
-  box: MetroLayoutBox;
-}
-
-export interface MetroRange {
-  lower: number;
-  upper: number;
 }
 
 export interface MissingResource {
@@ -1580,9 +1418,8 @@ export interface Outcome {
 export interface OverviewFloor {
   total: FactorySummaryCounts;
   belts: OverviewFloorBelt[];
-  machines?: OverviewFloorMachine[];
-  boxes?: OverviewFloorBox[];
-  layout?: FloorLayout;
+  boxes: OverviewFloorBox[];
+  layout: FloorLayout;
 }
 
 export interface OverviewFloorBelt {
@@ -1624,31 +1461,12 @@ export interface OverviewFloorChip {
   openStage?: string;
 }
 
-export interface OverviewFloorMachine {
-  id: string;
-  name: string;
-  number: number;
-  belts: string[];
-  beltNames: string[];
-  mixed: boolean;
-  workers: string;
-  status: StageStatus;
-  machine: Machine;
-  tint: Tint;
-  runCount: number;
-  chips: OverviewFloorChip[];
-  more: number;
-  dimmed: boolean;
-}
-
 export interface OverviewResponse {
   summary: RunCounts;
   caption: string;
   greeting: string;
-  look: BeltLook;
   today: OverviewSummary;
   floor: OverviewFloor;
-  metroLayout?: MetroLayout;
   runs: OverviewRun[];
 }
 
@@ -2052,58 +1870,6 @@ export interface RunLink {
   url: string;
 }
 
-export interface RunMap {
-  availableWidth: number;
-  contentWidth: number;
-  minimumContentWidth: number;
-  compact: boolean;
-  column: number;
-  height: number;
-  mainY: number;
-  placements: RunMapPlacement[];
-  tracks: RunMapTrackPath[];
-  filledTrackPathIds: string[];
-  fillStageId?: string;
-  fillUntilX: number;
-  finished: boolean;
-  forks: MapGeometrySpan[];
-  routeLabels: RunMapRouteLabel[];
-  crates: MapCrate[];
-  caption: string;
-  moving: boolean;
-}
-
-export interface RunMapPlacement {
-  stageId: string;
-  number: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  dimmed: boolean;
-}
-
-export interface RunMapRouteLabel {
-  id: string;
-  forkId: string;
-  routeId: string;
-  text: string;
-  x: number;
-  y: number;
-  room: number;
-  taken?: boolean;
-}
-
-export interface RunMapTrackPath {
-  id: string;
-  kind: string;
-  forkId?: string;
-  routeId?: string;
-  taken?: boolean;
-  subpaths: MapPoint[][];
-  cornerRadius: number;
-}
-
 export interface RunMenuRow {
   command: RunCommand;
   label: string;
@@ -2119,65 +1885,6 @@ export interface RunMenuRow {
 export interface RunMenuTarget {
   stage: string;
   name: string;
-}
-
-export interface RunMetro {
-  width: number;
-  height: number;
-  colour: number;
-  trigger: RunMetroPill;
-  segments: RunMetroSegment[];
-  stations: RunMetroStation[];
-  routes: RunMetroRouteTag[];
-  ends: MapPoint[];
-}
-
-export interface RunMetroBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface RunMetroPill {
-  text: string;
-  box: RunMetroBox;
-}
-
-export interface RunMetroRouteTag {
-  id: string;
-  fork: string;
-  route: string;
-  text: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  taken?: boolean;
-  feeds: boolean;
-}
-
-export interface RunMetroSegment {
-  id: string;
-  state: RunMetroTravel;
-  path: MapPath;
-}
-
-export interface RunMetroStation {
-  id: string;
-  number: number;
-  name: string;
-  lines: string[];
-  glyph: RunMetroGlyph;
-  x: number;
-  y: number;
-  label: RunMetroBox;
-  hit: RunMetroBox;
-  state: RunMetroStationState;
-  status: string;
-  look: string;
-  tagged: boolean;
-  statusBox: RunMetroBox;
 }
 
 export interface RunOverruleAfkRequest {
@@ -2257,13 +1964,10 @@ export interface RunStage {
   number: number;
   kind: StageKind;
   status: StageStatus;
-  compactStatus: StageStatus;
   defaultAttempt?: string;
   attempts: RunPresentationAttemptEntry[];
   emptyMessage?: string;
   liveWatchSummary?: string;
-  machine: Machine;
-  tint: Tint;
   worker?: string;
   step: string;
   adjust?: RunStageAdjust;
@@ -2293,11 +1997,7 @@ export interface RunTaskRequest {
 
 export interface RunViewResponse {
   run: Run;
-  availableWidth: number;
-  look: string;
-  map?: RunMap;
-  boxes?: RunBoxes;
-  metro?: RunMetro;
+  boxes: RunBoxes;
   metadata: string;
   heading: string;
   reference: string;
@@ -2409,7 +2109,6 @@ export interface SettingsResponse {
   allowedModels: Record<string, string[]>;
   modelCatalogs: Record<string, ModelCatalogSnapshot>;
   afk: AfkSettings;
-  beltLook: BeltLook;
   showInsights: boolean;
   dataLocation: string;
   demo: boolean;
@@ -2665,7 +2364,7 @@ export interface StageSendWords {
 export interface StageStatus {
   text: string;
   look: StageStatusLook;
-  face: StageStatusFace;
+  paused: boolean;
 }
 
 export interface StateResponse {
@@ -2693,7 +2392,7 @@ export interface StatusLegRow {
   stage: string;
   state: RunState;
   look: StageStatusLook;
-  face: StageStatusFace;
+  paused: boolean;
 }
 
 export interface StatusWhere {
@@ -2929,7 +2628,7 @@ export interface WorkStage {
 
 export type EventMessage = { type: "hello"; apiVersion: number } | { type: "changed"; resource: EventResource; revision: number } | { type: "notification"; title: string; body: string };
 export type EventResource = (typeof eventResourceValues)[number];
-export type FactoryTrackNode = { kind: "entrance" | "machine"; value: string } | { kind: "waypoint"; value: number };
+export type FactoryTrackNode = { kind: "entrance" | "stage"; value: string } | { kind: "waypoint"; value: number };
 
 export type MarkdownBlock = { type: "heading"; level: number; text: string } | { type: "item"; marker: string; text: string } | { type: "code" | "paragraph"; text: string };
 

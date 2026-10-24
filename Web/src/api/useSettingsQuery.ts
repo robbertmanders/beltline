@@ -6,7 +6,7 @@ import { resourcesForPath } from "./resources";
 import { settingsQueryKey } from "./settingsCommands";
 import type { SettingsResponse } from "./wire.gen";
 
-/** The daemon's saved settings, read by the shell (for the look and the navigation width) and by Settings. */
+/** The daemon's saved settings, read by the shell (for the Insights switch and the demo chip) and by Settings. */
 export function useSettingsQuery() {
   const runtime = useRuntime();
   return useQuery({

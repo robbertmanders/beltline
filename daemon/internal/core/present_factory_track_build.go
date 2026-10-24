@@ -1,4 +1,4 @@
-// The factory track's build: the walk that lays each belt's stages into machines,
+// The factory track's build: the walk that lays each belt's stages into merged stages,
 // layers and tracks, and the ordering of each layer so the tracks cross as little
 // as they can. The types are in present_factory_track.go; the reads are in
 // present_factory_track_queries.go.
@@ -27,11 +27,11 @@ func NewFactoryTrack(belts []FactoryTrackBelt) FactoryTrack {
 	for _, belt := range belts {
 		layer[FactoryTrackEntrance(belt.ID)] = 0
 	}
-	for _, machine := range f.Machines {
-		layer[FactoryTrackMachineNode(machine.ID)] = 1
+	for _, merged := range f.Stages {
+		layer[FactoryTrackStageNode(merged.ID)] = 1
 	}
-	// Each machine sits one layer past the furthest node that leads to it.
-	for iteration := 0; iteration <= len(f.Machines); iteration++ {
+	// Each merged stage sits one layer past the furthest node that leads to it.
+	for iteration := 0; iteration <= len(f.Stages); iteration++ {
 		changed := false
 		for _, link := range kept {
 			if layer[link.To] < layer[link.From]+1 {
@@ -51,9 +51,9 @@ func NewFactoryTrack(belts []FactoryTrackBelt) FactoryTrack {
 	for _, belt := range belts {
 		f.Layers[0] = append(f.Layers[0], FactoryTrackEntrance(belt.ID))
 	}
-	for _, machine := range f.Machines {
-		l := layer[FactoryTrackMachineNode(machine.ID)]
-		f.Layers[l] = append(f.Layers[l], FactoryTrackMachineNode(machine.ID))
+	for _, merged := range f.Stages {
+		l := layer[FactoryTrackStageNode(merged.ID)]
+		f.Layers[l] = append(f.Layers[l], FactoryTrackStageNode(merged.ID))
 	}
 
 	// A link across several layers becomes one stretch per layer, through waypoints.
@@ -84,27 +84,27 @@ func NewFactoryTrack(belts []FactoryTrackBelt) FactoryTrack {
 	return f
 }
 
-// reach is the machine for a stage: the one with its name, or the next of that
+// reach is the merged stage for a stage: the one with its name, or the next of that
 // name when the belt already passed it. When the belt comes to the name
-// again further on, this stage also skips a machine that the floor so far
+// again further on, this stage also skips a merged stage that the floor so far
 // would lead back from, so its later stage is the one that shares it.
 func (f *FactoryTrack) reach(stage Stage, belt FactoryTrackBelt, passed map[FactoryTrackNode]struct{}, ahead map[string]struct{}, links []factoryTrackLink) FactoryTrackNode {
 	name := factoryTrackKey(stage.Name)
 	taken := func(key string) bool {
-		if _, ok := passed[FactoryTrackMachineNode(key)]; ok {
+		if _, ok := passed[FactoryTrackStageNode(key)]; ok {
 			return true
 		}
-		if _, ok := ahead[name]; !ok || f.machineIndex(key) < 0 {
+		if _, ok := ahead[name]; !ok || f.stageIndex(key) < 0 {
 			return false
 		}
 		var later []FactoryTrackNode
-		for _, machine := range f.Machines {
-			if _, ok := ahead[factoryTrackKey(machine.Name)]; ok && machine.ID != key {
-				later = append(later, FactoryTrackMachineNode(machine.ID))
+		for _, merged := range f.Stages {
+			if _, ok := ahead[factoryTrackKey(merged.Name)]; ok && merged.ID != key {
+				later = append(later, FactoryTrackStageNode(merged.ID))
 			}
 		}
-		here := map[FactoryTrackNode]struct{}{FactoryTrackMachineNode(key): {}}
-		return factoryTrackReaches([]FactoryTrackNode{FactoryTrackMachineNode(key)}, passed, links) ||
+		here := map[FactoryTrackNode]struct{}{FactoryTrackStageNode(key): {}}
+		return factoryTrackReaches([]FactoryTrackNode{FactoryTrackStageNode(key)}, passed, links) ||
 			factoryTrackReaches(later, here, links)
 	}
 	key, count := name, 1
@@ -113,22 +113,22 @@ func (f *FactoryTrack) reach(stage Stage, belt FactoryTrackBelt, passed map[Fact
 		key = name + " #" + strconv.Itoa(count)
 	}
 	member := FactoryTrackMember{BeltID: belt.ID, BeltName: belt.Name, StageID: stage.ID, Stage: cloneValue(stage)}
-	if index := f.machineIndex(key); index >= 0 {
-		f.Machines[index].Members = append(f.Machines[index].Members, member)
+	if index := f.stageIndex(key); index >= 0 {
+		f.Stages[index].Members = append(f.Stages[index].Members, member)
 	} else {
-		f.Machines = append(f.Machines, FactoryTrackMachine{
+		f.Stages = append(f.Stages, FactoryTrackStage{
 			ID:      key,
 			Name:    strings.TrimSpace(stage.Name),
 			Members: []FactoryTrackMember{member},
 		})
 	}
-	return FactoryTrackMachineNode(key)
+	return FactoryTrackStageNode(key)
 }
 
-// machineIndex is the position of the machine with id, or -1.
-func (f *FactoryTrack) machineIndex(id string) int {
-	for i := range f.Machines {
-		if f.Machines[i].ID == id {
+// stageIndex is the position of the merged stage with id, or -1.
+func (f *FactoryTrack) stageIndex(id string) int {
+	for i := range f.Stages {
+		if f.Stages[i].ID == id {
 			return i
 		}
 	}

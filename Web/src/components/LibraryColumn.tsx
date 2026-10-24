@@ -12,7 +12,7 @@ export interface LibraryRow {
   /** Drawn quieter, as a paused belt is. */
   dimmed?: boolean;
   title?: string;
-  /** Drawn before the title and detail, as an agent's machine is. */
+  /** Drawn before the title and detail, as an agent's icon is. */
   leading?: ReactNode;
 }
 

@@ -7,14 +7,14 @@ import (
 )
 
 // TestNewAgentDefaults checks the defaults of Agent.init: version 1, the key
-// is the id, read-only, two slots, Pi, the box machine and grey, no thinking level.
+// is the id, read-only, two slots, Pi, grey, no thinking level.
 func TestNewAgentDefaults(t *testing.T) {
 	t.Parallel()
 	agent := NewAgent(AgentArgs{ID: "writer", Name: "Writer"})
 	want := Agent{
 		ID: "writer", Version: 1, Name: "Writer", Key: "writer",
 		Workspace: WorkspaceReadOnly, Slots: 2, Runner: BackendPi,
-		Machine: MachineBox, Tint: TintGrey,
+		Tint: TintGrey,
 	}
 	if !agentEqual(agent, want) {
 		t.Fatalf("NewAgent defaults:\n%s", testkit.Diff(want, agent))
@@ -33,17 +33,16 @@ func TestNewAgentTakesGivenValues(t *testing.T) {
 	workspace := WorkspaceWorktree
 	slots := 5
 	runner := BackendClaude
-	machine := MachineRobot
 	tint := TintRose
 	icon := StageIcon("wrench")
 	agent := NewAgent(AgentArgs{
 		ID: "build", Version: new(4), Name: "Build", Key: new("evidence"), Workspace: &workspace,
-		Slots: &slots, Runner: &runner, Model: "m", Machine: &machine, Tint: &tint, Icon: &icon, Brief: "Build.",
+		Slots: &slots, Runner: &runner, Model: "m", Tint: &tint, Icon: &icon, Brief: "Build.",
 	})
 	if agent.Version != 4 || agent.Key != "evidence" || agent.Slots != 5 || agent.Runner != BackendClaude {
 		t.Fatalf("given values not taken: %+v", agent)
 	}
-	if agent.Machine != MachineRobot || agent.Tint != TintRose || agent.Model != "m" || agent.Brief != "Build." {
+	if agent.Tint != TintRose || agent.Model != "m" || agent.Brief != "Build." {
 		t.Fatalf("given values not taken: %+v", agent)
 	}
 	if agent.Icon == nil || *agent.Icon != icon || !agent.ChangesCode() {

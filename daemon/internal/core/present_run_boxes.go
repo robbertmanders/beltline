@@ -232,14 +232,14 @@ func RunBoxesTriggerSubtitle(kind *TriggerKind) string {
 }
 
 // runBoxesNode is one stage's box. The chip and state follow the stage's step, the same statuses the
-// stage panels and the machines show.
+// stage panels show.
 func runBoxesNode(panel RunPresentationStagePanel, stage Stage, run Run) RunBoxesNode {
 	caption := fmt.Sprintf("%02d", panel.Number) + " · " + runBoxesKindWord(stage.Kind())
 	details := []string{}
 	if panel.Worker != nil {
 		details = []string{*panel.Worker}
 	}
-	paused := panel.Status.Face == StageStatusFacePaused
+	paused := panel.Status.Paused
 	node := func(state RunBoxesState, chip *RunBoxesChip, dot *RunBoxesDot) RunBoxesNode {
 		return RunBoxesNode{ID: stage.ID, State: state, Caption: caption, Title: panel.Name, Details: details, Chip: chip, Dot: dot}
 	}

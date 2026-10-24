@@ -10,7 +10,7 @@ import (
 // versions into that line, and marks a file it cannot read.
 func TestAssistantIndexListsEachDefinitionInOneLine(t *testing.T) {
 	t.Parallel()
-	agent := "---\nname: Helper\nkey: helper\nworkspace: worktree\nslots: 1\nrunner: pi\nmachine: box\ntint: teal\noutcomes:\n  - name: done\n    when: Done.\n    tone: good\n    then: next\n---\nWork.\n"
+	agent := "---\nname: Helper\nkey: helper\nworkspace: worktree\nslots: 1\nrunner: pi\ntint: teal\noutcomes:\n  - name: done\n    when: Done.\n    tone: good\n    then: next\n---\nWork.\n"
 	belt := `{"id":"tasks","name":"Tasks","version":4,"triggers":[{"id":"1","trigger":{"kind":"manual"},"repos":["o/r"]}],` +
 		`"stages":[{"id":"helper","name":"Helper","type":"agent","agent":{"id":"helper","version":3},"outcomes":[]}]}`
 	library := map[string][]byte{

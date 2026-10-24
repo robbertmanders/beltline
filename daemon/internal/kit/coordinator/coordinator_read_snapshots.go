@@ -101,17 +101,14 @@ func (s CoordinatorViewsSnapshot) OverviewBelts() []core.OverviewBelt {
 // run-page read, gathered once on the main actor. The projection contains no
 // selection or saved preference.
 type CoordinatorRunViewSnapshot struct {
-	Run            core.Run
-	AvailableWidth float64
-	BeltPaused     bool
-	Pause          core.Pause
-	Now            time.Time
+	Run        core.Run
+	BeltPaused bool
+	Pause      core.Pause
+	Now        time.Time
 	// AmbiguousRepositories are the repositories whose short names two belts share.
 	AmbiguousRepositories map[string]struct{}
 	Actions               []core.RunAction
 	Presentation          core.RunPresentationSnapshot
-	Map                   core.MapGeometry
-	MapContentWidth       float64
 	Worktrees             []runner.WorktreeTarget
 	// AdjustHelp is what the Adjust stage sheet shows beside each agent stage's brief, by stage id.
 	AdjustHelp map[string]StageAdjustHelp
@@ -119,10 +116,8 @@ type CoordinatorRunViewSnapshot struct {
 	PanelFacts map[string]StagePanelFacts
 	// AfkGlobal is the global AFK switch, which a run in the global mode follows.
 	AfkGlobal bool
-	// Look is how the belt is drawn, from the settings.
-	Look core.BeltLook
-	// Boxes is the belt as stage boxes, when the look is boxes.
-	Boxes *core.RunBoxes
+	// Boxes is the belt as stage boxes.
+	Boxes core.RunBoxes
 }
 
 // StageAdjustHelp is the placeholders an agent stage's brief can use in this run,

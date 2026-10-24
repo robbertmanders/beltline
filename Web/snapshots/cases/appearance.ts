@@ -35,25 +35,14 @@ export const appearanceCases: SnapshotCase[] = [
   appearanceOf("appearance-settings-error-dark", "dark", "settings-inline-422"),
   appearanceOf("appearance-gallery-light", "light", "gallery"),
   appearanceOf("appearance-gallery-dark", "dark", "gallery"),
-  {
-    // The frozen machine drawings, a section below the fold of the gallery.
-    ...existing("gallery"),
-    id: "appearance-gallery-machines-dark",
-    appearance: "dark",
-    scrollToTop: "#machines",
-    readyMarker: "#machines"
-  },
   appearanceOf("appearance-overview-dark", "dark", "overview-open"),
-  // The Floor as boxes, the demo's default look: the Floor button opens it, and it carries the tracks, forks and trigger captions.
+  // The Floor: the Floor button opens it, and it carries the tracks, forks and trigger captions.
   appearanceOf("appearance-overview-floor-boxes-dark", "dark", "overview-floor-open"),
-  appearanceOf("appearance-overview-metro-light", "light", "overview-floor-metro"),
-  appearanceOf("appearance-overview-metro-dark", "dark", "overview-floor-metro"),
   appearanceOf("appearance-work-dark", "dark", "work-open"),
   appearanceOf("appearance-belts-stage-form-dark", "dark", "belts-stage-form"),
   appearanceOf("appearance-agents-dark", "dark", "agents-open"),
   appearanceOf("appearance-library-share-dark", "dark", "library-share-belt"),
   appearanceOf("appearance-afk-dark", "dark", "afk-open"),
   appearanceOf("appearance-run-boxes-dark", "dark", "run-open"),
-  appearanceOf("appearance-run-metro-dark", "dark", "run-metro-selected"),
   appearanceOf("appearance-run-sessions-dark", "dark", "run-sessions-click")
 ];

@@ -26,7 +26,7 @@ export function NeedChip({ children, held }: { children: ReactNode; held?: boole
   return <span className={`paper-chip paper-chip--need ${held ? "paper-chip--held" : ""}`}>{children}</span>;
 }
 
-/** The status above a machine: a mono pill coloured by how the stage is doing. */
+/** The status above a stage box: a mono pill coloured by how the stage is doing. */
 export function StatusPill({ text, look, compact }: { text: string; look: Look; compact?: boolean }) {
   // Plex Mono draws ✓ like a root sign, so the tick comes from the system font.
   const tick = text.startsWith("✓ ");
