@@ -2,7 +2,6 @@ package core
 
 import (
 	"math"
-	"slices"
 	"sort"
 	"strconv"
 	"time"
@@ -67,47 +66,15 @@ func overviewSummaryAxisDate(date time.Time) string {
 	return local.Month().String()[:3] + " " + strconv.Itoa(local.Day())
 }
 
-// OverviewSummaryChartFor is the shipped sparkline: the same curve, area and axis the
-// Summary drew, with the ISO week labels.
+// OverviewSummaryChartFor is the shipped sparkline's labels: the ISO weeks its twelve weeks span, and the latest
+// week's count.
 func OverviewSummaryChartFor(weeks []int, now time.Time) OverviewSummaryChart {
-	most := float64(max(slices.Max(weeks), 1))
-	scale := 100 / (most * 8 / 7)
-	type point struct{ x, y float64 }
-	points := make([]point, len(weeks))
-	for index, value := range weeks {
-		x := 10 + float64(index)*280/11
-		y := 120 - float64(float64(value)*scale)
-		points[index] = point{x: x, y: y}
-	}
-	line := "M" + overviewSummaryNumber(points[0].x) + " " + overviewSummaryNumber(points[0].y)
-	for index := 1; index < len(points); index++ {
-		previous, current := points[index-1], points[index]
-		middle := (previous.x + current.x) / 2
-		line += " C" + overviewSummaryNumber(middle) + " " + overviewSummaryNumber(previous.y) +
-			" " + overviewSummaryNumber(middle) + " " + overviewSummaryNumber(current.y) +
-			" " + overviewSummaryNumber(current.x) + " " + overviewSummaryNumber(current.y)
-	}
 	_, week := now.In(time.Local).ISOWeek()
-	last := points[len(points)-1]
 	return OverviewSummaryChart{
-		Line:        line,
-		Area:        line + " L290 120 L10 120 Z",
-		DotX:        last.x,
-		DotY:        last.y,
 		StartLabel:  overviewSummaryStartPrefix + strconv.Itoa((week+40)%52+1),
 		EndLabel:    overviewSummaryStartPrefix + strconv.Itoa(week),
 		LatestLabel: "[ " + strconv.Itoa(weeks[len(weeks)-1]) + " ]",
 	}
-}
-
-// overviewSummaryNumber is a coordinate as SVG writes it: whole numbers bare, others to two
-// places.
-func overviewSummaryNumber(value float64) string {
-	rounded := math.Round(value*100) / 100
-	if rounded == math.Trunc(rounded) {
-		return strconv.Itoa(int(rounded))
-	}
-	return strconv.FormatFloat(rounded, 'f', -1, 64)
 }
 
 // OverviewSummaryGreeting is the greeting for the daemon's clock, in the local hours the

@@ -90,25 +90,12 @@ func TestSessionShadesFollowTheBusiestBlockAndGridOrder(t *testing.T) {
 	}
 }
 
-// TestShippedChartSendsItsCurveAndWeekLabels
-func TestShippedChartSendsItsCurveAndWeekLabels(t *testing.T) {
+// TestShippedChartSendsItsWeekLabels
+func TestShippedChartSendsItsWeekLabels(t *testing.T) {
 	t.Parallel()
 	weeks := make([]int, 12)
 	weeks[11] = 7
 	chart := OverviewSummaryChartFor(weeks, ovNow)
-	if !strings.HasPrefix(chart.Line, "M10 120 C") {
-		t.Fatalf("line = %q", chart.Line)
-	}
-	if !strings.HasSuffix(chart.Area, "L290 120 L10 120 Z") {
-		t.Fatalf("area = %q", chart.Area)
-	}
-	if chart.DotX != 290 {
-		t.Fatalf("dotX = %v, want 290", chart.DotX)
-	}
-	// The last week is the peak, so its point sits at the top of the curve's range: 120 - 100 * 7 / (7 * 8 / 7).
-	if chart.DotY != 32.5 {
-		t.Fatalf("dotY = %v, want 32.5", chart.DotY)
-	}
 	if chart.LatestLabel != "[ 7 ]" {
 		t.Fatalf("latest label = %q", chart.LatestLabel)
 	}

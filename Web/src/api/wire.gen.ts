@@ -1443,10 +1443,6 @@ export interface OverviewSummary {
 }
 
 export interface OverviewSummaryChart {
-  line: string;
-  area: string;
-  dotX: number;
-  dotY: number;
   startLabel: string;
   endLabel: string;
   latestLabel: string;

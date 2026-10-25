@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { OverviewResponse, OverviewRun, OverviewSummaryRow } from "../../api/wire.gen";
 import { Caps, Chip, Spinner, Tag, type Look } from "../../components/Paper";
+import { shippedCurve } from "./shippedChart";
 
 export interface SummaryProps {
   today: OverviewResponse["today"];
@@ -14,15 +15,16 @@ const runningPattern = (() => {
   return Array.from({ length: 40 }, (_, r) => Array.from({ length: 24 }, (_, c) => glyphs[(r * 7 + c * 3) % glyphs.length]!.padEnd(4, " ")).join("")).join("\n");
 })();
 
-/** Shipped runs per week as a smooth line with its area, over twelve weeks, drawn in the daemon's 300 × 150 space. */
-function ShippedChart({ chart }: { chart: OverviewResponse["today"]["shipped"]["chart"] }) {
+/** Shipped runs per week as a smooth line with its area, over twelve weeks, in a 300 × 150 space; the daemon names the weeks. */
+function ShippedChart({ weeks, chart }: { weeks: readonly number[]; chart: OverviewResponse["today"]["shipped"]["chart"] }) {
+  const curve = shippedCurve(weeks);
   return <svg className="overview-chart" viewBox="0 0 300 150" role="img" aria-label="Pull requests shipped per week over the last twelve weeks">
     {[20, 60, 100].map(y => <line key={y} x1={10} x2={290} y1={y} y2={y} className="overview-chart-rule" />)}
     <line x1={10} x2={290} y1={120} y2={120} className="overview-chart-base" />
-    <path d={chart.area} className="overview-chart-area" />
-    <path d={chart.line} className="overview-chart-line" />
-    <circle cx={chart.dotX} cy={chart.dotY} r={8} className="overview-chart-halo" />
-    <circle cx={chart.dotX} cy={chart.dotY} r={4} className="overview-chart-dot" />
+    <path d={curve.area} className="overview-chart-area" />
+    <path d={curve.line} className="overview-chart-line" />
+    <circle cx={curve.dotX} cy={curve.dotY} r={8} className="overview-chart-halo" />
+    <circle cx={curve.dotX} cy={curve.dotY} r={4} className="overview-chart-dot" />
     <text x={10} y={138} dominantBaseline="middle" className="overview-chart-axis">{chart.startLabel}</text>
     <text x={290} y={138} textAnchor="end" dominantBaseline="middle" className="overview-chart-axis">{chart.endLabel}</text>
     <text x={292} y={12} textAnchor="end" dominantBaseline="middle" className="overview-chart-latest">{chart.latestLabel}</text>
@@ -90,7 +92,7 @@ export function Summary({ today, runs, onOpenRun }: SummaryProps) {
       <section className="overview-post paper-card paper-card--raised" aria-label="Shipped">
         <header><h2>Shipped</h2><Tag>12 weeks</Tag></header>
         <Tag>Pull requests</Tag>
-        <ShippedChart chart={shipped.chart} />
+        <ShippedChart weeks={shipped.weeks} chart={shipped.chart} />
         <p className="overview-mono">SHIPPED PER WEEK — ALL BELTS</p>
         <p className="overview-median"><span>Issue to pull request, median</span><span className="overview-mono overview-muted">{shipped.median}</span></p>
       </section>
