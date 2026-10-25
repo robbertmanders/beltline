@@ -1,12 +1,14 @@
 import { useMemo } from "react";
-import type { OverviewFloorBelt, OverviewFloorBox, OverviewFloorChip, FloorLayout, OverviewRun, StageIcon, Tint } from "../../api/wire.gen";
+import type { FloorTrack, OverviewFloorBelt, OverviewFloorBox, OverviewFloorChip, OverviewRun, StageIcon, Tint } from "../../api/wire.gen";
 import { Chip, NeedChip, type Look } from "../../components/Paper";
+import { useElementWidth } from "../../components/useElementWidth";
 import { StageBox, type BoxState } from "../../theme/stages/StageBox";
 import { focusOpacity } from "./focus";
-import { FactoryTracks, nodeKey } from "./FactoryTracks";
+import { FactoryTracks } from "./FactoryTracks";
+import { floorBoxFrame, layOutFloor, nodeKey, type FloorPlaced } from "./floorLayout";
 
 export interface BoxFloorProps {
-  layout: FloorLayout;
+  track: FloorTrack;
   belts: readonly OverviewFloorBelt[];
   boxes: readonly OverviewFloorBox[];
   runs: ReadonlyMap<string, OverviewRun>;
@@ -23,15 +25,17 @@ export interface BoxFloorProps {
 const boxStates: Record<Look, BoxState> = { done: "done", running: "running", waiting: "needs", held: "held", plain: "idle" };
 
 /**
- * The Floor as the daemon laid it out: each belt's card on the left, each merged stage as one box with its
- * status above and its run tags below, and the tracks between them. The positions are the daemon's; the
- * browser only draws the boxes, lights a focused belt's tracks and dims what it does not touch.
+ * The Floor: each belt's card on the left, each merged stage as one box with its status above and its run tags
+ * below, and the tracks between them. The daemon says which nodes sit in which layer and which tracks join them;
+ * the page lays them out over its width (layOutFloor), lights a focused belt's tracks and dims what it does not touch.
  */
 export function BoxFloor(props: BoxFloorProps) {
-  const { layout, belts, boxes, runs, focus, pinned } = props;
+  const { track, belts, boxes, runs, focus, pinned } = props;
+  const [scrollRef, width] = useElementWidth<HTMLDivElement>();
+  const layout = useMemo(() => layOutFloor(track, boxes, width > 0 ? width : undefined), [track, boxes, width]);
   const placed = useMemo(() => new Map(layout.placed.map(item => [nodeKey(item.node), item])), [layout.placed]);
 
-  return <div className="factory-scroll box-floor" data-testid="floor-scroll" data-scroll-viewport>
+  return <div ref={scrollRef} className="factory-scroll box-floor" data-testid="floor-scroll" data-scroll-viewport>
     <div className="factory-canvas" style={{ width: layout.width, height: layout.height }}>
       <FactoryTracks layout={layout} focus={focus} />
       {belts.map(belt => {
@@ -43,22 +47,28 @@ export function BoxFloor(props: BoxFloorProps) {
             onRuns={() => props.onOpenBelt(belt.id)} />
         </div>;
       })}
-      {boxes.map(box => <BoxCell key={box.id} box={box} runs={runs} focus={focus}
-        onOpenRun={props.onOpenRun} onOpenStage={props.onOpenStage} />)}
+      {boxes.map(box => {
+        const at = placed.get(`stage:${box.id}`);
+        if (!at) return null;
+        return <BoxCell key={box.id} box={box} at={at} runs={runs} focus={focus}
+          onOpenRun={props.onOpenRun} onOpenStage={props.onOpenStage} />;
+      })}
     </div>
     {belts.length === 0 && <p className="empty-state" role="status">No belts are on the floor.</p>}
   </div>;
 }
 
-/** One merged stage: its status chip above, its stage box, and its run tags below, in the cell the daemon sized. */
-function BoxCell({ box, runs, focus, onOpenRun, onOpenStage }: {
+/** One merged stage: its status chip above, its stage box, and its run tags below, in its placed cell. */
+function BoxCell({ box, at, runs, focus, onOpenRun, onOpenStage }: {
   box: OverviewFloorBox;
+  at: FloorPlaced;
   runs: ReadonlyMap<string, OverviewRun>;
   focus: string | null;
   onOpenRun: (chip: OverviewFloorChip) => void;
   onOpenStage: (stageId: string) => void;
 }) {
-  return <div className="floor-box" data-stage={box.id} style={{ left: box.x, top: box.y, width: box.width, height: box.height, opacity: focusOpacity(box.belts, focus) }}>
+  const frame = floorBoxFrame(at);
+  return <div className="floor-box" data-stage={box.id} style={{ left: frame.x, top: frame.y, width: frame.width, height: frame.height, opacity: focusOpacity(box.belts, focus) }}>
     <StatusChip look={box.status.look as Look} text={box.status.text} />
     <StageBox icon={box.icon as StageIcon} tint={box.tint as Tint} caption={box.caption} title={box.name} state={boxStates[box.status.look as Look]}
       label={`${box.name}: ${box.status.text.toLowerCase()}`} onClick={() => onOpenStage(box.id)} />

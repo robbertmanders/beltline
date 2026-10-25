@@ -91,15 +91,13 @@ type OverviewView struct {
 	Greeting string
 }
 
-// OverviewViewArgs are the parameters of NewOverviewView. Nil pointers and a nil Location
-// are the defaults: the local calendar, and the Floor drawn at its minimum column.
+// OverviewViewArgs are the parameters of NewOverviewView. A nil Location is the local calendar.
 type OverviewViewArgs struct {
 	Belts    []OverviewBelt
 	Runs     []Run
 	Now      time.Time
 	Location *time.Location
 	Pause    Pause
-	Width    *float64
 	Agent    func(stage Stage) *Agent
 	// Track is OverviewPresentationTrack of the floor belts when the caller keeps it; nil builds it.
 	Track *FactoryTrack
@@ -122,18 +120,12 @@ func NewOverviewView(a OverviewViewArgs) OverviewView {
 	} else {
 		track = OverviewPresentationTrack(floorBelts)
 	}
-	// The layout looks runs up per box, and only active runs sit at one.
-	active := floorRuns(a.Runs)
 	paused := map[string]struct{}{}
 	for _, belt := range a.Belts {
 		if belt.Paused {
 			paused[belt.ID] = struct{}{}
 		}
 	}
-	layout := NewFloorLayout(track, OverviewBoxesMetrics(), a.Width, func(merged FactoryTrackStage) float64 {
-		return OverviewBoxesHeight(len(track.RunsAt(merged, active)))
-	})
-
 	view := OverviewView{
 		Summary:      RunSummaryCounts(a.Runs, a.Now, loc),
 		Today:        NewOverviewSummary(a.Runs, a.Now, loc, paused, a.Pause),
@@ -145,7 +137,6 @@ func NewOverviewView(a OverviewViewArgs) OverviewView {
 		Runs:     a.Runs,
 		Now:      a.Now,
 		Location: loc,
-		Layout:   layout,
 		Agent:    agent,
 	})
 	view.Greeting = OverviewSummaryGreeting(a.Now, loc)

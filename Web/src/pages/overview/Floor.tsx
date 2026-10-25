@@ -31,10 +31,10 @@ export function FloorCard({ total, children }: { total: OverviewFloor["total"]; 
   </section>;
 }
 
-/** The Floor the daemon laid out: every merged stage as a box, inside its card. */
+/** The Floor: every merged stage as a box, inside its card. */
 export function Floor({ floor, ...map }: FloorProps) {
   return <FloorCard total={floor.total}>
-    <BoxFloor layout={floor.layout} belts={floor.belts} boxes={floor.boxes} runs={map.runs} focus={map.focus} pinned={map.pinned}
+    <BoxFloor track={floor.track} belts={floor.belts} boxes={floor.boxes} runs={map.runs} focus={map.focus} pinned={map.pinned}
       onHover={map.onHover} onPin={map.onPin} onOpenRun={map.onOpenRun} onOpenStage={map.onOpenStage} onOpenBelt={map.onOpenBelt} />
   </FloorCard>;
 }

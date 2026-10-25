@@ -1,7 +1,8 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useMemo, type CSSProperties, type ReactNode } from "react";
 import type { BoxMap, BoxMapEdge, BoxMapNode, BoxMapRoutePill, StageIcon, Tint } from "../../api/wire.gen";
+import { placeBoxMap, runBoxMetrics, type BoxGridMetrics } from "./boxGrid";
 import { Glyph } from "./glyphs";
-import { trackData } from "./tracks";
+import { roundedTrack } from "./tracks";
 import "./stages.css";
 
 /** A box's state, which sets its border and fill (the mockup's st-* classes). */
@@ -80,26 +81,31 @@ export interface BoxMapViewProps {
   selected?: string | null;
   onSelect?: (nodeId: string) => void;
   label: string;
+  metrics?: BoxGridMetrics;
 }
 
-/** A belt as stage boxes on hooked tracks. Every position is the daemon's; the page supplies words and states. */
-export function BoxMapView({ map, content, track = () => "todo", routeTaken = () => true, selected, onSelect, label }: BoxMapViewProps) {
+/**
+ * A belt as stage boxes on hooked tracks. The daemon says which column and row each box takes and which corners each
+ * track turns; this places them in points (placeBoxMap), and the page supplies words and states.
+ */
+export function BoxMapView({ map, content, track = () => "todo", routeTaken = () => true, selected, onSelect, label, metrics = runBoxMetrics }: BoxMapViewProps) {
+  const placed = useMemo(() => placeBoxMap(map, metrics), [map, metrics]);
   const order: Record<TrackState, number> = { skip: 0, todo: 1, done: 2 };
-  const edges = map.edges.map(edge => ({ edge, state: track(edge) })).sort((a, b) => order[a.state] - order[b.state]);
+  const edges = placed.edges.map(item => ({ ...item, state: track(item.edge) })).sort((a, b) => order[a.state] - order[b.state]);
   return <div className="box-map-scroll" data-scroll-viewport>
-    <div className="box-map" style={{ width: map.width, height: map.height }} role="group" aria-label={label}>
-      <svg className="box-map__tracks" width={map.width} height={map.height} aria-hidden="true">
-        {edges.map(({ edge, state }) => <path key={`${edge.from}>${edge.to}>${edge.route ?? ""}`} className={`box-track box-track--${state}`} d={trackData(edge.path)} />)}
+    <div className="box-map" style={{ width: placed.width, height: placed.height }} role="group" aria-label={label}>
+      <svg className="box-map__tracks" width={placed.width} height={placed.height} aria-hidden="true">
+        {edges.map(({ edge, points, state }) => <path key={`${edge.from}>${edge.to}>${edge.route ?? ""}`} className={`box-track box-track--${state}`} d={roundedTrack(points, metrics.corner)} />)}
       </svg>
-      {map.routes.map(route => <span key={`${route.fork}:${route.route}`} className={`box-map__route${routeTaken(route) ? "" : " box-map__route--off"}`}
-        style={{ left: route.x, top: route.y }}>{route.name}</span>)}
-      {map.nodes.map(node => {
+      {placed.routes.map(({ route, x, y }) => <span key={`${route.fork}:${route.route}`} className={`box-map__route${routeTaken(route) ? "" : " box-map__route--off"}`}
+        style={{ left: x, top: y }}>{route.name}</span>)}
+      {placed.nodes.map(({ node, ...box }) => {
         const words = content(node);
         return <div key={node.id} className="box-map__node">
-          {words.above && <div className="box-map__above" style={{ left: node.x + node.width / 2, top: node.y - 7 }}>{words.above}</div>}
+          {words.above && <div className="box-map__above" style={{ left: box.x + box.width / 2, top: box.y - 7 }}>{words.above}</div>}
           <StageBox icon={node.icon} tint={node.tint} caption={words.caption} title={words.title} details={words.details} state={words.state}
             trigger={node.kind === "trigger"} dot={words.dot} selected={selected === node.id} label={words.label} dataStage={node.id}
-            style={{ left: node.x, top: node.y, width: node.width, height: node.height }}
+            style={{ left: box.x, top: box.y, width: box.width, height: box.height }}
             onClick={onSelect ? () => onSelect(node.id) : undefined} />
         </div>;
       })}

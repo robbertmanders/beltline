@@ -682,39 +682,17 @@ export interface BeltsResponse {
 }
 
 export interface BoxMap {
-  width: number;
-  height: number;
+  columns: number;
   nodes: BoxMapNode[];
   edges: BoxMapEdge[];
-  forks: BoxMapForkArea[];
   routes: BoxMapRoutePill[];
-  inserts: BoxMapInsert[];
 }
 
 export interface BoxMapEdge {
   from: string;
   to: string;
-  path: MapPath;
-  straight: boolean;
+  via: BoxMapTurn[];
   route?: string;
-}
-
-export interface BoxMapForkArea {
-  id: string;
-  routes: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface BoxMapInsert {
-  x: number;
-  y: number;
-  after?: string;
-  before?: string;
-  route?: string;
-  addAt: number;
 }
 
 export interface BoxMapNode {
@@ -723,10 +701,8 @@ export interface BoxMapNode {
   number: number;
   fork?: string;
   route?: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  column: number;
+  row: number;
   icon: StageIcon;
   tint?: Tint;
 }
@@ -735,10 +711,15 @@ export interface BoxMapRoutePill {
   fork: string;
   route: string;
   name: string;
-  x: number;
-  y: number;
+  column: number;
+  row: number;
   stageIds: string[];
   feeds: boolean;
+}
+
+export interface BoxMapTurn {
+  column: number;
+  row: number;
 }
 
 export interface ContinueSessionResponse {
@@ -779,40 +760,23 @@ export interface FactorySummaryCounts {
   shippedToday: number;
 }
 
-export interface FloorLayout {
-  width: number;
-  height: number;
-  column: number;
-  placed: FloorLayoutPlaced[];
-  tracks: FloorLayoutStroke[];
-  lanes: FloorLayoutLaneRoute[];
-}
-
-export interface FloorLayoutLaneRoute {
+export interface FactoryTrackTrack {
   from: FactoryTrackNode;
   to: FactoryTrackNode;
   belts: string[];
-  path: string;
-  arrow: string;
+}
+
+export interface FloorTrack {
+  layers: FactoryTrackNode[][];
+  tracks: FactoryTrackTrack[];
+  returns: FloorTrackReturn[];
+}
+
+export interface FloorTrackReturn {
+  from: FactoryTrackNode;
+  to: FactoryTrackNode;
+  belts: string[];
   label: string;
-  labelX: number;
-  labelY: number;
-}
-
-export interface FloorLayoutPlaced {
-  node: FactoryTrackNode;
-  x: number;
-  top: number;
-  height: number;
-  anchor: number;
-}
-
-export interface FloorLayoutStroke {
-  from: FactoryTrackNode;
-  to: FactoryTrackNode;
-  belts: string[];
-  path: string;
-  width: number;
 }
 
 export interface Fork {
@@ -1307,16 +1271,6 @@ export interface LibraryShareResponse {
   changed: boolean;
 }
 
-export interface MapPath {
-  subpaths: MapPoint[][];
-  cornerRadius: number;
-}
-
-export interface MapPoint {
-  x: number;
-  y: number;
-}
-
 export interface Merge {
   branches: string[];
   into?: string;
@@ -1419,7 +1373,7 @@ export interface OverviewFloor {
   total: FactorySummaryCounts;
   belts: OverviewFloorBelt[];
   boxes: OverviewFloorBox[];
-  layout: FloorLayout;
+  track: FloorTrack;
 }
 
 export interface OverviewFloorBelt {
@@ -1441,10 +1395,6 @@ export interface OverviewFloorBox {
   runCount: number;
   chips: OverviewFloorChip[];
   more: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
 }
 
 export interface OverviewFloorBoxStatus {

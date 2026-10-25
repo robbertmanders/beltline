@@ -1,6 +1,6 @@
-// A run's belt drawn as stage boxes for the run page: the daemon's geometry
+// A run's belt drawn as stage boxes for the run page: the daemon's grid
 // (BoxMap) with the words, state and chip each box shows, and the state of
-// every track. The page draws it as it is.
+// every track. The page sizes the grid and draws it.
 
 package core
 
@@ -112,7 +112,7 @@ func RunBoxesProject(run Run, stages []RunPresentationStagePanel, ambiguous map[
 		value := run.Source.Trigger.Kind
 		kind = &value
 	}
-	mapped := BoxLayoutMap(run.Layout(), BoxMapMetricsRun, true, kind, look)
+	mapped := BoxLayoutMap(run.Layout(), true, kind, look)
 	panels := map[string]RunPresentationStagePanel{}
 	for _, panel := range stages {
 		if _, seen := panels[panel.ID]; !seen {

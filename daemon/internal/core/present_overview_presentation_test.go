@@ -324,23 +324,6 @@ func TestSummaryUsesTheSuppliedClockAndCalendarAndMatchesRunSummary(t *testing.T
 	}
 }
 
-// TestOverviewFloorWidthSpreadsColumnsAndNeverGoesBelowMinimum
-func TestOverviewFloorWidthSpreadsColumnsAndNeverGoesBelowMinimum(t *testing.T) {
-	t.Parallel()
-	belt := DefaultsBelt([]string{"a/b"}, "agent", DefaultsBuiltInAgents(), true)
-	track := OverviewPresentationTrack([]OverviewBelt{OverviewBeltFromBelt(belt, false, false)})
-	narrowWidth := 100.0
-	narrow := NewFloorLayout(track, OverviewBoxesMetrics(), &narrowWidth, func(FactoryTrackStage) float64 { return 96 })
-	if narrow.Column != OverviewBoxesMetrics().MinColumn {
-		t.Errorf("narrow column = %v, want the minimum %v", narrow.Column, OverviewBoxesMetrics().MinColumn)
-	}
-	wideWidth := 2000.0
-	wide := NewFloorLayout(track, OverviewBoxesMetrics(), &wideWidth, func(FactoryTrackStage) float64 { return 96 })
-	if wide.Column <= narrow.Column {
-		t.Errorf("wide column = %v, want more than the narrow %v", wide.Column, narrow.Column)
-	}
-}
-
 // TestOverviewBuildsTheSharedTrack checks the Overview lays its Floor out on the track of its belts.
 func TestOverviewBuildsTheSharedTrack(t *testing.T) {
 	t.Parallel()
@@ -359,8 +342,8 @@ func TestOverviewBuildsTheSharedTrack(t *testing.T) {
 	}
 }
 
-// TestEmptyFloorAndEmptyRunsProduceEmptyGeometry
-func TestEmptyFloorAndEmptyRunsProduceEmptyGeometry(t *testing.T) {
+// TestEmptyFloorAndEmptyRunsProduceAnEmptyTrack
+func TestEmptyFloorAndEmptyRunsProduceAnEmptyTrack(t *testing.T) {
 	t.Parallel()
 	view := NewOverviewView(OverviewViewArgs{Now: ovNow})
 	if view.Summary.Total != 0 {
@@ -369,8 +352,8 @@ func TestEmptyFloorAndEmptyRunsProduceEmptyGeometry(t *testing.T) {
 	if len(view.FactoryTrack.Belts) != 0 || len(view.FactoryTrack.Stages) != 0 {
 		t.Errorf("track has belts or merged stages: %+v", view.FactoryTrack)
 	}
-	if len(view.Floor.Boxes) != 0 || len(view.Floor.Layout.Tracks) != 0 || len(view.Floor.Layout.Lanes) != 0 {
-		t.Errorf("empty floor has boxes, tracks or lanes: %d %d %d", len(view.Floor.Boxes), len(view.Floor.Layout.Tracks), len(view.Floor.Layout.Lanes))
+	if len(view.Floor.Boxes) != 0 || len(view.Floor.Track.Tracks) != 0 || len(view.Floor.Track.Returns) != 0 {
+		t.Errorf("empty floor has boxes, tracks or lanes: %d %d %d", len(view.Floor.Boxes), len(view.Floor.Track.Tracks), len(view.Floor.Track.Returns))
 	}
 }
 

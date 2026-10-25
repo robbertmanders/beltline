@@ -37,8 +37,9 @@ function trackKey(edge: { from: string; to: string; route?: string }): string {
 
 /**
  * The run's belt as stage boxes on hooked tracks (BoxMapView), in a card with the run's metadata above it. The
- * daemon places every box and track and says each one's words, state and chip; the page only draws them and
- * reports a click on a stage. The trigger's box is not a stage, so selecting it does nothing.
+ * daemon puts every box in its column and row, says which corners each track turns, and gives each one's words,
+ * state and chip; the page sizes the grid, draws them and reports a click on a stage. The trigger's box is not a
+ * stage, so selecting it does nothing.
  */
 export function RunBoxes({ boxes, metadata, selectedStageId, onSelectStage, opening }: RunBoxesProps) {
   const section = useRef<HTMLElement>(null);

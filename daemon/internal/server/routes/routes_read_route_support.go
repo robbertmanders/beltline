@@ -5,12 +5,10 @@ package routes
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -138,33 +136,6 @@ func ReadRouteSupportQueryValues(name, query string) []string {
 		}
 	}
 	return out
-}
-
-// Strtod is strtod over the whole string, with
-// no leading white space, no trailing text and no `_`. Decimal and hexadecimal
-// floats are read as strtod reads them, so a hex value needs no `p` exponent.
-// Values out of range are returned as strtod returns them (infinity or zero).
-func Strtod(text string) (float64, bool) {
-	if text == "" {
-		return 0, false
-	}
-	switch text[0] {
-	case '\t', '\n', '\v', '\f', '\r', ' ', 0:
-		return 0, false
-	}
-	if strings.ContainsRune(text, '_') {
-		return 0, false
-	}
-	candidate := text
-	unsigned := strings.TrimLeft(text, "+-")
-	if len(unsigned) >= 2 && (unsigned[:2] == "0x" || unsigned[:2] == "0X") && !strings.ContainsAny(unsigned, "pP") {
-		candidate = text + "p0"
-	}
-	value, err := strconv.ParseFloat(candidate, 64)
-	if err != nil && !errors.Is(err, strconv.ErrRange) {
-		return 0, false
-	}
-	return value, true
 }
 
 // HummingbirdQueryParameter (Hummingbird's

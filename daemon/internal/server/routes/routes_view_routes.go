@@ -3,7 +3,6 @@
 package routes
 
 import (
-	"math"
 	"net/http"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
@@ -48,17 +47,10 @@ func AddViewRunSessions(mux *http.ServeMux, c *coordinator.Coordinator) {
 }
 
 // AddViewOverview GET api/v1/views/overview.
-// The browser's width in points spreads the Floor's columns; without it the
-// Floor draws at the minimum column.
 // Lock: the handler calls ReadOverviewView, which takes the lock.
 func AddViewOverview(mux *http.ServeMux, c *coordinator.Coordinator) {
 	mux.Handle("GET /api/v1/views/overview", JSONRoute(c, func(r *http.Request) (any, error) {
-		width, err := viewWidth(r)
-		if err != nil {
-			return nil, err
-		}
-		view := c.ReadOverviewView(nil, nil, width)
-		return api.NewOverviewResponse(view), nil
+		return api.NewOverviewResponse(c.ReadOverviewView(nil, nil)), nil
 	}))
 }
 
@@ -80,23 +72,6 @@ func AddViewWaiting(mux *http.ServeMux, c *coordinator.Coordinator) {
 	mux.Handle("GET /api/v1/waiting", JSONRoute(c, func(r *http.Request) (any, error) {
 		return api.NewWaitingResponse(c.ReadWaitingSubjects()), nil
 	}))
-}
-
-// viewWidth is the Overview read's width query: at most one
-// `width`, a finite positive number of points. Nil when the query has none.
-func viewWidth(r *http.Request) (*float64, error) {
-	widths := ReadRouteSupportQueryValues("width", r.URL.RawQuery)
-	if len(widths) > 1 {
-		return nil, ReadRouteSupportFail("Width must be provided once as a finite positive number of points.")
-	}
-	if len(widths) == 0 {
-		return nil, nil
-	}
-	value, ok := Strtod(widths[0])
-	if !ok || math.IsNaN(value) || math.IsInf(value, 0) || value <= 0 {
-		return nil, ReadRouteSupportFail("Width must be a finite positive number of points.")
-	}
-	return &value, nil
 }
 
 // nonEmptyQuery is the first value of a query parameter, nil when it is absent or empty
