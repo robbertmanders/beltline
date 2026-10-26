@@ -1,5 +1,5 @@
-/* The Overview: the Summary posts and the Floor. Colours come from the theme tokens; the daemon supplies
-   every position in points, so these rules size and place only what the drawings already say. */
+/* The Overview: the Summary posts and the Floor. Colours come from the theme tokens; floorLayout.ts places
+   every node, track and lane in points, so these rules size and place only what the drawings already say. */
 
 .overview-page { min-width: 0; }
 .overview-heading { margin-bottom: 18px; }

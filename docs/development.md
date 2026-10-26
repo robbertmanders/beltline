@@ -38,7 +38,7 @@ While it runs, `<data-folder>/daemon.json` (mode 0600) holds the port and a fres
 
 ## Architecture
 
-The daemon owns every fact and every decision: it reads and writes the data folder, runs agents, `gh`, `acli`, `git` and `tmux`, says which actions are available and why not, validates every save, and computes every view (statuses, cost, Work grouping, run links, the maps' geometry, parsed Markdown). The web app draws what it is given, keeps your navigation, unsent input and display preferences, and sends your commands. Two browsers on the same data never disagree.
+The daemon owns every fact and every decision: it reads and writes the data folder, runs agents, `gh`, `acli`, `git` and `tmux`, says which actions are available and why not, validates every save, and computes every view (statuses, cost, Work grouping, run links, which stage connects to which on the drawings, parsed Markdown). The web app lays out and draws what it is given in points, keeps your navigation, unsent input and display preferences, and sends your commands. Two browsers on the same data never disagree.
 
 - `daemon/internal/core`, `integrations`, `kit`: the model, engine and presentation; GitHub, Jira, runners, workspaces and storage; the coordinator, launch setup and demo mode.
 - `daemon/internal/server`: the HTTP and WebSocket API on Go's `net/http`, in the same process as the coordinator.

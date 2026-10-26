@@ -112,9 +112,9 @@ func FactoryTrackWaypoint(number int) FactoryTrackNode {
 
 // FactoryTrackTrack is a stretch of track between two nodes, and the belts on it.
 type FactoryTrackTrack struct {
-	From  FactoryTrackNode
-	To    FactoryTrackNode
-	Belts []string
+	From  FactoryTrackNode `json:"from"`
+	To    FactoryTrackNode `json:"to"`
+	Belts []string         `json:"belts"`
 }
 
 // factoryTrackLink is one stage-to-stage link a belt makes.

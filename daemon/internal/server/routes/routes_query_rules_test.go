@@ -1,11 +1,9 @@
-// Tests of the query and width rules: the URI query parameters, and the Double parsing (strtod rules)
-// that the widths use.
+// Tests of the query rules: the URI query parameters.
 
 package routes
 
 import (
 	"context"
-	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -73,47 +71,6 @@ func TestPercentDecodedQueryValues(t *testing.T) {
 				if got[i] != c.want[i] {
 					t.Fatalf("PercentDecodedQueryValues(token, %q) = %q; want %q", c.query, got, c.want)
 				}
-			}
-		})
-	}
-}
-
-// TestStrtod checks the strtod rules that widths use.
-func TestStrtod(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		text string
-		want float64
-		ok   bool
-	}{
-		{"1080", 1080, true},
-		{"1.5", 1.5, true},
-		{"+.5", 0.5, true},
-		{"1e3", 1000, true},
-		{"0x10", 16, true},
-		{"0X1A", 26, true},
-		{"0x1.8p1", 3, true},
-		{"0x1.8", 1.5, true},
-		{"inf", math.Inf(1), true},
-		{"nan", math.NaN(), true},
-		{"1_000", 0, false},
-		{" 1", 0, false},
-		{"1 ", 0, false},
-		{"", 0, false},
-		{"0x", 0, false},
-		{"0xp1", 0, false},
-		{"1,5", 0, false},
-		{"--1", 0, false},
-	}
-	for _, c := range cases {
-		t.Run(c.text, func(t *testing.T) {
-			t.Parallel()
-			got, ok := Strtod(c.text)
-			if ok != c.ok {
-				t.Fatalf("Strtod(%q) ok = %v, want %v", c.text, ok, c.ok)
-			}
-			if ok && !(got == c.want || (math.IsNaN(got) && math.IsNaN(c.want))) {
-				t.Fatalf("Strtod(%q) = %v, want %v", c.text, got, c.want)
 			}
 		})
 	}

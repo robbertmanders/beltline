@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../../api/client";
@@ -7,7 +7,6 @@ import { apiQueryKey, resourcesForPath } from "../../api/resources";
 import type { OverviewFloorChip, OverviewResponse, OverviewRun } from "../../api/wire.gen";
 import { useRuntime } from "../../app/runtime";
 import { ProblemItems } from "../../components/ProblemList";
-import { useElementWidth } from "../../components/useElementWidth";
 import { usePreferences } from "../../state/usePreferences";
 import { Floor } from "./Floor";
 import "./overview.css";
@@ -24,7 +23,7 @@ export const overviewModes = [
 ] as const;
 export type OverviewMode = (typeof overviewModes)[number]["value"];
 
-/** The Overview page. The daemon sends the Summary and the Floor, and lays the Floor out at the page's width; this page shows them, pins and dims them. */
+/** The Overview page. The daemon sends the Summary and the Floor; this page shows them, lays the Floor out at its width, pins and dims them. */
 export function OverviewPage() {
   const runtime = useRuntime();
   const navigate = useNavigate();
@@ -32,15 +31,11 @@ export function OverviewPage() {
   const [mode, setMode] = useState<OverviewMode>("summary");
   // Hover is transient: it lives only while the pointer is on a belt, and a view change or leaving the page clears it.
   const [hovered, setHovered] = useState<string | null>(null);
-  // The page's width, measured after a pause in resizing, so the daemon lays the Floor out once per settled width.
-  const [pageRef, pageWidth] = useElementWidth<HTMLElement>(150);
-  const path = pageWidth > 0 ? `${overviewApiPath}?width=${pageWidth}` : overviewApiPath;
   const result = useQuery({
-    queryKey: apiQueryKey(path),
-    queryFn: ({ signal }) => apiRequest<OverviewResponse>(path, { signal, onUnauthorized: runtime.requireSignIn }),
+    queryKey: apiQueryKey(overviewApiPath),
+    queryFn: ({ signal }) => apiRequest<OverviewResponse>(overviewApiPath, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead,
     retry: false,
-    placeholderData: keepPreviousData,
     meta: { resourceDeps: resourcesForPath(overviewApiPath) }
   });
   const data = result.data;
@@ -64,7 +59,7 @@ export function OverviewPage() {
   const hover = (belt: string, pointing: boolean) => setHovered(current => hoveredAfter(current, belt, pointing));
   const pin = (belt: string) => update({ floorPinnedBeltId: togglePin(pinned, belt) });
 
-  return <article ref={pageRef} className="page-content overview-page">
+  return <article className="page-content overview-page">
     <header className="page-heading overview-heading">
       <h1 className="screen-reader-only">Overview</h1>
       <p className="page-title" aria-hidden="true">{data?.greeting ?? ""}</p>

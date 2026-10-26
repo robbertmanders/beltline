@@ -30,14 +30,6 @@ type OverviewFloorChip struct {
 	OpenStage *string `json:"openStage,omitzero"`
 }
 
-// OverviewFloorFrame is a rectangle in the layout's points.
-type OverviewFloorFrame struct {
-	X      float64 `json:"x"`
-	Y      float64 `json:"y"`
-	Width  float64 `json:"width"`
-	Height float64 `json:"height"`
-}
-
 // OverviewFloorBoxStatus is a box's status: its text and colour look.
 type OverviewFloorBoxStatus struct {
 	Text string          `json:"text"`
@@ -45,8 +37,7 @@ type OverviewFloorBoxStatus struct {
 }
 
 // OverviewFloorBox is a merged stage on the Floor: its icon and colour (StageLook), its caption and
-// status, its run tags and the cell it sits in on the layout (OverviewFloorFrame: the box, its status
-// above and its tags below).
+// status, and its run tags. It is drawn at the track's stage node with its id.
 type OverviewFloorBox struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -59,16 +50,14 @@ type OverviewFloorBox struct {
 	// Chips are up to three run tags, then More for the rest.
 	Chips []OverviewFloorChip `json:"chips"`
 	More  int                 `json:"more"`
-	OverviewFloorFrame
 }
 
-// OverviewFloor is the Floor: entrances with their counts, and its boxes with the layout they are
-// drawn on, in points.
+// OverviewFloor is the Floor: entrances with their counts, its boxes, and the track they are drawn on.
 type OverviewFloor struct {
-	Total  FactorySummaryCounts `json:"total"`
-	Belts  []OverviewFloorBelt  `json:"belts"`
-	Boxes  []OverviewFloorBox   `json:"boxes"`
-	Layout FloorLayout          `json:"layout"`
+	Total FactorySummaryCounts `json:"total"`
+	Belts []OverviewFloorBelt  `json:"belts"`
+	Boxes []OverviewFloorBox   `json:"boxes"`
+	Track FloorTrack           `json:"track"`
 }
 
 // OverviewFloorArgs are the parameters of NewOverviewFloor. Agent may be nil, and finds the agent a
@@ -79,7 +68,6 @@ type OverviewFloorArgs struct {
 	Runs     []Run
 	Now      time.Time
 	Location *time.Location
-	Layout   FloorLayout
 	Agent    func(stage Stage) *Agent
 }
 
@@ -113,8 +101,7 @@ func overviewFloorChip(run Run, belt *string, pausedBelts map[string]struct{}) O
 	}
 }
 
-// NewOverviewFloor builds the Floor. Layout is the placement it draws with, which gives each box
-// its frame.
+// NewOverviewFloor builds the Floor.
 func NewOverviewFloor(a OverviewFloorArgs) OverviewFloor {
 	loc := a.Location
 	if loc == nil {
@@ -130,10 +117,10 @@ func NewOverviewFloor(a OverviewFloorArgs) OverviewFloor {
 	a.Runs = floorRuns(a.Runs)
 
 	return OverviewFloor{
-		Belts:  overviewFloorBelts(a.Belts, summary),
-		Total:  summary.Total,
-		Boxes:  overviewFloorBoxes(a, pausedBelts, agent),
-		Layout: a.Layout,
+		Belts: overviewFloorBelts(a.Belts, summary),
+		Total: summary.Total,
+		Boxes: overviewFloorBoxes(a, pausedBelts, agent),
+		Track: NewFloorTrack(a.Track),
 	}
 }
 
@@ -175,8 +162,8 @@ func overviewFloorBoxes(a OverviewFloorArgs, pausedBelts map[string]struct{}, ag
 	return boxes
 }
 
-// overviewFloorBox is one merged stage on the Floor: its caption and status, up to three run tags
-// (then More), and its frame from the layout.
+// overviewFloorBox is one merged stage on the Floor: its caption and status, and up to three run tags
+// (then More).
 func overviewFloorBox(a OverviewFloorArgs, merged FactoryTrackStage, pausedBelts map[string]struct{}, agent func(Stage) *Agent) OverviewFloorBox {
 	here := overviewFloorByState(a.Track.RunsAt(merged, a.Runs))
 	shown := here
@@ -185,10 +172,6 @@ func overviewFloorBox(a OverviewFloorArgs, merged FactoryTrackStage, pausedBelts
 	}
 	stage := merged.Members[0].Stage
 	statusText, statusLook := OverviewBoxesStatus(here)
-	frame := OverviewFloorFrame{}
-	if placed := a.Layout.Box(FactoryTrackStageNode(merged.ID)); placed != nil {
-		frame = OverviewBoxesFrame(*placed)
-	}
 	chips := make([]OverviewFloorChip, 0, len(shown))
 	for _, run := range shown {
 		name := FactoryTrackShortName(run.BeltName)
@@ -199,15 +182,14 @@ func overviewFloorBox(a OverviewFloorArgs, merged FactoryTrackStage, pausedBelts
 		more = len(here) - OverviewBoxesTagLimit
 	}
 	return OverviewFloorBox{
-		ID:                 merged.ID,
-		Name:               merged.Name,
-		Caption:            OverviewBoxesCaption(stage, len(merged.Belts())),
-		StageLook:          StageLookOf(stage, agent(stage)),
-		Belts:              merged.Belts(),
-		Status:             OverviewFloorBoxStatus{Text: statusText, Look: statusLook},
-		RunCount:           len(here),
-		Chips:              chips,
-		More:               more,
-		OverviewFloorFrame: frame,
+		ID:        merged.ID,
+		Name:      merged.Name,
+		Caption:   OverviewBoxesCaption(stage, len(merged.Belts())),
+		StageLook: StageLookOf(stage, agent(stage)),
+		Belts:     merged.Belts(),
+		Status:    OverviewFloorBoxStatus{Text: statusText, Look: statusLook},
+		RunCount:  len(here),
+		Chips:     chips,
+		More:      more,
 	}
 }

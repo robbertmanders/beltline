@@ -1,5 +1,4 @@
-// The run view cases: the shared projection for each layout fixture, and the
-// Overview's width rejections.
+// The run view cases: the shared projection for each layout fixture.
 package servertest
 
 import (
@@ -126,20 +125,4 @@ func TestRunViewUsesSharedProjectionForLayoutFixtures(t *testing.T) {
 		t.Fatalf("erased: status %d", erased.Status)
 	}
 	CheckGoldenAs(t, notFound, "erased run view", "error-not-found.json", erased, f.Root)
-}
-
-// TestOverviewRejectsInvalidWidthsWithTheShared422Shape checks the Overview's width query: a finite positive
-// number of points, given at most once.
-func TestOverviewRejectsInvalidWidthsWithTheShared422Shape(t *testing.T) {
-	t.Parallel()
-	f := ReadOnlyFixture(t)
-	path := "/api/v1/views/overview?width="
-	message := "Width must be a finite positive number of points."
-	for _, value := range []string{"nan", "infinity", "-infinity", "0", "-1", "nope"} {
-		reply := f.Do(Request{Method: "GET", Path: path + value, Token: ContractToken})
-		require422Problem(t, reply, message, []string{message})
-	}
-	duplicateMessage := "Width must be provided once as a finite positive number of points."
-	duplicate := f.Do(Request{Method: "GET", Path: path + "420&width=620", Token: ContractToken})
-	require422Problem(t, duplicate, duplicateMessage, []string{duplicateMessage})
 }

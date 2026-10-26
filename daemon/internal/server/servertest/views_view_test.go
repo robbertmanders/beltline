@@ -42,7 +42,7 @@ func TestWorkAnswersTheSharedViewForEachQuery(t *testing.T) {
 		belt = run.BeltID
 		break
 	}
-	track := f.Coordinator.ReadOverviewView(nil, nil, nil).FactoryTrack
+	track := f.Coordinator.ReadOverviewView(nil, nil).FactoryTrack
 	var merged string
 	for i := range track.Stages {
 		if slices.ContainsFunc(runs, track.Stages[i].Contains) {
@@ -150,13 +150,13 @@ func TestWaitingReturnsTheCoordinatorsListWithoutCallingOutward(t *testing.T) {
 }
 
 // TestOverviewAnswersTheSharedView checks the Overview against the shared view, and that its Floor sends
-// its boxes and their layout.
+// its boxes and the track they are drawn on.
 func TestOverviewAnswersTheSharedView(t *testing.T) {
 	t.Parallel()
 	f := Start(t, Options{})
 	f.SeedViews()
 	reply := getCase(f, "/api/v1/views/overview")
-	if !bytes.Equal(reply.Body, mustMarshal(t, api.NewOverviewResponse(f.Coordinator.ReadOverviewView(nil, nil, nil)))) {
+	if !bytes.Equal(reply.Body, mustMarshal(t, api.NewOverviewResponse(f.Coordinator.ReadOverviewView(nil, nil)))) {
 		t.Fatal("not the shared overview")
 	}
 	members, err := jsonx.Members(reply.Body)
@@ -167,7 +167,7 @@ func TestOverviewAnswersTheSharedView(t *testing.T) {
 	if err := json.Unmarshal(members["floor"], &floor); err != nil {
 		t.Fatal(err)
 	}
-	for _, key := range []string{"boxes", "layout"} {
+	for _, key := range []string{"boxes", "track"} {
 		if _, ok := floor[key]; !ok {
 			t.Fatalf("the floor sends no %s", key)
 		}

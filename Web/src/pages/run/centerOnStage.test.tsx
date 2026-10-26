@@ -7,9 +7,9 @@ import { centredScrollLeft } from "./centerOnStage";
 /** Six boxes in a row, 160 apart, so the line is 940 wide and a 400-wide viewport can scroll 540. */
 const lefts: Record<string, number> = { trigger: 2, s1: 162, s2: 322, s3: 482, s4: 642, s5: 802 };
 const map: BoxMap = {
-  width: 940, height: 120,
-  nodes: Object.entries(lefts).map(([id, x], index) => ({ id, kind: index === 0 ? "trigger" : "agent", number: index, x, y: 34, width: 132, height: 52, icon: "funnel" })),
-  edges: [], forks: [], routes: [], inserts: []
+  columns: 6,
+  nodes: Object.keys(lefts).map((id, index) => ({ id, kind: index === 0 ? "trigger" : "agent", number: index, column: index, row: 0, icon: "funnel" })),
+  edges: [], routes: []
 };
 const boxes: RunBoxesData = {
   map,

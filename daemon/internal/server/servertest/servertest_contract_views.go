@@ -82,7 +82,7 @@ func exerciseViewsArea(f *Fixture, t testing.TB, contractCase string) bool {
 		f.SeedViews()
 		reply := f.Do(Request{Method: "GET", Path: "/api/v1/views/overview", Token: ContractToken})
 		CheckGolden(t, "viewsOverview", "views-overview.json", reply, f.Root)
-		want := mustMarshal(t, api.NewOverviewResponse(f.Coordinator.ReadOverviewView(nil, nil, nil)))
+		want := mustMarshal(t, api.NewOverviewResponse(f.Coordinator.ReadOverviewView(nil, nil)))
 		if !bytes.Equal(reply.Body, want) {
 			t.Fatalf("viewsOverview: the response is not the coordinator's overview")
 		}

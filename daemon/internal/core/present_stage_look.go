@@ -1,5 +1,4 @@
-// The stage look a box draws with: its icon and tint, and the trigger glyph. Paths (MapPath) are the
-// renderer-independent polylines the boxes' tracks are drawn with.
+// The stage look a box draws with: its icon and tint, and the trigger glyph.
 
 package core
 
@@ -48,22 +47,4 @@ func StageLookTrigger(kind *TriggerKind) StageIcon {
 	default:
 		return StageIconBolt
 	}
-}
-
-// MapPoint is one point of a path, in points.
-type MapPoint struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
-}
-
-// MapPath is one renderer-independent path. A radius of zero keeps every segment sharp;
-// otherwise each interior point is rounded by that radius.
-type MapPath struct {
-	Subpaths     [][]MapPoint `json:"subpaths"`
-	CornerRadius float64      `json:"cornerRadius"`
-}
-
-// NewMapPathPoints is a path of one subpath with the given radius.
-func NewMapPathPoints(points []MapPoint, cornerRadius float64) MapPath {
-	return MapPath{Subpaths: [][]MapPoint{points}, CornerRadius: cornerRadius}
 }

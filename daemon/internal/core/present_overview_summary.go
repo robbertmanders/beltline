@@ -56,22 +56,16 @@ type OverviewSummaryShipped struct {
 	Latest int   `json:"latest"`
 	// Median is "—" when nothing has shipped.
 	Median string `json:"median"`
-	// Chart is the sparkline's drawing in its 300 × 150 space.
+	// Chart is the sparkline's words; the browser draws its curve from Weeks.
 	Chart OverviewSummaryChart `json:"chart"`
 }
 
-// OverviewSummaryChart is the Shipped post's sparkline in its 300 × 150 space, with its axis labels.
+// OverviewSummaryChart is the Shipped post's sparkline labels: the ISO weeks at either end of its axis, and the
+// latest week's count.
 type OverviewSummaryChart struct {
-	// Line is the smooth line through every week, as SVG path data.
-	Line string `json:"line"`
-	// Area is the line closed along the base, as SVG path data.
-	Area string `json:"area"`
-	// DotX and DotY are the latest week's point.
-	DotX        float64 `json:"dotX"`
-	DotY        float64 `json:"dotY"`
-	StartLabel  string  `json:"startLabel"`
-	EndLabel    string  `json:"endLabel"`
-	LatestLabel string  `json:"latestLabel"`
+	StartLabel  string `json:"startLabel"`
+	EndLabel    string `json:"endLabel"`
+	LatestLabel string `json:"latestLabel"`
 }
 
 // OverviewSummaryRow is a row in In progress or Needs you. The glyph, look and chip say what

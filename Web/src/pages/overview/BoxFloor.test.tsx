@@ -24,7 +24,7 @@ function Harness({ view, pinned: initialPin = null, onOpenRun = vi.fn(), onOpenS
   const [pinned, setPinned] = useState<string | null>(initialPin);
   const [hovered, setHovered] = useState<string | null>(null);
   const props: BoxFloorProps = {
-    layout: view.floor.layout,
+    track: view.floor.track,
     belts: view.floor.belts,
     boxes: view.floor.boxes,
     runs: runsOf(view),
@@ -75,7 +75,7 @@ describe("Boxes Floor focus and actions", () => {
     const card = document.querySelector(`.box-belt[data-belt='issues']`)!;
     fireEvent.pointerEnter(card);
     expect(document.querySelectorAll(".factory-track-focus").length)
-      .toBe(view.floor.layout.tracks.filter(stroke => stroke.belts.includes("issues")).length);
+      .toBe(view.floor.track.tracks.filter(stretch => stretch.belts.includes("issues")).length);
     for (const box of view.floor.boxes) {
       expect(dimmed(cell(box.id))).toBe(!box.belts.includes("issues"));
     }

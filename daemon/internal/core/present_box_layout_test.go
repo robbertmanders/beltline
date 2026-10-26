@@ -53,15 +53,6 @@ func boxTestEdgeNamed(t *testing.T, m BoxMap, route string) BoxMapEdge {
 	return BoxMapEdge{}
 }
 
-// boxTestFirstSubpath is the first subpath's points of a path, failing the test when there is none.
-func boxTestFirstSubpath(t *testing.T, path MapPath) []MapPoint {
-	t.Helper()
-	if len(path.Subpaths) == 0 {
-		t.Fatal("path has no subpaths")
-	}
-	return path.Subpaths[0]
-}
-
 // boxTestEdgeKeys is each edge as "from>to", in order.
 func boxTestEdgeKeys(edges []BoxMapEdge) []string {
 	var keys []string
@@ -143,7 +134,7 @@ func boxTestUpper(s string) string {
 func TestStraightBeltPutsTheTriggerAndEveryStageOnOneRow(t *testing.T) {
 	t.Parallel()
 	belt := boxTestStraightBelt()
-	m := BoxLayoutMap(belt.Layout(), BoxMapMetricsRun, true, new(TriggerKindManual), boxTestLook)
+	m := BoxLayoutMap(belt.Layout(), true, new(TriggerKindManual), boxTestLook)
 	if len(m.Nodes) == 0 || m.Nodes[0].ID != "trigger" {
 		t.Fatalf("first node is %v, want trigger", m.Nodes)
 	}
@@ -153,37 +144,21 @@ func TestStraightBeltPutsTheTriggerAndEveryStageOnOneRow(t *testing.T) {
 	if len(m.Nodes) != len(belt.Stages)+1 {
 		t.Errorf("nodes = %d, want %d", len(m.Nodes), len(belt.Stages)+1)
 	}
-	rows := map[float64]bool{}
-	for _, node := range m.Nodes {
-		rows[node.Y] = true
+	for index, node := range m.Nodes {
+		if node.Row != 0 || node.Column != index {
+			t.Errorf("node %s at column %d row %v, want column %d on the line", node.ID, node.Column, node.Row, index)
+		}
 	}
-	if len(rows) != 1 {
-		t.Errorf("nodes sit on %d rows, want 1", len(rows))
+	if m.Columns != len(m.Nodes) {
+		t.Errorf("columns = %d, want %d", m.Columns, len(m.Nodes))
 	}
 	if len(m.Edges) != len(belt.Stages) {
 		t.Errorf("edges = %d, want %d", len(m.Edges), len(belt.Stages))
 	}
 	for _, edge := range m.Edges {
-		if !edge.Straight {
-			t.Errorf("edge %s>%s is not straight", edge.From, edge.To)
+		if len(edge.Via) != 0 {
+			t.Errorf("edge %s>%s turns %v, want straight", edge.From, edge.To, edge.Via)
 		}
-	}
-	// A + on every join and one past the last box.
-	if len(m.Inserts) != len(belt.Stages)+1 {
-		t.Errorf("inserts = %d, want %d", len(m.Inserts), len(belt.Stages)+1)
-	}
-	if last := m.Inserts[len(m.Inserts)-1]; last.Before != nil {
-		t.Errorf("last insert has a box after it")
-	}
-	if len(m.Forks) != 0 {
-		t.Errorf("forks = %d, want none", len(m.Forks))
-	}
-	right := m.Nodes[0].X + m.Nodes[0].Width
-	for _, node := range m.Nodes {
-		right = max(right, node.X+node.Width)
-	}
-	if m.Width < right {
-		t.Errorf("width %v is narrower than the boxes (%v)", m.Width, right)
 	}
 }
 
@@ -191,57 +166,50 @@ func TestStraightBeltPutsTheTriggerAndEveryStageOnOneRow(t *testing.T) {
 func TestForkRoutesGetRowsOfTheirOwnAndHookedTracks(t *testing.T) {
 	t.Parallel()
 	belt := forkedBeltWith([]string{"build"})
-	m := BoxLayoutMap(belt.Layout(), BoxMapMetricsEditor, true, new(TriggerKindIssues), boxTestLook)
-	if len(m.Forks) != 1 {
-		t.Fatalf("forks = %d, want 1", len(m.Forks))
-	}
-	fork := m.Forks[0]
+	m := BoxLayoutMap(belt.Layout(), true, new(TriggerKindIssues), boxTestLook)
+	fork := belt.Forks[0]
 	var pills []BoxMapRoutePill
 	for _, pill := range m.Routes {
 		if pill.Fork == fork.ID {
 			pills = append(pills, pill)
 		}
 	}
-	if len(pills) != fork.Routes {
-		t.Errorf("pills = %d, want %d", len(pills), fork.Routes)
+	if len(pills) != len(fork.Routes) {
+		t.Errorf("pills = %d, want %d", len(pills), len(fork.Routes))
 	}
-	ys := map[float64]bool{}
+	rows := map[float64]bool{}
 	for _, pill := range pills {
-		ys[pill.Y] = true
+		rows[pill.Row] = true
 	}
-	if len(ys) != len(pills) {
-		t.Errorf("pills share rows: %d rows for %d pills", len(ys), len(pills))
+	if len(rows) != len(pills) {
+		t.Errorf("pills share rows: %d rows for %d pills", len(rows), len(pills))
 	}
-	hooked := slices.ContainsFunc(m.Edges, func(edge BoxMapEdge) bool {
-		return !edge.Straight && edge.Path.CornerRadius == BoxMapMetricsEditor.Corner
-	})
-	if !hooked {
-		t.Error("no hooked edge with the editor's corner radius")
-	}
-	// Hooked edges turn twice, on the spine or the gap before the box they reach (an empty route's track turns four times).
+	hooked := false
+	// Hooked edges turn twice on one gap, the spine or the gap in front of the box they reach.
 	for _, edge := range m.Edges {
-		if edge.Straight {
+		if len(edge.Via) == 0 {
 			continue
 		}
-		points := boxTestFirstSubpath(t, edge.Path)
-		if len(points) < 4 {
-			t.Fatalf("hooked edge %s>%s has %d points, want at least 4", edge.From, edge.To, len(points))
+		hooked = true
+		if len(edge.Via) < 2 {
+			t.Fatalf("hooked edge %s>%s turns %d times, want at least 2", edge.From, edge.To, len(edge.Via))
 		}
-		if points[1].X != points[2].X {
-			t.Errorf("hooked edge %s>%s does not turn on its spine", edge.From, edge.To)
+		if edge.Via[0].Column != edge.Via[1].Column {
+			t.Errorf("hooked edge %s>%s does not turn on one gap", edge.From, edge.To)
 		}
+	}
+	if !hooked {
+		t.Error("no hooked edge")
 	}
 	ids := map[string]bool{}
 	for _, node := range m.Nodes {
 		ids[node.ID] = true
+		if node.Column >= m.Columns {
+			t.Errorf("node %s in column %d, past the map's %d", node.ID, node.Column, m.Columns)
+		}
 	}
 	if len(ids) != len(m.Nodes) {
 		t.Errorf("node ids are not unique")
-	}
-	for _, node := range m.Nodes {
-		if node.Y+node.Height > m.Height {
-			t.Errorf("node %s runs past the map's height", node.ID)
-		}
 	}
 }
 
@@ -249,108 +217,26 @@ func TestForkRoutesGetRowsOfTheirOwnAndHookedTracks(t *testing.T) {
 func TestNestedForksStackTheirRoutesUnderTheParentRoute(t *testing.T) {
 	t.Parallel()
 	belt := nfBelt(false, true, true)
-	m := BoxLayoutMap(belt.Layout(), BoxMapMetricsRun, false, nil, boxTestLook)
-	if len(m.Forks) != 2 {
-		t.Fatalf("forks = %d, want 2", len(m.Forks))
-	}
+	m := BoxLayoutMap(belt.Layout(), false, nil, boxTestLook)
 	if len(m.Nodes) != len(belt.Stages) {
 		t.Errorf("nodes = %d, want %d", len(m.Nodes), len(belt.Stages))
 	}
+	forks := map[string]bool{}
+	for _, pill := range m.Routes {
+		forks[pill.Fork] = true
+	}
+	if len(forks) != 2 {
+		t.Fatalf("forks = %d, want 2", len(forks))
+	}
 	positions := map[string]bool{}
 	for _, node := range m.Nodes {
-		if node.Y+node.Height > m.Height || node.X+node.Width > m.Width {
+		if node.Column >= m.Columns {
 			t.Errorf("node %s runs past the map", node.ID)
 		}
-		positions[fmt.Sprintf("%v,%v", node.X, node.Y)] = true
+		positions[fmt.Sprintf("%v,%v", node.Column, node.Row)] = true
 	}
 	if len(positions) != len(m.Nodes) {
 		t.Errorf("two nodes share a position")
-	}
-}
-
-// TestEveryPlaceAStageCanGoHasAPlusThatAddsThereAtTheRightIndex checks that every place a stage can go has a plus that adds there at the right index.
-func TestEveryPlaceAStageCanGoHasAPlusThatAddsThereAtTheRightIndex(t *testing.T) {
-	t.Parallel()
-	belt := forkedBeltWith([]string{"build"})
-	layout := belt.Layout()
-	m := BoxLayoutMap(layout, BoxMapMetricsEditor, true, new(TriggerKindIssues), boxTestLook)
-	gap := BoxMapMetricsEditor.Gap
-	// A + in front of every box (where a route's end is drawn on the same spot, that one serves), and one at the
-	// end of every route (or in an empty route's slot).
-	for _, node := range m.Nodes {
-		if node.Kind == BoxMapKindTrigger {
-			continue
-		}
-		spot := slices.ContainsFunc(m.Inserts, func(insert BoxMapInsert) bool {
-			return math.Abs(insert.X-(node.X-gap/2)) < 1 && math.Abs(insert.Y-(node.Y+node.Height/2)) < 1
-		})
-		if !spot {
-			t.Errorf("no + in front of %s", node.ID)
-		}
-	}
-	// A route's end is drawn unless the box after its fork takes the spot (see addInsert).
-	for _, fork := range belt.Forks {
-		for _, route := range fork.Routes {
-			end, taken := false, false
-			for _, insert := range m.Inserts {
-				if insert.Route != nil && *insert.Route == route.ID && insert.Before == nil {
-					end = true
-				}
-				if insert.Before != nil && insert.Route == nil {
-					taken = true
-				}
-			}
-			if !end && !taken {
-				t.Errorf("no + at the end of %s", route.ID)
-			}
-		}
-	}
-	// Each adds at the index the stage list takes: in front of a box, its own index; at a route's end, the route's end.
-	for _, insert := range m.Inserts {
-		if insert.Before != nil {
-			for index, stage := range belt.Stages {
-				if stage.ID == *insert.Before && insert.AddAt != index {
-					t.Errorf("insert before %s adds at %d, want %d", stage.ID, insert.AddAt, index)
-				}
-			}
-		}
-		if insert.Route != nil && insert.Before == nil {
-			if want := layout.End(*insert.Route); insert.AddAt != want {
-				t.Errorf("insert at the end of %s adds at %d, want %d", *insert.Route, insert.AddAt, want)
-			}
-		}
-	}
-	last := m.Inserts[len(m.Inserts)-1]
-	if last.Before != nil || last.Route != nil {
-		t.Errorf("last insert is not past the line")
-	}
-	if last.AddAt != len(belt.Stages) {
-		t.Errorf("last insert adds at %d, want %d", last.AddAt, len(belt.Stages))
-	}
-	spots := map[string]bool{}
-	for _, insert := range m.Inserts {
-		spots[fmt.Sprintf("%v,%v", insert.X, insert.Y)] = true
-	}
-	if len(spots) != len(m.Inserts) {
-		t.Errorf("two inserts share a spot")
-	}
-}
-
-// TestAStraightBeltAddsAtEveryIndexInTurn checks that a straight belt adds at every index in turn.
-func TestAStraightBeltAddsAtEveryIndexInTurn(t *testing.T) {
-	t.Parallel()
-	belt := boxTestStraightBelt()
-	m := BoxLayoutMap(belt.Layout(), BoxMapMetricsEditor, true, new(TriggerKindManual), boxTestLook)
-	if len(m.Inserts) != len(belt.Stages)+1 {
-		t.Fatalf("inserts = %d, want %d", len(m.Inserts), len(belt.Stages)+1)
-	}
-	for index, insert := range m.Inserts {
-		if insert.AddAt != index {
-			t.Errorf("insert %d adds at %d", index, insert.AddAt)
-		}
-		if insert.Route != nil {
-			t.Errorf("insert %d is on a route", index)
-		}
 	}
 }
 
@@ -385,36 +271,25 @@ func TestAgentIconsFallBackToTheChip(t *testing.T) {
 func TestAForkSplitsTheLineEvenlyAboveAndBelowIt(t *testing.T) {
 	t.Parallel()
 	belt := forkedBeltWith([]string{"build"})
-	m := BoxLayoutMap(belt.Layout(), BoxMapMetricsRun, true, new(TriggerKindIssues), boxTestLook)
-	line := boxTestNode(t, m, "trigger").Y
-	if len(m.Forks) == 0 {
-		t.Fatal("no fork")
+	m := BoxLayoutMap(belt.Layout(), true, new(TriggerKindIssues), boxTestLook)
+	if line := boxTestNode(t, m, "trigger").Row; line != 0 {
+		t.Fatalf("trigger on row %v, want the line", line)
 	}
-	fork := m.Forks[0]
-	var ys []float64
+	var rows []float64
 	for _, pill := range m.Routes {
-		if pill.Fork == fork.ID {
-			ys = append(ys, pill.Y)
+		if pill.Fork == belt.Forks[0].ID {
+			rows = append(rows, pill.Row)
 		}
 	}
-	centre := line + BoxMapMetricsRun.NodeHeight/2
-	low, high := ys[0], ys[0]
-	for _, y := range ys {
-		low = min(low, y)
-		high = max(high, y)
+	if len(rows) == 0 {
+		t.Fatal("no fork")
 	}
-	if math.Abs((low+high)/2-centre) >= 0.01 {
-		t.Errorf("routes are not centred on the line: middle %v, line %v", (low+high)/2, centre)
+	low, high := slices.Min(rows), slices.Max(rows)
+	if math.Abs((low+high)/2) >= 0.01 {
+		t.Errorf("routes are not centred on the line: middle %v", (low+high)/2)
 	}
-	onLine := slices.ContainsFunc(ys, func(y float64) bool { return math.Abs(y-centre) < 0.01 })
-	if onLine && len(ys)%2 == 0 {
+	onLine := slices.ContainsFunc(rows, func(row float64) bool { return math.Abs(row) < 0.01 })
+	if onLine && len(rows)%2 == 0 {
 		t.Errorf("an even fork puts a route on the line")
-	}
-	top := m.Nodes[0].Y
-	for _, node := range m.Nodes {
-		top = min(top, node.Y)
-	}
-	if top != BoxMapMetricsRun.PadTop {
-		t.Errorf("highest node at %v, want %v", top, BoxMapMetricsRun.PadTop)
 	}
 }

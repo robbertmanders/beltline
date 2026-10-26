@@ -3,23 +3,19 @@ import { describe, expect, it, vi } from "vitest";
 import type { BoxMap, RunBoxes as RunBoxesData } from "../../api/wire.gen";
 import { RunBoxes } from "./RunBoxes";
 
-const straight = (x1: number, x2: number) => ({ subpaths: [[{ x: x1, y: 60 }, { x: x2, y: 60 }]], cornerRadius: 10 });
-
 /** A three-box belt: the trigger, an agent stage at work and an approval waiting for you. */
 const map: BoxMap = {
-  width: 460, height: 120,
+  columns: 3,
   nodes: [
-    { id: "trigger", kind: "trigger", number: 0, x: 2, y: 34, width: 132, height: 52, icon: "bolt" },
-    { id: "triage", kind: "agent", number: 1, x: 194, y: 34, width: 132, height: 52, icon: "funnel", tint: "blue" },
-    { id: "approve", kind: "approval", number: 2, x: 326, y: 34, width: 132, height: 52, icon: "approve", tint: "gold" }
+    { id: "trigger", kind: "trigger", number: 0, column: 0, row: 0, icon: "bolt" },
+    { id: "triage", kind: "agent", number: 1, column: 1, row: 0, icon: "funnel", tint: "blue" },
+    { id: "approve", kind: "approval", number: 2, column: 2, row: 0, icon: "approve", tint: "gold" }
   ],
   edges: [
-    { from: "trigger", to: "triage", path: straight(134, 194), straight: true },
-    { from: "triage", to: "approve", path: straight(326, 326), straight: true }
+    { from: "trigger", to: "triage", via: [] },
+    { from: "triage", to: "approve", via: [] }
   ],
-  forks: [],
-  routes: [],
-  inserts: []
+  routes: []
 };
 
 const boxes: RunBoxesData = {
@@ -64,10 +60,11 @@ describe("RunBoxes", () => {
     expect(onSelectStage).toHaveBeenCalledTimes(1);
   });
 
-  it("places each box where the daemon put it and states each track", () => {
+  it("places each box in its column and row and states each track", () => {
     const { container } = render(<RunBoxes boxes={boxes} metadata="Belt v1" selectedStageId={null} onSelectStage={vi.fn()} />);
     const triage = screen.getByRole("button", { name: "Triage — Running" });
-    expect(triage.style.left).toBe("194px");
+    // The second column: the padding, then a box and a gap.
+    expect(triage.style.left).toBe("210px");
     expect(triage.style.top).toBe("34px");
     expect(container.querySelectorAll(".box-track--done")).toHaveLength(1);
     expect(container.querySelectorAll(".box-track--todo")).toHaveLength(1);
@@ -79,8 +76,8 @@ describe("RunBoxes", () => {
       map: {
         ...map,
         edges: [
-          { from: "triage", to: "approve", path: straight(326, 326), straight: true, route: "work" },
-          { from: "triage", to: "approve", path: straight(326, 326), straight: true, route: "skip" }
+          { from: "triage", to: "approve", via: [], route: "work" },
+          { from: "triage", to: "approve", via: [], route: "skip" }
         ]
       },
       edges: [
@@ -97,7 +94,7 @@ describe("RunBoxes", () => {
   it("draws a route's name off when the run did not take it", () => {
     const withRoute: RunBoxesData = {
       ...boxes,
-      map: { ...map, routes: [{ fork: "size", route: "simple", name: "Simple", x: 150, y: 80, stageIds: ["triage"], feeds: false }] },
+      map: { ...map, routes: [{ fork: "size", route: "simple", name: "Simple", column: 1, row: 1, stageIds: ["triage"], feeds: false }] },
       takenRoutes: []
     };
     render(<RunBoxes boxes={withRoute} metadata="Belt v1" selectedStageId={null} onSelectStage={vi.fn()} />);

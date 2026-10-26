@@ -1,5 +1,5 @@
 // Presentation-only helpers for the Overview: which belt stands out, and where a click goes. They decide no
-// geometry, membership, run status or ordering; the daemon supplies those. The pin is browser preference, and
+// membership, run status or ordering; the daemon supplies those. The pin is browser preference, and
 // hover is transient page state.
 
 /** The opacity an unrelated floor item takes while a belt is in focus. */

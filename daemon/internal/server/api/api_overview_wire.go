@@ -5,9 +5,8 @@ import (
 )
 
 // OverviewResponse is `GET /api/v1/views/overview`: the Summary, the Floor and
-// the global counts. Every figure, order and
-// coordinate is computed by Core; the browser draws what arrives and computes
-// none of it.
+// the global counts. Every figure, order and connection is computed by Core;
+// the browser lays the Floor's track out in points and draws it.
 type OverviewResponse struct {
 	Summary core.RunCounts `json:"summary"`
 	// Caption is the global counts line the Overview's greeting carries.

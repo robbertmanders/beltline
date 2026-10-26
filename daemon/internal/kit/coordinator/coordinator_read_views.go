@@ -76,10 +76,9 @@ func (c *Coordinator) viewsSnapshotNow(now *time.Time) CoordinatorViewsSnapshot 
 }
 
 // ReadOverviewView is the Overview with the shared counts, floor eligibility and
-// layout. width spreads the Floor's columns over the browser's width in points;
-// nil draws the minimum columns.
+// the Floor's track.
 // Lock: exported entry point; takes c.mu.
-func (c *Coordinator) ReadOverviewView(now *time.Time, loc *time.Location, width *float64) core.OverviewView {
+func (c *Coordinator) ReadOverviewView(now *time.Time, loc *time.Location) core.OverviewView {
 	c.Lock()
 	defer c.EndTurn()
 	snapshot := c.viewsSharedNow(now)
@@ -88,7 +87,7 @@ func (c *Coordinator) ReadOverviewView(now *time.Time, loc *time.Location, width
 	// A stage is drawn with its agent's icon; without the agent every agent stage is a plain box.
 	return core.NewOverviewView(core.OverviewViewArgs{
 		Belts: belts, Runs: snapshot.Runs, Now: snapshot.Now, Location: loc,
-		Pause: snapshot.Pause, Width: width, Track: &track,
+		Pause: snapshot.Pause, Track: &track,
 		Agent: func(stage core.Stage) *core.Agent { return c.library.Agent(stage.Agent) },
 	})
 }
