@@ -8,24 +8,6 @@ export function pathNumber(value: number): string {
 
 const at = (point: Point) => `${pathNumber(point.x)} ${pathNumber(point.y)}`;
 
-/** A line through the points that turns each corner on a curve, as the run page's box tracks do. */
-export function roundedTrack(points: readonly Point[], radius: number): string {
-  if (points.length === 0) return "";
-  let d = `M${at(points[0]!)}`;
-  for (let index = 1; index < points.length; index += 1) {
-    const b = points[index]!;
-    if (index === points.length - 1 || radius <= 0) { d += ` L${at(b)}`; continue; }
-    const a = points[index - 1]!, c = points[index + 1]!;
-    const ab = Math.hypot(b.x - a.x, b.y - a.y), bc = Math.hypot(c.x - b.x, c.y - b.y);
-    const r = Math.min(radius, ab / 2, bc / 2);
-    if (r <= 0) { d += ` L${at(b)}`; continue; }
-    const start = { x: b.x - ((b.x - a.x) / ab) * r, y: b.y - ((b.y - a.y) / ab) * r };
-    const end = { x: b.x + ((c.x - b.x) / bc) * r, y: b.y + ((c.y - b.y) / bc) * r };
-    d += ` L${at(start)} Q${at(b)} ${at(end)}`;
-  }
-  return d;
-}
-
 /** A straight line through the points. */
 export function lineTrack(points: readonly Point[]): string {
   if (points.length === 0) return "";
@@ -33,7 +15,7 @@ export function lineTrack(points: readonly Point[]): string {
 }
 
 /**
- * A line through the points whose inner corners turn on arcs of radius, as the Floor's tracks do. Each arc meets
+ * A line through the points whose inner corners turn on arcs of radius, as the Floor's and the run page's tracks do. Each arc meets
  * both stretches, and is shortened so it never runs past a neighbouring corner: a stretch shared with the next corner
  * gives each half, one ending the line gives it all. A point the line runs straight on through has no corner.
  */

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { FactoryTrackNode, FloorTrack, OverviewFloorBox, OverviewResponse } from "../../api/wire.gen";
 import { golden } from "../../test/golden";
-import { floorCellHeight, floorMetrics, floorMinimumWidth, floorTagRows, layOutFloor, nodeKey, spread } from "./floorLayout";
+import { floorCellHeight, floorMetrics, floorMinimumWidth, floorTagRows, layOutFloor, nodeKey, placeFloor, planFloor, spread } from "./floorLayout";
 
 const floor = () => golden<OverviewResponse>("views-overview.json").floor;
 const m = floorMetrics;
@@ -95,6 +95,17 @@ describe("layOutFloor", () => {
     expect(wide.column).toBeGreaterThan(m.minColumn);
     expect(wide.width).toBeCloseTo(minimum + 400);
     expect(layOutFloor(track, boxes, minimum - 400)).toEqual(layOutFloor(track, boxes));
+  });
+
+  it("keeps every node's height and top across widths, so a resize only places the plan again", () => {
+    const plan = planFloor(returning, returningBoxes);
+    const narrow = placeFloor(returning, plan, 600), wide = placeFloor(returning, plan, 1600);
+    expect(wide).toEqual(layOutFloor(returning, returningBoxes, 1600));
+    for (const cell of narrow.placed) {
+      const key = nodeKey(cell.node);
+      expect(narrow.byKey.get(key)).toBe(cell);
+      expect(wide.byKey.get(key)).toMatchObject({ top: cell.top, height: cell.height, anchor: cell.anchor });
+    }
   });
 
   it("is empty but finite with no belts", () => {

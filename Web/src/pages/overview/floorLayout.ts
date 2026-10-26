@@ -50,8 +50,16 @@ export interface FloorLayout {
   height: number;
   column: number;
   placed: FloorPlaced[];
+  /** Each placed node by its key. */
+  byKey: ReadonlyMap<string, FloorPlaced>;
   tracks: FloorStroke[];
   lanes: FloorLane[];
+}
+
+/** The part of the Floor's placement its width does not change: each node's height and top, by its key. */
+export interface FloorPlan {
+  heights: ReadonlyMap<string, number>;
+  tops: ReadonlyMap<string, number>;
 }
 
 /** A box's tag rows: its shown tags, and one more when some are left over. */
@@ -81,6 +89,11 @@ export function floorMinimumWidth(track: FloorTrack): number {
  * next, turning in the gap where they change rows; and each return lane drops below the stages it passes under.
  */
 export function layOutFloor(track: FloorTrack, boxes: readonly OverviewFloorBox[], width?: number): FloorLayout {
+  return placeFloor(track, planFloor(track, boxes), width);
+}
+
+/** The heights and tops of the Floor's nodes, which only the track and the boxes change, so a resize can keep them. */
+export function planFloor(track: FloorTrack, boxes: readonly OverviewFloorBox[]): FloorPlan {
   const m = floorMetrics;
   const byId = new Map(boxes.map(box => [box.id, box]));
   const heights = new Map<string, number>();
@@ -92,24 +105,28 @@ export function layOutFloor(track: FloorTrack, boxes: readonly OverviewFloorBox[
         : box ? floorCellHeight(box) : trackOffset);
     }
   }
-  const height = (node: FactoryTrackNode) => heights.get(nodeKey(node)) ?? 0;
-  const offset = (node: FactoryTrackNode) => node.kind === "stage" ? trackOffset : height(node) / 2;
+  return { heights, tops: floorTops(track, heights) };
+}
+
+/** The planned Floor placed over width: each layer's column, the tracks between the nodes and the return lanes. */
+export function placeFloor(track: FloorTrack, plan: FloorPlan, width?: number): FloorLayout {
+  const m = floorMetrics;
   const layers = track.layers.length;
   const column = width === undefined ? m.minColumn : Math.max(m.minColumn, (width - m.entranceWidth) / Math.max(layers - 1, 1));
-  const tops = floorTops(track, height, offset);
-
   const placed: FloorPlaced[] = [];
-  const positions = new Map<string, FloorPlaced>();
+  const byKey = new Map<string, FloorPlaced>();
   track.layers.forEach((layer, index) => {
     const x = index === 0 ? m.entranceWidth / 2 : m.entranceWidth + (index - 0.5) * column;
     for (const node of layer) {
-      const top = tops.get(nodeKey(node)) ?? 0;
-      const box = { node, x, top, height: height(node), anchor: top + offset(node) };
+      const key = nodeKey(node);
+      const top = plan.tops.get(key) ?? 0;
+      const height = plan.heights.get(key) ?? 0;
+      const box = { node, x, top, height, anchor: top + nodeOffset(node, height) };
       placed.push(box);
-      positions.set(nodeKey(node), box);
+      byKey.set(key, box);
     }
   });
-  const lanes = floorLanes(track, placed, positions, column);
+  const lanes = floorLanes(track, placed, byKey, column);
   const bottom = placed.reduce((lowest, box) => Math.max(lowest, box.top + box.height), 0);
   const lowestLane = lanes.reduce((lowest, lane) => Math.max(lowest, lane.y), 0);
   return {
@@ -117,43 +134,65 @@ export function layOutFloor(track: FloorTrack, boxes: readonly OverviewFloorBox[
     height: Math.max(bottom, lowestLane + 10),
     column,
     placed,
-    tracks: track.tracks.map(stretch => ({ stretch, path: floorTrackPath(stretch, positions) })),
+    byKey,
+    tracks: track.tracks.map(stretch => ({ stretch, path: floorTrackPath(stretch, byKey) })),
     lanes: lanes.map(lane => ({ lane: lane.stretch, left: lane.left, right: lane.right, ...lanePath(lane), labelX: (lane.left + lane.right) / 2, labelY: lane.y }))
   };
+}
+
+/** How far below a node's top its track runs: a stage's box middle, or the middle of anything else. */
+function nodeOffset(node: FactoryTrackNode, height: number): number {
+  return node.kind === "stage" ? trackOffset : height / 2;
 }
 
 /**
  * Every node's top. Each layer starts stacked in order; then, sweeping forwards and back a few times, each layer moves
  * as near as it can to the average height of the tracks into it (forwards) or out of it (back), without overlapping.
  */
-function floorTops(track: FloorTrack, height: (node: FactoryTrackNode) => number, offset: (node: FactoryTrackNode) => number): Map<string, number> {
+function floorTops(track: FloorTrack, heights: ReadonlyMap<string, number>): Map<string, number> {
+  const layerKeys = track.layers.map(layer => layer.map(nodeKey));
+  const offsets = new Map<string, number>();
+  track.layers.forEach((layer, l) => layer.forEach((node, i) => {
+    const key = layerKeys[l]![i]!;
+    offsets.set(key, nodeOffset(node, heights.get(key) ?? 0));
+  }));
+  // The nodes each node's tracks come from and go to, in the tracks' order, worked out once for every pass.
+  const into = new Map<string, string[]>(), outOf = new Map<string, string[]>();
+  const link = (links: Map<string, string[]>, key: string, other: string) => {
+    const list = links.get(key);
+    if (list) list.push(other); else links.set(key, [other]);
+  };
+  for (const stretch of track.tracks) {
+    const from = nodeKey(stretch.from), to = nodeKey(stretch.to);
+    link(into, to, from);
+    link(outOf, from, to);
+  }
   const top = new Map<string, number>();
-  for (const layer of track.layers) {
+  for (const keys of layerKeys) {
     let y = 0;
-    for (const node of layer) {
-      top.set(nodeKey(node), y);
-      y += height(node) + floorMetrics.gap;
+    for (const key of keys) {
+      top.set(key, y);
+      y += (heights.get(key) ?? 0) + floorMetrics.gap;
     }
   }
   const count = track.layers.length;
   for (let pass = 0; pass < 5 && count > 1; pass += 1) {
     const forwards = pass % 2 === 0;
+    const links = forwards ? into : outOf;
     const order: number[] = [];
     if (forwards) for (let l = 1; l < count; l += 1) order.push(l);
     else for (let l = count - 2; l >= 0; l -= 1) order.push(l);
     for (const l of order) {
-      const layer = track.layers[l]!;
-      const desired = layer.map(node => {
-        const key = nodeKey(node);
-        const near: number[] = [];
-        for (const stretch of track.tracks) {
-          const other = forwards ? (nodeKey(stretch.to) === key ? stretch.from : null) : (nodeKey(stretch.from) === key ? stretch.to : null);
-          if (other) near.push((top.get(nodeKey(other)) ?? 0) + offset(other));
-        }
-        const want = near.length === 0 ? (top.get(key) ?? 0) + offset(node) : near.reduce((sum, value) => sum + value, 0) / near.length;
-        return want - offset(node);
+      const keys = layerKeys[l]!;
+      const desired = keys.map(key => {
+        const near = links.get(key) ?? [];
+        const offset = offsets.get(key) ?? 0;
+        let sum = 0;
+        for (const other of near) sum += (top.get(other) ?? 0) + (offsets.get(other) ?? 0);
+        const want = near.length === 0 ? (top.get(key) ?? 0) + offset : sum / near.length;
+        return want - offset;
       });
-      spread(desired, layer.map(height)).forEach((y, index) => top.set(nodeKey(layer[index]!), y));
+      spread(desired, keys.map(key => heights.get(key) ?? 0)).forEach((y, index) => top.set(keys[index]!, y));
     }
   }
   const least = top.size > 0 ? Math.min(...top.values()) : 0;

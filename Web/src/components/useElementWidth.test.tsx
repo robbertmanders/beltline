@@ -12,59 +12,32 @@ class FakeResizeObserver {
   disconnect(): void {}
 }
 
-function Probe({ settleMs }: { settleMs?: number }) {
-  const [ref, width] = useElementWidth<HTMLDivElement>(settleMs);
+function Probe() {
+  const [ref, width] = useElementWidth<HTMLDivElement>();
   return <div ref={ref}><output>{width}</output></div>;
 }
 
 describe("useElementWidth", () => {
   beforeEach(() => {
-    laidOutWidth = 640.4;
+    laidOutWidth = 640.6;
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(() => ({ width: laidOutWidth }) as DOMRect);
     vi.stubGlobal("ResizeObserver", FakeResizeObserver);
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
-  it("reports the rounded laid-out width on mount", () => {
+  it("reports the laid-out width rounded down on mount, so content sized to it never overflows", () => {
     render(<Probe />);
     expect(document.querySelector("output")?.textContent).toBe("640");
   });
 
-  it("measures again on every resize when no settle delay is given", () => {
+  it("measures again on every resize", () => {
     render(<Probe />);
     laidOutWidth = 800;
     act(() => fireResize());
     expect(document.querySelector("output")?.textContent).toBe("800");
-  });
-
-  it("waits for the settle delay to pass before measuring a resize", () => {
-    vi.useFakeTimers();
-    render(<Probe settleMs={150} />);
-    laidOutWidth = 800;
-    act(() => fireResize());
-    expect(document.querySelector("output")?.textContent).toBe("640");
-    act(() => vi.advanceTimersByTime(149));
-    expect(document.querySelector("output")?.textContent).toBe("640");
-    act(() => vi.advanceTimersByTime(1));
-    expect(document.querySelector("output")?.textContent).toBe("800");
-  });
-
-  it("restarts the settle delay on each resize, so only the settled width is measured", () => {
-    vi.useFakeTimers();
-    render(<Probe settleMs={150} />);
-    laidOutWidth = 700;
-    act(() => fireResize());
-    act(() => vi.advanceTimersByTime(100));
-    laidOutWidth = 900;
-    act(() => fireResize());
-    act(() => vi.advanceTimersByTime(100));
-    expect(document.querySelector("output")?.textContent).toBe("640");
-    act(() => vi.advanceTimersByTime(50));
-    expect(document.querySelector("output")?.textContent).toBe("900");
   });
 });

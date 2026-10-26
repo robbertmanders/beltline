@@ -2,7 +2,7 @@ import { useMemo, type CSSProperties, type ReactNode } from "react";
 import type { BoxMap, BoxMapEdge, BoxMapNode, BoxMapRoutePill, StageIcon, Tint } from "../../api/wire.gen";
 import { placeBoxMap, runBoxMetrics, type BoxGridMetrics } from "./boxGrid";
 import { Glyph } from "./glyphs";
-import { roundedTrack } from "./tracks";
+import { arcTrack } from "./tracks";
 import "./stages.css";
 
 /** A box's state, which sets its border and fill (the mockup's st-* classes). */
@@ -95,7 +95,7 @@ export function BoxMapView({ map, content, track = () => "todo", routeTaken = ()
   return <div className="box-map-scroll" data-scroll-viewport>
     <div className="box-map" style={{ width: placed.width, height: placed.height }} role="group" aria-label={label}>
       <svg className="box-map__tracks" width={placed.width} height={placed.height} aria-hidden="true">
-        {edges.map(({ edge, points, state }) => <path key={`${edge.from}>${edge.to}>${edge.route ?? ""}`} className={`box-track box-track--${state}`} d={roundedTrack(points, metrics.corner)} />)}
+        {edges.map(({ edge, points, state }) => <path key={`${edge.from}>${edge.to}>${edge.route ?? ""}`} className={`box-track box-track--${state}`} d={arcTrack(points, metrics.corner)} />)}
       </svg>
       {placed.routes.map(({ route, x, y }) => <span key={`${route.fork}:${route.route}`} className={`box-map__route${routeTaken(route) ? "" : " box-map__route--off"}`}
         style={{ left: x, top: y }}>{route.name}</span>)}

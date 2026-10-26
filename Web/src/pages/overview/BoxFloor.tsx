@@ -5,7 +5,7 @@ import { useElementWidth } from "../../components/useElementWidth";
 import { StageBox, type BoxState } from "../../theme/stages/StageBox";
 import { focusOpacity } from "./focus";
 import { FactoryTracks } from "./FactoryTracks";
-import { floorBoxFrame, layOutFloor, nodeKey, type FloorPlaced } from "./floorLayout";
+import { floorBoxFrame, placeFloor, planFloor, type FloorPlaced } from "./floorLayout";
 
 export interface BoxFloorProps {
   track: FloorTrack;
@@ -27,13 +27,15 @@ const boxStates: Record<Look, BoxState> = { done: "done", running: "running", wa
 /**
  * The Floor: each belt's card on the left, each merged stage as one box with its status above and its run tags
  * below, and the tracks between them. The daemon says which nodes sit in which layer and which tracks join them;
- * the page lays them out over its width (layOutFloor), lights a focused belt's tracks and dims what it does not touch.
+ * the page lays them out over its width (planFloor once per track, placeFloor on every resize), lights a focused
+ * belt's tracks and dims what it does not touch.
  */
 export function BoxFloor(props: BoxFloorProps) {
   const { track, belts, boxes, runs, focus, pinned } = props;
   const [scrollRef, width] = useElementWidth<HTMLDivElement>();
-  const layout = useMemo(() => layOutFloor(track, boxes, width > 0 ? width : undefined), [track, boxes, width]);
-  const placed = useMemo(() => new Map(layout.placed.map(item => [nodeKey(item.node), item])), [layout.placed]);
+  const plan = useMemo(() => planFloor(track, boxes), [track, boxes]);
+  const layout = useMemo(() => placeFloor(track, plan, width > 0 ? width : undefined), [track, plan, width]);
+  const placed = layout.byKey;
 
   return <div ref={scrollRef} className="factory-scroll box-floor" data-testid="floor-scroll" data-scroll-viewport>
     <div className="factory-canvas" style={{ width: layout.width, height: layout.height }}>
