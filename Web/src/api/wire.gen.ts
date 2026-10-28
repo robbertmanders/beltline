@@ -399,6 +399,17 @@ export interface AgentsResponse {
   browser?: LibraryBrowser;
 }
 
+export interface ApprovalPrompt {
+  noteKey: string;
+  label: string;
+  placeholder: string;
+  help: string;
+  contextLabel: string;
+  context: MarkdownBlock[];
+  includeLabel: string;
+  include: boolean;
+}
+
 export interface ArtifactLinkResponse {
   url: string;
   expiresAt: string;
@@ -1642,6 +1653,7 @@ export interface Run {
   repos: string[];
   source?: RunSource;
   issue: Subject;
+  includeSubject?: boolean;
   state: RunState;
   stageId: string;
   reason?: string;
@@ -1799,6 +1811,7 @@ export interface RunCounts {
 export interface RunDecideRequest {
   outcome: string;
   note?: string;
+  includeSubject?: boolean;
 }
 
 export interface RunEmptyRequest {
@@ -2284,6 +2297,7 @@ export interface StagePanelFactsApproval {
   primary?: string;
   outcomesHelp: string;
   outcomes: StagePanelFactsOutcome[];
+  prompt?: ApprovalPrompt;
 }
 
 export interface StagePanelFactsOutcome {

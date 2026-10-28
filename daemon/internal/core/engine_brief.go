@@ -79,7 +79,11 @@ func briefRenderWithEarlier(run Run, stage Stage, context BriefContext, earlierW
 		text = strings.ReplaceAll(text, "{"+key+"}", values[key])
 	}
 
-	text += "\n\n" + briefSubject(run.Subject, context.Base, run.Repos)
+	if ValueOr(run.IncludeSubject, true) {
+		text += "\n\n" + briefSubject(run.Subject, context.Base, run.Repos)
+	} else {
+		text += "\n\n## Source context\n\nThe human chose not to include the source work item. Work from their prompt and supplied handoffs only; do not fetch or infer the ticket, issue or its linked context. Identifiers in workspace paths or branch names are operational metadata, not permission to retrieve it.\n"
+	}
 	text += briefRepositories(run, context)
 	for _, pull := range run.PullRequests {
 		if run.Subject.Kind == SubjectKindPullRequest {

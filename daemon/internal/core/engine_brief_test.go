@@ -101,6 +101,35 @@ func briefTestFinish(run *Run, outcome string) {
 	EngineAdvance(run, Event{Kind: EventKindSessionFinished, Output: new("Some output.\n\nOutcome: " + outcome)}, engineT0)
 }
 
+func TestBriefSourceContextRequiresConsentAfterPromptEntry(t *testing.T) {
+	t.Parallel()
+	run := briefTestSampleRun(engineIssueBelt())
+	run.Subject = Subject{Kind: SubjectKindJira, Key: "SECRET-123", Title: "Source title",
+		Body: "Source description", URL: "https://jira.example/SECRET-123", Labels: []string{"source-label"}, Parent: new("SECRET-1")}
+	run.Note = new("Implement only my explicit task.")
+	stage := *run.Stage()
+	stage.Brief = "Task reference: {issue}. Write {output}."
+	for _, include := range []*bool{nil, new(true), new(false)} {
+		run.IncludeSubject = include
+		for _, text := range []string{
+			BriefRender(run, stage, briefTestContext()),
+			BriefRerun(run, stage, Attempt{}, briefTestContext()),
+		} {
+			for _, detail := range []string{"SECRET-123", "Source title", "Source description", "https://jira.example/", "source-label", "SECRET-1"} {
+				if strings.Contains(text, detail) != ValueOr(include, true) {
+					t.Fatalf("include=%v: source detail %q shared incorrectly:\n%s", include, detail, text)
+				}
+			}
+			if !strings.Contains(text, *run.Note) {
+				t.Fatal("human prompt was excluded with source context")
+			}
+			if include != nil && !*include && !strings.Contains(text, "do not fetch or infer the ticket") {
+				t.Fatal("excluded source lacks retrieval instructions")
+			}
+		}
+	}
+}
+
 // TestArtifactsAreOptInAndUseTheEffectiveBrief
 func TestArtifactsAreOptInAndUseTheEffectiveBrief(t *testing.T) {
 	t.Parallel()

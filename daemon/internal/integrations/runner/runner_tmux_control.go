@@ -6,7 +6,9 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
@@ -21,8 +23,7 @@ import (
 func (r TmuxRunner) Interrupt(ctx context.Context, spec SessionSpec) SessionInterrupt {
 	marker := filepath.Join(spec.AttemptFolder, "interrupted")
 	if runnerPathExists(marker) {
-		r.quarantineExit(spec)
-		r.Stop(ctx, spec.Name)
+		r.stopAndQuarantineExit(ctx, spec)
 		return SessionInterrupt{Kind: SessionInterruptConfirmed, Conversation: r.conversationIdentity(ctx, spec)}
 	}
 	if !r.tmux(ctx, []string{"has-session", "-t", tmuxExact(spec.Name)}).OK() {
@@ -35,8 +36,7 @@ func (r TmuxRunner) Interrupt(ctx context.Context, spec SessionSpec) SessionInte
 		}
 		if runnerPathExists(marker) || r.confirmInteractiveAbort(spec) {
 			r.archiveInterruptedTurn(ctx, spec)
-			r.quarantineExit(spec)
-			r.Stop(ctx, spec.Name)
+			r.stopAndQuarantineExit(ctx, spec)
 			return SessionInterrupt{Kind: SessionInterruptConfirmed, Conversation: r.conversationIdentity(ctx, spec)}
 		}
 		select {
@@ -116,6 +116,41 @@ func (r TmuxRunner) quarantineExit(spec SessionSpec) {
 	}
 	_ = os.Remove(kept)
 	_ = os.Rename(exit, kept)
+}
+
+// paneExitWait is how long stopAndQuarantineExit waits for the wrapper to end.
+const paneExitWait = 2 * time.Second
+
+// stopAndQuarantineExit ends the session, waits for its wrapper to end, then sets
+// the exit record aside. Stopping the session can end the agent's turn, and the
+// wrapper then writes `exit` on its way out: set aside any sooner and that record
+// lands after it, so the interrupted turn reads as finished.
+func (r TmuxRunner) stopAndQuarantineExit(ctx context.Context, spec SessionSpec) {
+	pid := r.panePid(ctx, spec.Name)
+	r.Stop(ctx, spec.Name)
+	awaitProcessExit(ctx, pid, paneExitWait)
+	r.quarantineExit(spec)
+}
+
+// awaitProcessExit waits until the process pid is gone, for at most limit or
+// until ctx ends. A pid that is missing, not a number, or not ours to signal is
+// not waited for.
+func awaitProcessExit(ctx context.Context, pid *string, limit time.Duration) {
+	if pid == nil {
+		return
+	}
+	n, err := strconv.Atoi(*pid)
+	if err != nil || n <= 1 {
+		return
+	}
+	deadline := time.Now().Add(limit)
+	for syscall.Kill(n, 0) == nil && time.Now().Before(deadline) {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(20 * time.Millisecond):
+		}
+	}
 }
 
 // Suspend freezes the session's process group, so its scrollback stays where it was.

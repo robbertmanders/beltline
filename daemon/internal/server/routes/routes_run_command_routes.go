@@ -38,7 +38,7 @@ func AddRunDecide(mux *http.ServeMux, c *coordinator.Coordinator) {
 		if err != nil {
 			return core.Run{}, err
 		}
-		return c.DecideCommand(id, decoded.Outcome, decoded.Note)
+		return c.DecideCommand(id, decoded.Outcome, decoded.Note, decoded.IncludeSubject)
 	})
 }
 

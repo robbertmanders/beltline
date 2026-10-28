@@ -168,7 +168,10 @@ export function RunStagePanel({ runId, panel, stage, selectedAttempt, onSelectAt
       {attemptFacts?.afk && <AfkNote note={attemptFacts.afk} />}
       {attempt && stage.type === "agent" && <Artifacts runId={runId} attemptId={attempt.id} onReveal={reveal} />}
       {answer}
-      {showsDecision ? <div className={`stage-approval${sessionsOpen ? " is-stacked" : ""}`}>
+      {showsDecision && facts?.approval?.prompt ? <>
+        {attemptFacts?.result && <Result result={attemptFacts.result} />}
+        {decision}
+      </> : showsDecision ? <div className={`stage-approval${sessionsOpen ? " is-stacked" : ""}`}>
         {attemptFacts?.result && <Result result={attemptFacts.result} />}
         <div className="stage-approval-doc">
           {facts?.approval?.blocks ? <MarkdownBlocks blocks={facts.approval.blocks} /> : <p className="run-muted">{facts?.approval?.emptyDocument}</p>}

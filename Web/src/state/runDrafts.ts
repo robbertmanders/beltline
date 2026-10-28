@@ -16,6 +16,7 @@ export interface StageDraft {
   notes: Record<string, string>;
   /** The outcome id whose note box is open, or null after Cancel. */
   pendingOutcome: string | null;
+  includeSubject?: boolean;
   sendMessage: string;
 }
 
@@ -104,6 +105,10 @@ export class RunDraftStore {
     this.write(runId, stageId, { pendingOutcome: outcome });
   }
 
+  setIncludeSubject(runId: string, stageId: string, value: boolean): void {
+    this.write(runId, stageId, { includeSubject: value });
+  }
+
   setSendMessage(runId: string, stageId: string, value: string): void {
     this.write(runId, stageId, { sendMessage: value });
     this.bump(runId, stageId, "sendMessage");
@@ -130,7 +135,7 @@ export class RunDraftStore {
 
   /** Decide clears that stage's per-outcome notes and its pending selection. */
   clearDecide(runId: string, stageId: string): void {
-    this.write(runId, stageId, { notes: {}, pendingOutcome: null });
+    this.write(runId, stageId, { notes: {}, pendingOutcome: null, includeSubject: undefined });
   }
 
   /** Resume, whole-run Drop and Erase clear every draft of the run. */

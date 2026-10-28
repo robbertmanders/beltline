@@ -63,6 +63,9 @@ func briefPlaceholders(run Run, stage Stage, context BriefContext) map[string]st
 	values["base"] = context.Base
 	values["branch"] = context.Branch
 	values["issue"] = run.Subject.Ref() + " in " + run.Subject.Repo
+	if !ValueOr(run.IncludeSubject, true) {
+		values["issue"] = "(source context not shared)"
+	}
 	values["previous"] = briefPrevious(run, stage, context)
 	return values
 }

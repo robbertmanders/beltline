@@ -292,6 +292,9 @@ func engineDecided(run *Run, event Event, now time.Time) []Effect {
 	if outcome == nil {
 		return nil
 	}
+	if event.IncludeSubject != nil {
+		run.IncludeSubject = CopyPointer(event.IncludeSubject)
+	}
 	if event.Note != nil && *event.Note != "" {
 		note := *event.Note
 		engineCloseAttempt(run, &at.ID, now, func(a *Attempt) { a.Detail = new(note) })

@@ -16,6 +16,18 @@ func TestTheDefaultBeltHasNoWarnings(t *testing.T) {
 	}
 }
 
+func TestEveryKindCanStartWithApproval(t *testing.T) {
+	t.Parallel()
+	for _, kind := range AllTriggerKind {
+		belt := vtBeltOfKind(kind, nil)
+		approval := DefaultsStage(StageTypeApprove, nil, belt.Stages, belt.Stages)
+		belt.Stages = append([]Stage{approval}, belt.Stages...)
+		if got := vtWarnings(belt); len(got) != 0 {
+			t.Errorf("%s: warnings %v, want none", kind, got)
+		}
+	}
+}
+
 // TestABeltNeedsARepository
 func TestABeltNeedsARepository(t *testing.T) {
 	t.Parallel()
@@ -86,9 +98,6 @@ func TestCatchesOrder(t *testing.T) {
 	warnings := vtWarnings(belt)
 	if !slices.Contains(warnings, "Verify reads the worktree before any stage changes code, so there is nothing to look at yet.") {
 		t.Errorf("missing worktree order warning in %v", warnings)
-	}
-	if !slices.Contains(warnings, "Approve is the first stage, so you would approve issues before any agent has looked at them.") {
-		t.Errorf("missing first-stage warning in %v", warnings)
 	}
 }
 

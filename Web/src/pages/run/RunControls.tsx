@@ -29,6 +29,7 @@ export interface RunControlsProps {
   onAnswerChange: (value: string) => void;
   onDecisionNoteChange: (outcomeId: string, value: string) => void;
   onPendingOutcomeChange: (value: string | null) => void;
+  onIncludeSubjectChange: (value: boolean) => void;
   onSendMessageChange: (value: string) => void;
   answerVersion: () => number;
   command: CommandController;

@@ -1,11 +1,46 @@
 package coordinator
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 )
+
+func TestPromptDecisionDefaultsToExcludedSourceAndPersistsConsent(t *testing.T) {
+	t.Parallel()
+	for _, consent := range []*bool{nil, new(false), new(true)} {
+		t.Run(fmt.Sprint(consent), func(t *testing.T) {
+			t.Parallel()
+			h := newHarness(t, harnessOptions{})
+			c := h.Coord()
+			belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+			gate := core.NewStage(core.StageArgs{ID: "prompt", Type: core.StageTypeApprove, Outcomes: []core.Outcome{
+				{ID: "go", Name: "go", Tone: core.ToneGood, Then: core.NewThen(core.ThenArgs{Action: core.ThenActionNext, WithOutput: true})},
+			}})
+			belt.Stages = []core.Stage{gate}
+			run := core.NewRun(core.RunArgs{Belt: belt, Subject: core.Subject{Kind: core.SubjectKindIssue, Repo: "acme/billing", Number: 1}, Now: testkitNow()})
+			core.EngineStart(&run, testkitNow())
+			h.putRun(run)
+			if _, err := c.DecideCommand(run.ID, "go", nil, consent); err == nil {
+				t.Fatal("prompt entry accepted an empty prompt")
+			}
+			after, err := c.DecideCommand(run.ID, "go", new("Do my task"), consent)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := core.ValueOr(consent, false)
+			if after.IncludeSubject == nil || *after.IncludeSubject != want {
+				t.Fatalf("consent = %v, want %v", after.IncludeSubject, want)
+			}
+			saved := h.storage.LoadRuns()
+			if len(saved) != 1 || saved[0].IncludeSubject == nil || *saved[0].IncludeSubject != want {
+				t.Fatalf("consent was not saved: %+v", saved)
+			}
+		})
+	}
+}
 
 func TestApprovalDocumentFollowsTheGateVisit(t *testing.T) {
 	t.Parallel()

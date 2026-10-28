@@ -12,6 +12,7 @@ import (
 func (c *Coordinator) approvalFacts(run core.Run, stage core.Stage) StagePanelFactsApproval {
 	primary := core.ApprovalPrimary(stage.Outcomes)
 	document := c.approvalDocument(run, stage)
+	prompt := core.ApprovalPromptOf(run, stage, document != nil)
 	var blocks []core.MarkdownBlock
 	if document != nil {
 		text := core.DocumentHoisting(core.OutcomeParserStrip(*document), core.DocumentHoistingDefaultSection)
@@ -24,12 +25,12 @@ func (c *Coordinator) approvalFacts(run core.Run, stage core.Stage) StagePanelFa
 
 	if primary == nil {
 		return StagePanelFactsApproval{Document: document, Blocks: blocks, EmptyDocument: core.StageCopyNoAgentWroteYet,
-			Will: [][]core.InlineSpan{}, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons}
+			Will: [][]core.InlineSpan{}, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons, Prompt: prompt}
 	}
 	primaryID := primary.ID
 	will := core.ApprovalWillOf(run, stage, *primary)
 	return StagePanelFactsApproval{Document: document, Blocks: blocks, EmptyDocument: core.StageCopyNoAgentWroteYet, WillHeading: &will.Heading,
-		Will: will.Lines, Primary: &primaryID, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons}
+		Will: will.Lines, Primary: &primaryID, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons, Prompt: prompt}
 }
 
 // approvalDocument reads the latest agent output leading into this approval's

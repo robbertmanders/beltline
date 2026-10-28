@@ -19,7 +19,7 @@ import (
 // when the outcome asks for output. A parked or paused run ignores the decision
 // and answers with the run as it is.
 // Lock: exported entry point; takes c.mu. Spawns: kick.
-func (c *Coordinator) DecideCommand(id, outcome string, note *string) (core.Run, error) {
+func (c *Coordinator) DecideCommand(id, outcome string, note *string, includeSubject *bool) (core.Run, error) {
 	c.Lock()
 	defer c.EndTurn()
 	command, err := c.commandOn(id, core.RunCommandDecide)
@@ -49,7 +49,14 @@ func (c *Coordinator) DecideCommand(id, outcome string, note *string) (core.Run,
 	if configured.Then.WithOutput && trimmed == nil {
 		return core.Run{}, core.NewValidationFailure(core.RunAvailabilityNoteRequired, nil)
 	}
-	if err := command.apply(core.Event{Kind: core.EventKindDecided, Outcome: configured.Name, Note: trimmed}, "Could not save the decision."); err != nil {
+	prompt := c.approvalFacts(run, *stage).Prompt
+	if includeSubject != nil && prompt == nil {
+		return core.Run{}, core.NewValidationFailure("Source context can only be chosen at a prompt-entry gate.", nil)
+	}
+	if prompt != nil {
+		includeSubject = new(core.ValueOr(includeSubject, prompt.Include))
+	}
+	if err := command.apply(core.Event{Kind: core.EventKindDecided, Outcome: configured.Name, Note: trimmed, IncludeSubject: includeSubject}, "Could not save the decision."); err != nil {
 		return core.Run{}, err
 	}
 	c.kick()

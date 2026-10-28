@@ -10,8 +10,9 @@ type RunEmptyRequest struct{}
 
 // RunDecideRequest is the body of POST /api/v1/runs/:id/decide.
 type RunDecideRequest struct {
-	Outcome string  `json:"outcome" required:"true"`
-	Note    *string `json:"note,omitzero"`
+	Outcome        string  `json:"outcome" required:"true"`
+	Note           *string `json:"note,omitzero"`
+	IncludeSubject *bool   `json:"includeSubject,omitzero"`
 }
 
 // RunResumeRequest is the body of POST /api/v1/runs/:id/resume.

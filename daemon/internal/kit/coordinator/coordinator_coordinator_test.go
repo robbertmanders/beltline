@@ -969,7 +969,7 @@ func TestADecisionOnAParkedRunChangesNothingAndIsNotAnError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("park: %v", err)
 	}
-	after, err := c.DecideCommand(h.Run().ID, "approved", nil)
+	after, err := c.DecideCommand(h.Run().ID, "approved", nil, nil)
 	if err != nil {
 		t.Fatalf("decide: %v", err)
 	}

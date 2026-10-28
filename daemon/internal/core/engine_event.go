@@ -67,6 +67,8 @@ type Event struct {
 	Note *string
 	// Outcome is the name of the approval outcome picked (decided).
 	Outcome string
+	// IncludeSubject records the prompt gate's source-context choice (decided).
+	IncludeSubject *bool
 	// Watch is the pull request event observed (watched).
 	Watch WatchEvent
 	// Ticket is the ticket event observed (ticketWatched).

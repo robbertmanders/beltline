@@ -60,8 +60,14 @@ describe("run draft store", () => {
     const storage = memoryStorage();
     const first = new RunDraftStore(storage);
     first.setSendMessage("run", "build", "keep me");
+    first.setNote("run", "prompt", "refine", "My unsent prompt");
+    first.setIncludeSubject("run", "prompt", true);
     const reloaded = new RunDraftStore(storage);
     expect(reloaded.stage("run", "build").sendMessage).toBe("keep me");
     expect(storage.getItem(runDraftsStorageKey)).toContain("keep me");
+    expect(reloaded.stage("run", "prompt").notes.refine).toBe("My unsent prompt");
+    expect(reloaded.stage("run", "prompt").includeSubject).toBe(true);
+    reloaded.clearDecide("run", "prompt");
+    expect(reloaded.stage("run", "prompt").includeSubject).toBeUndefined();
   });
 });
