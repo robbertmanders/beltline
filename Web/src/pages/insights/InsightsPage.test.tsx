@@ -61,6 +61,17 @@ describe("Insights page", () => {
     expect(await screen.findByRole("button", { name: "Lead time" })).toBeTruthy();
   });
 
+  it("marks the page as experimental, on every belt and on one", async () => {
+    insightsDaemon();
+    renderPage("/insights");
+    await screen.findByRole("table", { name: "Belts" });
+    expect(document.querySelector(".page-heading")?.textContent).toContain("EXPERIMENTAL");
+    cleanup();
+    renderPage(`/insights?belt=${everyBelt().beltRows[0]!.id}`);
+    await screen.findByRole("button", { name: "Lead time" });
+    expect(document.querySelector(".page-heading")?.textContent).toContain("EXPERIMENTAL");
+  });
+
   it("shows the belt's stages in the daemon's order", async () => {
     insightsDaemon();
     renderPage(`/insights?belt=${oneBelt().belt}&view=stages`);

@@ -6,7 +6,7 @@ import { describeError } from "../../api/errors";
 import { apiQueryKey, resourcesForPath } from "../../api/resources";
 import { insightsFigureIDValues, insightsPeriodValues, type InsightsEvolutionView, type InsightsFigureID, type InsightsPeriod, type InsightsView } from "../../api/wire.gen";
 import { useRuntime } from "../../app/runtime";
-import { Caps, Segmented, Select, Tag } from "../../components/Paper";
+import { Caps, Chip, Segmented, Select, Tag } from "../../components/Paper";
 import { BeltList, Stages } from "./InsightsSections";
 import { Evolution, evolutionRequestPath, type EvolutionChoice } from "./InsightsEvolution";
 import { ShadowComparison } from "./InsightsShadow";
@@ -121,7 +121,10 @@ export function InsightsPage() {
   return <article className="page-content insights-page">
     <header className="page-heading work-heading-row">
       <div className="work-title-block">
-        <Tag>{belt ? "Insights · belt" : "Insights"}</Tag>
+        <div className="insights-eyebrow">
+          <Tag>{belt ? "Insights · belt" : "Insights"}</Tag>
+          <Chip tone="gold" title="Insights is experimental: its figures and layout may still change.">EXPERIMENTAL</Chip>
+        </div>
         <h1>{heading?.title ?? "Insights"}</h1>
       </div>
       {heading && <div className="page-heading-actions"><Caps className="work-caption">{heading.caption}</Caps></div>}

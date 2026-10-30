@@ -37,7 +37,7 @@ function GeneralCard({ settings }: { settings: SettingsResponse }) {
     <label className="afk-toggle"><input type="checkbox" checked={settings.notifications} onChange={event => command.submit(settingsPatchRequest({ notifications: event.currentTarget.checked }))} />Notify me when a run needs me</label>
     <p className="muted-line">Send macOS notifications when a run needs you.</p>
     <label className="afk-toggle"><input type="checkbox" checked={settings.showInsights} onChange={event => command.submit(settingsPatchRequest({ showInsights: event.currentTarget.checked }))} />Show the Insights page</label>
-    <p className="muted-line">List Insights in the navigation, with each belt's first-try rate, time and cost.</p>
+    <p className="muted-line">List Insights in the navigation, with each belt's first-try rate, time and cost. Insights is experimental: its figures and layout may still change.</p>
     {command.error ? <ErrorProblems error={command.error} /> : null}
   </section>;
 }
