@@ -158,7 +158,7 @@ func Run(ctx context.Context, sh shell.Runner, ghostty GhosttyProbe) []Result {
 		{Name: "git", Purpose: "checkouts and worktrees", OK: git.OK(), Detail: toolCheckLine(git, installHint(runtime.GOOS, "git"))},
 		{Name: "tmux", Purpose: "agent sessions", OK: tmux.OK(), Detail: toolCheckLine(tmux, installHint(runtime.GOOS, "tmux"))},
 		{Name: "Copilot CLI", Purpose: "agent: copilot", OK: copilot.OK(), Detail: toolCheckLine(copilot, "not installed: npm install -g @github/copilot"), Optional: agentFound},
-		{Name: "Pi", Purpose: "agent: pi", OK: pi.OK(), Detail: toolCheckLine(pi, "not installed"), Optional: agentFound},
+		{Name: "Pi", Purpose: "agent: pi", OK: pi.OK(), Detail: toolCheckLine(pi, "not installed: npm install -g --ignore-scripts @earendil-works/pi-coding-agent"), Optional: agentFound},
 		{Name: "Claude Code", Purpose: "agent: claude", OK: claude.OK(), Detail: toolCheckLine(claude, "not installed: npm install -g @anthropic-ai/claude-code"), Optional: agentFound},
 		{Name: "Codex CLI", Purpose: "agent: codex", OK: codex.OK(), Detail: toolCheckLine(codex, "not installed: npm install -g @openai/codex"), Optional: agentFound},
 		{Name: "Cursor CLI", Purpose: "agent: cursor", OK: cursor.OK(), Detail: toolCheckLine(cursor, "not installed: install Cursor CLI from https://cursor.com/install"), Optional: agentFound},
