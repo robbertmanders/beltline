@@ -11,14 +11,14 @@ import (
 
 // gateBelt is Triage, then an approval, so a finished Triage lands on a gate.
 func gateBelt() Belt {
-	triage := DefaultsStageForAgent(DefaultsAgent("triage"), nil, nil, nil, TriggerKindIssues)
+	triage := DefaultsStageForAgent(SampleAgent("triage"), nil, nil, nil, TriggerKindIssues)
 	gate := DefaultsStage(StageTypeApprove, []Stage{triage}, nil, []Stage{triage})
 	return testKindBelt(TriggerKindIssues, triage, gate)
 }
 
 // parkableBelt is a belt whose approval can also park, for the outcome-parked case.
 func parkableBelt() Belt {
-	triage := DefaultsStageForAgent(DefaultsAgent("triage"), nil, nil, nil, TriggerKindIssues)
+	triage := DefaultsStageForAgent(SampleAgent("triage"), nil, nil, nil, TriggerKindIssues)
 	gate := DefaultsStage(StageTypeApprove, []Stage{triage}, nil, []Stage{triage})
 	gate.Outcomes = append(gate.Outcomes, Outcome{Name: "parked", When: "Park it", Tone: ToneNeutral, Then: Then{Action: ThenActionPark}})
 	return testKindBelt(TriggerKindIssues, triage, gate)

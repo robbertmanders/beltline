@@ -182,7 +182,7 @@ func TestTasksCreateRunsAndRefuseInvalidInput(t *testing.T) {
 	f.Coordinator.SetGloballyPaused(context.Background(), false)
 
 	// Several manual entries need an explicit choice; each accepted submission is another task.
-	two := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	two := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	two.ID = "contract-two"
 	two.Name = "Two manuals"
 	two.Version = 0

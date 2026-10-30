@@ -36,7 +36,7 @@ Recommendations:
 - **Choose triggers carefully.** Only trigger belts from repositories, labels and JQL queries where you trust everyone who can write the text. On a public repository, use a label that only maintainers can apply.
 - **Limit what the sign-ins can do.** Sign `gh` in with a fine-grained token scoped to the repositories the belts work on, and use a Jira account that can only reach the relevant projects.
 - **Separate it from your personal data.** Run Beltline under a dedicated user account, or on a dedicated machine or VM, without your personal credentials, SSH keys or cloud sessions in reach.
-- **Keep approvals in the belt.** Put an approval stage before any stage whose agent pushes, merges or posts. Review what agents ship: the built-in Ship and Post review agents open pull requests and post reviews, but nothing merges without the policies you configure.
+- **Keep approvals in the belt.** Put an approval stage before any stage whose agent pushes, merges or posts. Review what agents ship: the example Ship and Post review agents open pull requests and post reviews, but nothing merges without the policies you configure.
 - **Treat AFK mode as delegation** (below).
 
 ## AFK mode decides on your behalf

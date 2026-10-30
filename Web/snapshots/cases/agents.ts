@@ -169,16 +169,6 @@ export const agentsCases: SnapshotCase[] = [
     visibleColumns: [library]
   },
   {
-    id: "agents-reset-confirmation",
-    route: "/agents?agent=review",
-    sidebar: sidebarState({ navigationOpen: true }),
-    readiness: "shell",
-    fixtures: [{ kind: "ensure-agent-reset-available", id: "review" }],
-    steps: [{ kind: "click", target: { role: "button", name: "Reset to default" } }],
-    readyMarker: '.sheet-layer [role="dialog"]',
-    visibleColumns: [editor]
-  },
-  {
     id: "agents-new",
     route: "/agents",
     sidebar: sidebarState({ navigationOpen: true }),

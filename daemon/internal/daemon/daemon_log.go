@@ -116,6 +116,9 @@ func upgradeMessage(report store.UpgradeReport, err error) string {
 		return ""
 	}
 	message := fmt.Sprintf("Upgraded the data folder: rewrote %d belt versions, %d belt states and %d runs", report.Belts, report.States, report.Runs)
+	if report.Agents > 0 {
+		message += fmt.Sprintf(", saved %d agent versions they use", report.Agents)
+	}
 	if report.Settings {
 		message += ", and the settings"
 	}

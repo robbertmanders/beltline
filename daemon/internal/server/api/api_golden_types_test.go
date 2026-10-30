@@ -41,7 +41,6 @@ var goldenResponses = map[string]string{
 	"agent-draft-presentation.json":        "AgentDraftResponse",
 	"agent-draft-switch-runner.json":       "AgentDraftResponse",
 	"agent-new.json":                       "Agent",
-	"agent-reset.json":                     "AgentRecordResponse",
 	"agent-save.json":                      "AgentRecordResponse",
 	"agent-thinking-supplemental.json":     "AgentDetailResponse",
 	"agent-unarchive.json":                 "AgentRecordResponse",

@@ -6,7 +6,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
-	"time"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
@@ -22,16 +22,11 @@ func (s Storage) agentFolder(id string) string {
 	return filepath.Join(s.Paths.Agents(), id)
 }
 
-// LoadAgents is every agent's latest version: the built-ins first, in the
-// shipped order, then by when each was made, then by name.
+// LoadAgents is every agent's latest version, by name, then by id.
 // The library is one folder per agent, each version a Markdown file you can
 // also edit by hand, and state.json saying whether it is archived.
 func (s Storage) LoadAgents() []core.AgentRecord {
-	type entry struct {
-		record  core.AgentRecord
-		created time.Time
-	}
-	var entries []entry
+	records := []core.AgentRecord{}
 	for _, folder := range subfolders(s.Paths.Agents()) {
 		id := filepath.Base(folder)
 		all := versions(folder, "md")
@@ -44,41 +39,18 @@ func (s Storage) LoadAgents() []core.AgentRecord {
 		}
 		var state agentState
 		archived := s.Read(filepath.Join(folder, "state.json"), &state) == nil && state.Archived
-		first := filepath.Join(folder, "v"+strconv.Itoa(slices.Min(all))+".md")
-		entries = append(entries, entry{
-			record:  core.AgentRecord{Agent: agent, Archived: archived},
-			created: birthTime(first),
-		})
+		records = append(records, core.AgentRecord{Agent: agent, Archived: archived})
 	}
-	rank := func(id string) int {
-		for i, builtIn := range core.DefaultsBuiltInIDs {
-			if builtIn == id {
-				return i
-			}
+	slices.SortStableFunc(records, func(a, b core.AgentRecord) int {
+		if order := core.LocalizedStandardCompare(a.Agent.Name, b.Agent.Name); order != 0 {
+			return order
 		}
-		return len(core.DefaultsBuiltInIDs)
-	}
-	sort.SliceStable(entries, func(i, j int) bool {
-		a, b := entries[i], entries[j]
-		ra, rb := rank(a.record.Agent.ID), rank(b.record.Agent.ID)
-		if ra != rb {
-			return ra < rb
-		}
-		if !a.created.Equal(b.created) {
-			return a.created.Before(b.created)
-		}
-		return a.record.Agent.Name < b.record.Agent.Name
+		return strings.Compare(a.Agent.ID, b.Agent.ID)
 	})
-	records := make([]core.AgentRecord, 0, len(entries))
-	for _, e := range entries {
-		records = append(records, e.record)
-	}
 	return records
 }
 
-// Agent is one agent version as saved, and whether it exists. Only the
-// current shipped version can fall back to bundled text; never serve new
-// wording under an older pin.
+// Agent is one agent version as saved, and whether it exists.
 func (s Storage) Agent(id string, version int) (core.Agent, bool) {
 	path := filepath.Join(s.agentFolder(id), "v"+strconv.Itoa(version)+".md")
 	if data, err := os.ReadFile(path); err == nil && utf8.Valid(data) {
@@ -87,11 +59,6 @@ func (s Storage) Agent(id string, version int) (core.Agent, bool) {
 			return core.Agent{}, false
 		}
 		return agent, true
-	}
-	if version == core.DefaultsShippedVersion(id) {
-		if agent := core.DefaultsBuiltIn(id, nil); agent != nil {
-			return *agent, true
-		}
 	}
 	return core.Agent{}, false
 }
@@ -129,12 +96,13 @@ func (s Storage) SetAgentArchived(id string, archived bool) error {
 	return s.Write(agentState{Archived: archived}, filepath.Join(s.agentFolder(id), "state.json"))
 }
 
-// SeedAgents adds the shipped version of each built-in agent when the library
-// lacks it or has only older versions. Saved versions and user versions at or
-// above the shipped version stay untouched. Errors are ignored.
+// SeedAgents adds each sample agent (core.SampleAgents) at its sample version
+// when the library lacks it or has only older versions, for demo mode and the
+// tests; a live data folder is never seeded. Saved versions and versions at or
+// above the sample's stay untouched. Errors are ignored.
 func (s Storage) SeedAgents() {
-	for _, id := range core.DefaultsBuiltInIDs {
-		shipped := core.DefaultsShippedVersion(id)
+	for _, id := range core.SampleAgentIDs {
+		shipped := core.SampleAgentVersion(id)
 		highest := 0
 		if all := s.AgentVersions(id); len(all) > 0 {
 			highest = all[len(all)-1]
@@ -142,7 +110,7 @@ func (s Storage) SeedAgents() {
 		if highest >= shipped {
 			continue
 		}
-		text, ok := core.BuiltInAgentFile(id)
+		text, ok := core.SampleAgentText(id)
 		if !ok {
 			continue
 		}

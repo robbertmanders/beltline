@@ -33,11 +33,11 @@ func TestTheBriefNamesTheParentAndTheBase(t *testing.T) {
 func TestEveryAgentsFooterHasCopyableOutcomeNamesNotDescriptions(t *testing.T) {
 	t.Parallel()
 	var stages []Stage
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		stages = append(stages, DefaultsStageForAgent(agent, nil, nil, nil, TriggerKindIssues))
 	}
 	for _, kind := range AllTriggerKind {
-		for _, stage := range DefaultsStages(kind, DefaultsBuiltInAgents(), true) {
+		for _, stage := range SampleStages(kind, SampleAgents(), true) {
 			if stage.Kind() == StageKindAgent {
 				stages = append(stages, stage)
 			}
@@ -79,7 +79,7 @@ func TestEveryAgentsFooterHasCopyableOutcomeNamesNotDescriptions(t *testing.T) {
 // attempt folder /runs/r/02-spec-1, base main and every built-in agent.
 func briefTestContext() BriefContext {
 	agents := map[AgentRef]Agent{}
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		agents[agent.Ref()] = agent
 	}
 	return BriefContext{RunFolder: "/runs/r", AttemptFolder: "/runs/r/02-spec-1", Base: "main", Branch: "beltline/issue-142", Agents: agents}
@@ -147,7 +147,7 @@ func TestArtifactsAreOptInAndUseTheEffectiveBrief(t *testing.T) {
 	if !strings.HasSuffix(text, BriefFooter(stage, BriefOutputPath(stage, ctx))) {
 		t.Fatalf("brief does not end with the footer:\n%s", text)
 	}
-	agent := DefaultsAgent("triage")
+	agent := SampleAgent("triage")
 	agent.Brief = stage.Brief
 	ctx.Agents[agent.Ref()] = agent
 	stage.Brief = ""

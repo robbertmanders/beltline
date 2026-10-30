@@ -18,7 +18,7 @@ import (
 func brokenLibrary(t *testing.T) string {
 	t.Helper()
 	folder := filepath.Join(t.TempDir(), "check broken")
-	agent := core.DefaultsBuiltIn("custom", nil)
+	agent := core.SampleAgentNamed("custom", nil)
 	if agent == nil {
 		t.Fatal("the custom agent is missing")
 	}

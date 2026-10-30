@@ -20,7 +20,7 @@ import (
 func TestSaveAndReloadKeepTheModeAndLeaveOlderVersionsUntouched(t *testing.T) {
 	t.Parallel()
 	storage := seededNoBelts(t)
-	belt := core.DefaultsBelt([]string{"a/b"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"a/b"}, "agent", core.SampleAgents(), true)
 	belt.Afk = core.AfkModeAlways
 	first, err := storage.SaveNewVersion(belt)
 	if err != nil {
@@ -49,7 +49,7 @@ func TestSaveAndReloadKeepTheModeAndLeaveOlderVersionsUntouched(t *testing.T) {
 func TestLoadingAnOldBeltDoesNotRewriteItsSavedVersions(t *testing.T) {
 	t.Parallel()
 	storage := seededNoBelts(t)
-	saved, err := storage.SaveNewVersion(core.DefaultsBelt([]string{"a/b"}, "agent", core.DefaultsBuiltInAgents(), true))
+	saved, err := storage.SaveNewVersion(core.SampleBelt([]string{"a/b"}, "agent", core.SampleAgents(), true))
 	if err != nil {
 		t.Fatalf("save: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestSavesAndReloadsKeepCodexEffort(t *testing.T) {
 			if err := storage.SaveSettings(modelFixtureSettings()); err != nil {
 				t.Fatalf("save settings: %v", err)
 			}
-			agent := core.DefaultsAgent("custom")
+			agent := core.SampleAgent("custom")
 			belt := core.NewBeltFromTrigger(core.BeltFromTriggerArgs{
 				ID: "tasks", Name: "Tasks", Trigger: core.TriggerKindManual.Fresh(), Repos: []string{"acme/app"},
 				Stages: []core.Stage{core.DefaultsStageForAgent(agent, nil, nil, nil, core.TriggerKindManual)},
@@ -155,14 +155,14 @@ func TestPinnedBriefKeysCompletionAndMissingVersions(t *testing.T) {
 	t.Parallel()
 	storage := seededNoBelts(t)
 	library := libraryOver(t, storage)
-	agent := core.DefaultsAgent("spec")
+	agent := core.SampleAgent("spec")
 	agent.Key = "outline"
 	agent.Brief = "Read {draft}."
 	pinned, err := library.SaveAgent(agent)
 	if err != nil {
 		t.Fatalf("save agent: %v", err)
 	}
-	belt := core.DefaultsBelt([]string{"a/b"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"a/b"}, "agent", core.SampleAgents(), true)
 	belt.Stages[1].Agent = &core.AgentRef{ID: pinned.ID, Version: pinned.Version}
 	belt.Stages[1].Key = nil
 	belt.Stages[1].Brief = ""
@@ -226,8 +226,8 @@ func choiceIDs(choices []core.AgentChoice) []string {
 // allArchivedRecords is every built-in agent archived.
 func allArchivedRecords() []core.AgentRecord {
 	var out []core.AgentRecord
-	for _, id := range core.DefaultsBuiltInIDs {
-		out = append(out, core.AgentRecord{Agent: core.DefaultsAgent(id), Archived: true})
+	for _, id := range core.SampleAgentIDs {
+		out = append(out, core.AgentRecord{Agent: core.SampleAgent(id), Archived: true})
 	}
 	return out
 }

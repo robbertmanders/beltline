@@ -84,24 +84,6 @@ func TestRunsAtOnceAreBoundedToSix(t *testing.T) {
 	}
 }
 
-func TestResetRefusesAnAgentThatAlreadyMatchesTheShippedVersion(t *testing.T) {
-	t.Parallel()
-	h := newLibraryHarness(t, liveTestBelt("agent-library", "Agent library belt", "acme/app"))
-	c := h.Coord()
-	version := c.LatestAgent("triage").Agent.Version
-	_, err := c.ResetAgentCommand("triage")
-	validation, ok := err.(core.ValidationFailure)
-	if !ok {
-		t.Fatalf("reset error = %#v, want core.ValidationFailure", err)
-	}
-	if validation.Message != core.AgentActionsResetUnchanged {
-		t.Errorf("message = %q, want %q", validation.Message, core.AgentActionsResetUnchanged)
-	}
-	if got := c.LatestAgent("triage").Agent.Version; got != version {
-		t.Errorf("reset changed the version to %d", got)
-	}
-}
-
 func TestANewInstallHasNoAgentsAndSeedingAddsTheShippedVersions(t *testing.T) {
 	t.Parallel()
 	storage := unseededStorage(t)
@@ -113,12 +95,12 @@ func TestANewInstallHasNoAgentsAndSeedingAddsTheShippedVersions(t *testing.T) {
 	var ids []string
 	for _, record := range c.Agents() {
 		ids = append(ids, record.Agent.ID)
-		if record.Agent.Version != core.DefaultsShippedVersion(record.Agent.ID) || record.Archived {
+		if record.Agent.Version != core.SampleAgentVersion(record.Agent.ID) || record.Archived {
 			t.Errorf("agent %s is at version %d, archived %v", record.Agent.ID, record.Agent.Version, record.Archived)
 		}
 	}
-	if !reflect.DeepEqual(ids, core.DefaultsBuiltInIDs) {
-		t.Errorf("agent ids = %q, want %q", ids, core.DefaultsBuiltInIDs)
+	if want := slices.Sorted(slices.Values(core.SampleAgentIDs)); !reflect.DeepEqual(slices.Sorted(slices.Values(ids)), want) {
+		t.Errorf("agent ids = %q, want %q", ids, want)
 	}
 	for _, id := range []string{"triage", "spec"} {
 		record := c.LatestAgent(id)
@@ -126,7 +108,7 @@ func TestANewInstallHasNoAgentsAndSeedingAddsTheShippedVersions(t *testing.T) {
 			t.Errorf("%s latest = %+v, want version 2", id, record)
 			continue
 		}
-		if want := core.DefaultsBuiltIn(id, nil).Brief; record.Agent.Brief != want {
+		if want := core.SampleAgentNamed(id, nil).Brief; record.Agent.Brief != want {
 			t.Errorf("%s brief does not match the shipped one", id)
 		}
 	}
@@ -135,7 +117,7 @@ func TestANewInstallHasNoAgentsAndSeedingAddsTheShippedVersions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read verify: %v", err)
 	}
-	if want := core.DefaultsBuiltInFile("verify"); want == nil || string(data) != *want {
+	if want := core.SampleAgentFile("verify"); want == nil || string(data) != *want {
 		t.Errorf("the verify file does not match the bundled one")
 	}
 }
@@ -150,11 +132,11 @@ func TestSeedingUpgradesOldTemplatesWithoutChangingSavedVersions(t *testing.T) {
 			if _, ok := storage.Agent(id, 1); ok {
 				t.Fatalf("version 1 exists before seeding")
 			}
-			want := core.DefaultsAgent(id)
-			if got, ok := storage.Agent(id, 2); !ok || got.Brief != want.Brief {
-				t.Fatalf("version 2 is not the shipped one")
+			if _, ok := storage.Agent(id, 2); ok {
+				t.Fatalf("version 2 is read before seeding")
 			}
-			old := core.DefaultsAgent(id)
+			want := core.SampleAgent(id)
+			old := core.SampleAgent(id)
 			old.Brief = "# Title\n\n## Goal\nOld wording.\n\n## Open questions\n1. (needs info) Which page?"
 			saved, err := storage.SaveNewAgentVersion(old)
 			if err != nil || saved.Version != 1 {
@@ -178,7 +160,7 @@ func TestSeedingUpgradesOldTemplatesWithoutChangingSavedVersions(t *testing.T) {
 			if got, ok := storage.Agent(id, 1); !ok || !strings.Contains(got.Brief, "(needs info)") {
 				t.Errorf("v1 lost its brief")
 			}
-			custom := core.DefaultsAgent(id)
+			custom := core.SampleAgent(id)
 			custom.Brief = "My custom brief."
 			newer, err := storage.SaveNewAgentVersion(custom)
 			if err != nil {
@@ -202,13 +184,13 @@ func TestOldBeltPinsOnlyMoveWhenTheBeltIsUpdated(t *testing.T) {
 		t.Run(id, func(t *testing.T) {
 			t.Parallel()
 			storage := unseededStorage(t)
-			old := core.DefaultsAgent(id)
+			old := core.SampleAgent(id)
 			old.Brief = "The old pinned brief."
 			saved, err := storage.SaveNewAgentVersion(old)
 			if err != nil {
 				t.Fatalf("save old: %v", err)
 			}
-			belt := core.DefaultsBelt(nil, "agent", core.DefaultsBuiltInAgents(), true)
+			belt := core.SampleBelt(nil, "agent", core.SampleAgents(), true)
 			index := -1
 			for i, stage := range belt.Stages {
 				if stage.Agent != nil && stage.Agent.ID == id {
@@ -337,29 +319,6 @@ func TestUpdatingABeltMovesOutdatedStagesToTheLatestVersion(t *testing.T) {
 	}
 	if !reflect.DeepEqual(c.UpdatingAllStages(updated), updated) {
 		t.Errorf("updating again changed the belt")
-	}
-}
-
-func TestResetSavesTheShippedAgentAsTheNewestVersion(t *testing.T) {
-	t.Parallel()
-	c := coordinatorOn(t, seededLibraryStorage(t))
-	spec := c.LatestAgent("spec").Agent
-	spec.Name = "Specification"
-	if _, err := c.SaveAgent(spec); err != nil {
-		t.Fatalf("save: %v", err)
-	}
-	reset, err := c.ResetAgent("spec")
-	if err != nil {
-		t.Fatalf("reset: %v", err)
-	}
-	if reset.Version != 4 {
-		t.Errorf("reset version = %d, want 4", reset.Version)
-	}
-	if want := core.DefaultsAgent("spec").Brief; reset.Brief != want {
-		t.Errorf("reset brief does not match the shipped one")
-	}
-	if reset.Name != "Spec" {
-		t.Errorf("reset name = %q, want Spec", reset.Name)
 	}
 }
 

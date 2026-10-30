@@ -1,12 +1,9 @@
-// The agents, outcomes and
-// stages a new install starts with). The belt, forks and stage lists are in
-// engine_defaults_belt.go; the single stages, their updates and their
-// comparisons are in engine_defaults_stage.go.
+// The outcomes a new stage starts with, by its type and place. The single
+// stages, their updates and their comparisons are in engine_defaults_stage.go.
 //
 // Go has no default arguments. Where a parameter has a default (a Place's
-// later, a kind of .issues, the built-in agents, bundled true, the label
-// "agent", the events of a migration, the Go caller passes that default
-// explicitly; the doc comment names it.
+// later, a kind of .issues, the events of a migration), the Go caller passes
+// that default explicitly; the doc comment names it.
 
 package core
 
@@ -14,72 +11,6 @@ import "slices"
 
 // DefaultsModel is the model new agent stages run, through Pi and OpenRouter.
 const DefaultsModel = "openrouter/stealth/space-bunny-alpha"
-
-// DefaultsBuiltInIDs are the agents the app ships, in the order the library
-// lists them. A new install gets each as its version 1.
-var DefaultsBuiltInIDs = []string{
-	"triage", "spec", "build", "verify", "ship", "wrap-up", "resolve-conflicts", "fix-checks", "review", "post-review",
-	"plan-epic", "open-branches", "file-wave", "assess-epic", "replan-epic", "land-epic", "custom",
-}
-
-// DefaultsBuiltInFile is the bundled file of a built-in agent, or nil.
-func DefaultsBuiltInFile(id string) *string {
-	file, ok := BuiltInAgentFile(id)
-	if !ok {
-		return nil
-	}
-	return &file
-}
-
-// DefaultsShippedVersion is the version of each built-in bundled with this app:
-// triage, spec, ship, wrap-up and post-review are version 2, the others 1.
-func DefaultsShippedVersion(id string) int {
-	switch id {
-	case "triage", "spec", "ship", "wrap-up", "post-review":
-		return 2
-	default:
-		return 1
-	}
-}
-
-// DefaultsBuiltIn is the bundled text of a built-in agent, using its shipped
-// version unless version is set.
-// Nil when the file is not bundled or does not parse.
-func DefaultsBuiltIn(id string, version *int) *Agent {
-	file := DefaultsBuiltInFile(id)
-	if file == nil {
-		return nil
-	}
-	number := ValueOr(version, DefaultsShippedVersion(id))
-	agent, err := AgentFileParse(*file, id, number)
-	if err != nil {
-		return nil
-	}
-	return &agent
-}
-
-// DefaultsBuiltInAgents are the built-in agents that parse, in DefaultsBuiltInIDs
-// order. The bundled files are read each time it is called.
-func DefaultsBuiltInAgents() []Agent {
-	var agents []Agent
-	for _, id := range DefaultsBuiltInIDs {
-		if agent := DefaultsBuiltIn(id, nil); agent != nil {
-			agents = append(agents, *agent)
-		}
-	}
-	return agents
-}
-
-// DefaultsAgent is a built-in agent, for tests and the demo.
-// It panics for an id that is not built in.
-func DefaultsAgent(id string) Agent {
-	for _, agent := range DefaultsBuiltInAgents() {
-		if agent.ID == id {
-			return agent
-		}
-	}
-	panic("Defaults.agent: no built-in agent " + id)
-}
 
 // defaultsTemplate is the outcome a stage type starts with, before its place is
 // known. To is the agents a goto jumps to (empty when none), or `watch` for a

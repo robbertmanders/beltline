@@ -34,7 +34,7 @@ func holdKicks(t *testing.T, c *Coordinator) {
 // finished attempt, put straight into the run book.
 func coordHeldRun(t *testing.T, h *harness, number int) core.Run {
 	t.Helper()
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	run := core.NewRun(core.RunArgs{
 		Belt:    belt,
 		Subject: core.Subject{Kind: core.SubjectKindIssue, Repo: "acme/billing", Number: number, Title: "Draft test"},

@@ -287,7 +287,7 @@ func btUnmarshal(data string, v any) error {
 // TestBeltsAndRunningAttemptsSavedBeforeThinkingStillOpen
 func TestBeltsAndRunningAttemptsSavedBeforeThinkingStillOpen(t *testing.T) {
 	t.Parallel()
-	belt := DefaultsBelt([]string{"a/b"}, "agent", DefaultsBuiltInAgents(), true)
+	belt := SampleBelt([]string{"a/b"}, "agent", SampleAgents(), true)
 	for _, stage := range btDecode[Belt](t, btEncode(t, belt)).Stages {
 		if stage.Thinking != nil {
 			t.Errorf("belt stage %s thinking = %v, want none", stage.ID, *stage.Thinking)
@@ -308,8 +308,8 @@ func TestBeltsAndRunningAttemptsSavedBeforeThinkingStillOpen(t *testing.T) {
 		}
 	}
 
-	// The test starts from DefaultsBelt and a run the engine has started.
-	defaults := DefaultsBelt([]string{"a/b"}, "agent", DefaultsBuiltInAgents(), true)
+	// The test starts from SampleBelt and a run the engine has started.
+	defaults := SampleBelt([]string{"a/b"}, "agent", SampleAgents(), true)
 	for _, stage := range btDecode[Belt](t, btEncode(t, defaults)).Stages {
 		if stage.Thinking != nil {
 			t.Errorf("default belt stage %s thinking = %v, want none", stage.ID, *stage.Thinking)

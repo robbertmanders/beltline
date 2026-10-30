@@ -20,7 +20,7 @@ import (
 // linkRun is a run on an issues belt for subject, begun at now, with the given pull requests.
 func linkRun(subject core.Subject, now time.Time, pulls ...core.PullRequest) core.Run {
 	run := core.NewRun(core.RunArgs{
-		Belt:    core.DefaultsBelt([]string{subject.Repo}, "agent", core.DefaultsBuiltInAgents(), true),
+		Belt:    core.SampleBelt([]string{subject.Repo}, "agent", core.SampleAgents(), true),
 		Subject: subject,
 		Now:     now,
 	})

@@ -1,5 +1,5 @@
 // Shared fixtures for the validation tests (engine_validation_*_test.go). They
-// build belts with the real builders (DefaultsBelt, DefaultsStage…) and check
+// build belts with the real builders (SampleBelt, DefaultsStage…) and check
 // them with the same warnings check the engine runs.
 // Names carry the vt prefix so they do not collide with the other suites here.
 
@@ -9,7 +9,7 @@ import "slices"
 
 // vtAgent is a shipped built-in agent by id.
 func vtAgent(id string) Agent {
-	agent := DefaultsBuiltIn(id, nil)
+	agent := SampleAgentNamed(id, nil)
 	if agent == nil {
 		panic("no built-in agent " + id)
 	}
@@ -28,7 +28,7 @@ func vtPinned(agents []Agent) map[AgentRef]Agent {
 // vtWarnings is the warnings of a belt:
 // the belt with its stage keys converted, checked against the shipped agents.
 func vtWarnings(belt Belt) []string {
-	agents := vtPinned(DefaultsBuiltInAgents())
+	agents := vtPinned(SampleAgents())
 	converted := StageKeysExplicit(belt, agents)
 	var keys []string
 	for _, stage := range converted.Stages {
@@ -109,7 +109,7 @@ func vtDefaultBelt(repos ...string) Belt {
 	if len(repos) == 0 {
 		repos = nil
 	}
-	return DefaultsBelt(repos, "agent", DefaultsBuiltInAgents(), true)
+	return SampleBelt(repos, "agent", SampleAgents(), true)
 }
 
 // vtStageIndex is the index of the first stage of kind, or -1.

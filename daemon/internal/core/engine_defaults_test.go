@@ -68,7 +68,7 @@ func TestWatchDefaultsCoverEveryEventAndBoundRetries(t *testing.T) {
 // TestAGotoWithNothingBeforeItHolds
 func TestAGotoWithNothingBeforeItHolds(t *testing.T) {
 	t.Parallel()
-	outcomes := DefaultsOutcomesForAgentAt(DefaultsAgent("verify"), DefaultsPlace{})
+	outcomes := DefaultsOutcomesForAgentAt(SampleAgent("verify"), DefaultsPlace{})
 	if !defaultsThenEqual(outcomes[1].Then, NewThen(ThenArgs{Action: ThenActionHold})) {
 		t.Fatalf("goto with no stage before it = %+v, want hold", outcomes[1].Then)
 	}
@@ -77,7 +77,7 @@ func TestAGotoWithNothingBeforeItHolds(t *testing.T) {
 // TestShipOpensOnePullRequestPerChangedRepositoryAndCanShipNothing
 func TestShipOpensOnePullRequestPerChangedRepositoryAndCanShipNothing(t *testing.T) {
 	t.Parallel()
-	ship := DefaultsBuiltIn("ship", nil)
+	ship := SampleAgentNamed("ship", nil)
 	if ship == nil {
 		t.Fatal("no bundled ship agent")
 	}
@@ -101,7 +101,7 @@ func TestShipOpensOnePullRequestPerChangedRepositoryAndCanShipNothing(t *testing
 
 // defaultsTestDefaultBelt is Defaults.belt(repos: ["a/b"]) in Go's arguments.
 func defaultsTestDefaultBelt() Belt {
-	return DefaultsBelt([]string{"a/b"}, "agent", DefaultsBuiltInAgents(), true)
+	return SampleBelt([]string{"a/b"}, "agent", SampleAgents(), true)
 }
 
 // TestWatchUpgradeIsAdditiveAndIdempotent
@@ -194,7 +194,7 @@ func TestAgentsDefaultToPiWithSpaceBunny(t *testing.T) {
 		if stage.Runner == nil || *stage.Runner != BackendPi {
 			t.Fatalf("%s runner = %v, want pi", stage.ID, stage.Runner)
 		}
-		if stage.Agent == nil || stage.Agent.Version != DefaultsShippedVersion(stage.Agent.ID) {
+		if stage.Agent == nil || stage.Agent.Version != SampleAgentVersion(stage.Agent.ID) {
 			t.Fatalf("%s agent = %+v, want the shipped version", stage.ID, stage.Agent)
 		}
 		if stage.Model != "openrouter/stealth/space-bunny-alpha" {
@@ -221,7 +221,7 @@ func TestAgentsDefaultToPiWithSpaceBunny(t *testing.T) {
 // TestNewStagesStartWithTheirAgentsThinking
 func TestNewStagesStartWithTheirAgentsThinking(t *testing.T) {
 	t.Parallel()
-	agent := DefaultsAgent("build")
+	agent := SampleAgent("build")
 	agent.Thinking = new(ThinkingHigh)
 	stage := DefaultsStageForAgent(agent, nil, nil, nil, TriggerKindIssues)
 	if stage.Thinking == nil || *stage.Thinking != ThinkingHigh {

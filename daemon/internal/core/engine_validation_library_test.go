@@ -128,7 +128,7 @@ func TestCheckLibraryAcceptsSeveralEntriesAndALegacyFile(t *testing.T) {
 		"belts/multi/v1.json": vtMarshal(t, multi),
 		"belts/old/v1.json":   vtLegacyBeltJSON(t, vtBeltOfKind(TriggerKindManual, nil)),
 	}
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		files[fmt.Sprintf("agents/%s/v%d.md", agent.ID, agent.Version)] = []byte(AgentFileWrite(agent))
 	}
 	problems := LibraryCheckProblems(files, nil)

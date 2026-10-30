@@ -15,7 +15,7 @@ import (
 func shipLineBelt(then Then) Belt {
 	var stages []Stage
 	for _, agent := range []string{"triage", "build"} {
-		stages = append(stages, DefaultsStageForAgentAt(DefaultsAgent(agent), DefaultsPlace{Before: stages}, stages, TriggerKindIssues))
+		stages = append(stages, DefaultsStageForAgentAt(SampleAgent(agent), DefaultsPlace{Before: stages}, stages, TriggerKindIssues))
 	}
 	stages[1].Outcomes[0].Then = then
 	trigger := DefaultIssueFilter()

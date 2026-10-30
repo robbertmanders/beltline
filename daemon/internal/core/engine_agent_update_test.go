@@ -266,7 +266,7 @@ func TestAStageUsesThePinnedVersionsBrief(t *testing.T) {
 // TestStagesTakeOneValidSuggestionAndDoNotShareTheLibraryNamespace
 func TestStagesTakeOneValidSuggestionAndDoNotShareTheLibraryNamespace(t *testing.T) {
 	t.Parallel()
-	legacy := DefaultsAgent("build")
+	legacy := SampleAgent("build")
 	legacy.Key = "Bad Name"
 	if warnings := ValidationAgentWarnings(legacy, nil); len(warnings) != 0 {
 		t.Fatalf("legacy key warns %q", warnings)
@@ -283,9 +283,9 @@ func TestStagesTakeOneValidSuggestionAndDoNotShareTheLibraryNamespace(t *testing
 		t.Fatalf("reserved key = %v, want output-stage", key)
 	}
 
-	first := DefaultsAgent("build")
+	first := SampleAgent("build")
 	first.Key = "shared"
-	second := DefaultsAgent("build")
+	second := SampleAgent("build")
 	second.ID = "second"
 	second.Name = "Second"
 	second.Key = first.Key

@@ -58,7 +58,7 @@ func (r *handoffRunner) launches() []runner.SessionSpec {
 // interactiveHarness is a harness on a handoffRunner whose first stage runs on backend.
 func interactiveHarness(t *testing.T, backend core.Backend, issues []core.Subject) (*harness, *handoffRunner) {
 	t.Helper()
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	belt.Stages[0].Runner = &backend
 	belt.Stages[0].Slots = 1
 	var handoff *handoffRunner
@@ -202,7 +202,7 @@ func TestAHandoffWithoutAKnownOutcomeFailsTheStage(t *testing.T) {
 // refuses fails its stage instead of leaving it running.
 func TestAFailedInteractiveLaunchReportsAFailure(t *testing.T) {
 	t.Parallel()
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	sim := runner.NewSimulatedRunner(func(runner.SessionSpec) float64 { return 0 }, nil, nil)
 	refused := "Handing the work back"
 	sim.RefusePrompt(&refused)

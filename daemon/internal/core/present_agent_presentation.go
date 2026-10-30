@@ -12,8 +12,8 @@ type AgentAction struct {
 	Reason  *string `json:"reason,omitzero"`
 }
 
-// The five agent commands. New and Save are browser-driven drafts; the daemon
-// decides Archive, Restore and Reset from the saved record.
+// The agent commands. New and Save are browser-driven drafts; the daemon
+// decides Archive, Restore and Share from the saved record.
 const (
 	AgentActionsNew  = "new"
 	AgentActionsSave = "save"
@@ -21,23 +21,13 @@ const (
 
 // Copy used by AgentActions. Literal text is exact.
 const (
-	AgentActionsResetUnchanged  = "This agent already matches the version the app ships."
-	AgentActionsResetNotBuiltIn = "Only the agents the app ships can be reset to their default."
-	agentActionsLabelNew        = "New agent"
-	agentActionsLabelSave       = "Save"
+	agentActionsLabelNew  = "New agent"
+	agentActionsLabelSave = "Save"
 )
 
 // AgentActionsForSaved is the ordered commands for a saved record. Save stays enabled for the
 // browser's unsaved draft; the editor shows it only when the draft is dirty.
-func AgentActionsForSaved(archived, builtIn, canReset, sharedRepository bool) []AgentAction {
-	reset := AgentAction{ID: "reset", Label: "Reset to default", Enabled: canReset}
-	if !canReset {
-		reason := AgentActionsResetNotBuiltIn
-		if builtIn {
-			reason = AgentActionsResetUnchanged
-		}
-		reset.Reason = &reason
-	}
+func AgentActionsForSaved(archived, sharedRepository bool) []AgentAction {
 	third := AgentAction{ID: "archive", Label: "Archive", Enabled: true}
 	if archived {
 		third = AgentAction{ID: "unarchive", Label: "Restore", Enabled: true}
@@ -55,7 +45,6 @@ func AgentActionsForSaved(archived, builtIn, canReset, sharedRepository bool) []
 		{ID: AgentActionsNew, Label: agentActionsLabelNew, Enabled: true},
 		{ID: AgentActionsSave, Label: agentActionsLabelSave, Enabled: true},
 		third,
-		reset,
 		share,
 	}
 }
@@ -102,18 +91,15 @@ func AgentOutcomeTargets(self string, records []AgentRecord) []AgentOutcomeTarge
 
 // AgentPresentation is what the editor shows beside an agent or a draft: the daemon's
 // validation warnings, the outcome footer, placeholder help, the belts that pin it,
-// the agents its outcomes may send a run to and whether it can be reset.
+// and the agents its outcomes may send a run to.
 type AgentPresentation struct {
 	IsNew          bool                 `json:"isNew"`
-	BuiltIn        bool                 `json:"builtIn"`
 	Archived       bool                 `json:"archived"`
 	Warnings       []string             `json:"warnings"`
 	Footer         string               `json:"footer"`
 	Placeholders   PlaceholderHelp      `json:"placeholders"`
 	UsedBy         []AgentUsage         `json:"usedBy"`
 	OutcomeTargets []AgentOutcomeTarget `json:"outcomeTargets"`
-	CanReset       bool                 `json:"canReset"`
-	ResetReason    *string              `json:"resetReason,omitzero"`
 	// Glyph is the icon a stage box of this agent shows: its own icon, else the chip.
 	Glyph StageIcon `json:"glyph"`
 	// Status is the editor's line about the version: a new agent, unsaved changes that

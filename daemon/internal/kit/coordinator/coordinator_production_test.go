@@ -5,9 +5,6 @@ package coordinator
 
 import (
 	"context"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 
@@ -105,32 +102,6 @@ func TestValidateConfigurationReadsTheCoordinatorsEnvironment(t *testing.T) {
 			t.Fatal("with the default executable the catalog is unusable, so the model should be refused")
 		}
 	})
-}
-
-// copyBuiltIns writes each file atomically: the files are there and no temporary file is
-// left beside them.
-func TestCopyBuiltInsWritesTheFilesWithoutTemporaries(t *testing.T) {
-	t.Parallel()
-	h := newHarness(t, harnessOptions{})
-	c := h.Coord()
-	h.Turn(func() {
-		if err := c.assistant.copyBuiltIns(); err != nil {
-			t.Fatalf("copy: %v", err)
-		}
-	})
-	folder := filepath.Join(h.root, core.AssistantReferenceBuiltInFolder)
-	entries, err := os.ReadDir(folder)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(entries) == 0 {
-		t.Fatal("no built-in agents were copied")
-	}
-	for _, entry := range entries {
-		if strings.HasSuffix(entry.Name(), ".tmp") || strings.HasPrefix(entry.Name(), ".") {
-			t.Fatalf("a temporary file was left behind: %s", entry.Name())
-		}
-	}
 }
 
 // The next task number is one past the highest existing number, and

@@ -419,7 +419,7 @@ func TestAWithdrawnRequestStopsItsRun(t *testing.T) {
 // TestATicketStaysOnItsBeltUntilDone
 func TestATicketStaysOnItsBeltUntilDone(t *testing.T) {
 	t.Parallel()
-	triage := core.DefaultsStageForAgent(core.DefaultsAgent("triage"), nil, nil, nil, core.TriggerKindJira)
+	triage := core.DefaultsStageForAgent(core.SampleAgent("triage"), nil, nil, nil, core.TriggerKindJira)
 	approve := core.DefaultsStage(core.StageTypeApprove, []core.Stage{triage}, nil, []core.Stage{triage})
 	h := newFlowHarness(t, flowOptions{
 		belts:   []core.Belt{flowBelt(core.TriggerKindJira, "", []core.Stage{triage, approve})},

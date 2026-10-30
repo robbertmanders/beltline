@@ -18,7 +18,7 @@ import (
 
 // SeedContractTemplate applies the contract template's changes to a demo's
 // storage: one ended pause, the earliest belt archived, the second belt paused,
-// the first built-in agent archived beside a custom agent, and every run without
+// the first sample agent archived beside a custom agent, and every run without
 // a model admission given the admission the template gives it (the fixture
 // models, plus the models its stages and attempts name). The fixture catalogs
 // and the settings are the demo's own. Test-only: see the file comment.
@@ -265,7 +265,7 @@ func (c *Coordinator) UpdateRunForContract(id string, change func(run *core.Run)
 	return c.book.update(id, nil, nil, change)
 }
 
-// SeedContractSupplemental applies the contract fixture's supplemental change: the built-in
+// SeedContractSupplemental applies the contract fixture's supplemental change: the sample
 // triage agent saved as a new version with high thinking, then the library reloaded (ContractHarness
 // `supplemental: true`). Test-only. Lock: takes c.mu.
 func (c *Coordinator) SeedContractSupplemental() error {

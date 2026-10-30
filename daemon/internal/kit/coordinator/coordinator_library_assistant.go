@@ -132,26 +132,6 @@ func LibraryAssistantCheck(paths store.Paths) []string {
 	return core.LibraryCheckProblems(store.LibraryFilesRead(paths), &admission)
 }
 
-// copyBuiltIns copies the built-in agents the assistant can add to the library.
-// Lock: runs with c.mu held.
-func (a *LibraryAssistant) copyBuiltIns() error {
-	folder := filepath.Join(a.paths.Root, core.AssistantReferenceBuiltInFolder)
-	if err := os.MkdirAll(folder, 0o755); err != nil {
-		return err
-	}
-	for _, id := range core.DefaultsBuiltInIDs {
-		text := core.DefaultsBuiltInFile(id)
-		if text == nil {
-			continue
-		}
-		// Atomic: the file is replaced whole, never half written.
-		if err := store.WriteFileAtomic(filepath.Join(folder, id+".md"), []byte(*text)); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // checkLine is the check command as one line for the shell, run on this folder, or nil.
 // Lock: runs with c.mu held.
 func (a *LibraryAssistant) checkLine() *string {
@@ -280,9 +260,6 @@ func (a *LibraryAssistant) Start(ctx context.Context, backend core.Backend, mode
 	policy := a.currentAdmission()
 	if warning := core.ModelPolicyWarning(model, backend, "Assistant", policy, nil); warning != nil {
 		return core.NewFailure(*warning)
-	}
-	if err := a.copyBuiltIns(); err != nil {
-		return err
 	}
 	identity := a.c.ids.UUID()
 	name := libraryAssistantSession(a.paths.Root) + "-" + strings.ToLower(identity)

@@ -47,7 +47,7 @@ This starts a separate daemon on fixture belts, runs, issues and pull requests i
 A fresh install has no belts and no agents. To set up your first belt:
 
 1. In **Settings → Tools**, check that `gh`, `git`, `tmux` and your agent CLIs are found. In **Settings → Allowed models**, allow the models your agents may use.
-2. On **Belts**, open **Agent** and describe what you want, for example: *"a belt for issues labelled `agent` in owner/repo: triage, spec, build, verify, ship, then wait for the merge"*. The configuration assistant adds the built-in agents and writes the belt for you. You can also build one by hand with **New belt**.
+2. On **Belts**, open **Agent** and describe what you want, for example: *"a belt for issues labelled `agent` in owner/repo: triage, spec, build, verify, ship, then wait for the merge"*. The configuration assistant writes the belt for you. You can also install a ready-made belt from the examples library on **Library** (it arrives paused until you add your repositories), or build one by hand with **New belt**.
 3. Label an issue and watch it come in on the **Overview**. Runs that need you are listed under **Needs you** and on **Work**.
 
 If your team keeps belts and agents in a git repository, add it in **Settings → Library repositories** and install them from **Library**.
@@ -58,7 +58,7 @@ The documentation is at **[robbertmanders.github.io/beltline](https://robbertman
 
 - [Your first belt](docs/first-belt.md): set up a belt for your own repository
 - [Concepts](docs/concepts.md): belts and triggers, stages, outcomes and forks, watches, and working with runs
-- [Agents](docs/agents.md): the agent file, briefs and placeholders, and the built-in agents
+- [Agents](docs/agents.md): the agent file, briefs and placeholders, and the example agents
 - [Runners and models](docs/runners.md): the agent CLIs, allowed models and thinking levels
 - [AFK mode](docs/afk.md), [Library](docs/library.md), [Shadow tests](docs/shadow-tests.md) and [Insights](docs/insights.md)
 - [Configuration](docs/configuration.md): the data folder, environment variables, running at login and the configuration assistant

@@ -15,7 +15,7 @@ import (
 
 // assistantHelper is the agent the assistant tests add a belt around.
 func assistantHelper(version int) core.Agent {
-	agent := *core.DefaultsBuiltIn("custom", nil)
+	agent := *core.SampleAgentNamed("custom", nil)
 	agent.ID = "helper"
 	agent.Version = version
 	agent.Name = "Helper"

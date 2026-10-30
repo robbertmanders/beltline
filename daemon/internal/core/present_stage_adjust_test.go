@@ -154,11 +154,11 @@ func TestSwitchingBackendKeepsOnlyAnExactAllowedModelAndSupportedEffort(t *testi
 
 // TestEditorBriefAndPlaceholdersMatchPinnedAgent checks the editor brief of a pinned agent.
 // The stage is the first stage of
-// DefaultsBelt, which is the same pinned Triage stage.
+// SampleBelt, which is the same pinned Triage stage.
 func TestEditorBriefAndPlaceholdersMatchPinnedAgent(t *testing.T) {
 	t.Parallel()
-	agents := DefaultsBuiltInAgents()
-	stage := DefaultsBelt([]string{"a/b"}, "agent", agents, true).Stages[0]
+	agents := SampleAgents()
+	stage := SampleBelt([]string{"a/b"}, "agent", agents, true).Stages[0]
 	var agent *Agent
 	for i := range agents {
 		if stage.Agent != nil && agents[i].Ref() == *stage.Agent {

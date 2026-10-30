@@ -11,7 +11,7 @@ import { AgentDraftsProvider } from "../state/agentDrafts";
 import { json } from "../test/response";
 import { golden } from "../test/golden";
 
-export type Record_ = { agent: { id: string; version: number; name: string } & Record<string, unknown>; archived: boolean; builtIn: boolean; glyph: string };
+export type Record_ = { agent: { id: string; version: number; name: string } & Record<string, unknown>; archived: boolean; glyph: string };
 export type Captured = { method: string; path: string; body?: Record<string, unknown> };
 export type List = { agents: Record_[]; choices: Array<Record<string, unknown>>; actions: Array<Record<string, unknown>>; browser?: Record<string, unknown> };
 export type Detail = { actions: Array<Record<string, unknown>>; presentation: Record<string, unknown>; folder: string };
@@ -22,7 +22,7 @@ export const draftGolden = () => golden<Detail & { agent: unknown }>("agent-draf
 
 export function detailFor(record: Record_): Detail & Record<string, unknown> {
   const detail = detailGolden();
-  return { ...detail, agent: record.agent, archived: record.archived, builtIn: record.builtIn };
+  return { ...detail, agent: record.agent, archived: record.archived };
 }
 
 export interface StubOptions {
@@ -48,7 +48,7 @@ export function stubAgents(options: StubOptions = {}) {
     return { ...value, browser: {
       items: value.agents.map(record => ({ id: record.agent.id, name: record.agent.name, version: record.agent.version,
         summary: String(record.agent.brief ?? ""), detail: `v${record.agent.version} · ${record.archived ? "archived" : "available"}`,
-        status: record.archived ? "Archived" : record.builtIn ? "Built in" : "Ready", statusTone: record.archived ? "grey" : "good",
+        status: record.archived ? "Archived" : "Ready", statusTone: record.archived ? "grey" : "good",
         icon: record.agent.icon ?? record.glyph, tint: record.agent.tint, stages: [] })),
       filters: [{ id: "all", label: "All agents", count: value.agents.length }, { id: "used", label: "Used", count: 0 }, { id: "unused", label: "Unused", count: value.agents.length }, { id: "archived", label: "Archived", count: value.agents.filter(record => record.archived).length }],
       totalCount: value.agents.length, matchCount: value.agents.length, actions: value.actions
@@ -72,7 +72,7 @@ export function stubAgents(options: StubOptions = {}) {
       const agent = request.body.agent as Record<string, unknown>;
       if (options.save) return options.save(request.body as { agent: Record<string, unknown> });
       const version = Number(agent.version ?? 0) + 1;
-      return json({ agent: { ...agent, version }, archived: false, builtIn: false, glyph: agent.icon ?? "chip", detail: `v${version}` });
+      return json({ agent: { ...agent, version }, archived: false, glyph: agent.icon ?? "chip", detail: `v${version}` });
     },
     "POST /api/v1/agents/draft/presentation": request => {
       const draft = draftGolden();
@@ -98,7 +98,7 @@ export function stubAgents(options: StubOptions = {}) {
         const record = agentRecord(decodeURIComponent(command[1]!))!;
         if (command[2] === "archive") return json({ ...record, archived: true });
         if (command[2] === "unarchive") return json({ ...record, archived: false });
-        return json({ agent: { ...record.agent, version: record.agent.version + 1 }, archived: record.archived, builtIn: record.builtIn });
+        return json({ agent: { ...record.agent, version: record.agent.version + 1 }, archived: record.archived });
       }
       const detail = /^\/api\/v1\/agents\/([^/]+)$/.exec(path);
       if (!detail) return notFound();

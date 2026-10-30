@@ -628,9 +628,9 @@ func TestCodexAssistantRequestsTheSelectedEffort(t *testing.T) {
 	}
 }
 
-// TestItStartsWithTheProblemsTheBuiltInsAndTheCheck: the assistant starts knowing what is wrong already, with the
+// TestItStartsWithTheProblemsAndTheCheck: the assistant starts knowing what is wrong already, with the
 // built-ins to copy and a command to check its work.
-func TestItStartsWithTheProblemsTheBuiltInsAndTheCheck(t *testing.T) {
+func TestItStartsWithTheProblemsAndTheCheck(t *testing.T) {
 	t.Parallel()
 	storage, conversations := assistantSetup(t)
 	root := storage.Paths.Root
@@ -659,10 +659,8 @@ func TestItStartsWithTheProblemsTheBuiltInsAndTheCheck(t *testing.T) {
 		hasText(t, "the prompt", spec.Prompt, "- "+problem)
 	}
 	hasText(t, "the prompt", spec.Prompt, "run `'/Apps/Belt line.app/Beltline' '--check-library' '"+root+"'`")
-	for _, id := range core.DefaultsBuiltInIDs {
-		if _, err := os.Stat(filepath.Join(root, "assistant", "built-in", id+".md")); err != nil {
-			t.Errorf("built-in %s was not copied: %v", id, err)
-		}
+	if _, err := os.Stat(filepath.Join(root, "assistant", "built-in")); err == nil {
+		t.Error("agents were copied for the assistant; the app has none of its own")
 	}
 	for path := range store.LibraryFilesRead(storage.Paths) {
 		if strings.HasPrefix(path, "assistant/") {

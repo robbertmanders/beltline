@@ -79,7 +79,7 @@ func terminalTmuxServerCleanup(t *testing.T) {
 // attempt on session, backed by backend, in the running state.
 func terminalIntegrationRun(id, session string, backend core.Backend) core.Run {
 	now := testkit.ContractTime
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "terminal", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "terminal", core.SampleAgents(), true)
 	for i := range belt.Stages {
 		if belt.Stages[i].Kind() == core.StageKindAgent {
 			chosen := backend

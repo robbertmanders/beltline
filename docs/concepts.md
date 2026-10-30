@@ -42,7 +42,7 @@ Beltline turns work items into pull requests by running them along **belts**. Th
 
 ## Who does what
 
-Agents make every outward change themselves, with `gh` and `acli`: pushes, pull requests, comments, labels, reviews and ticket moves. The built-in Ship, Post review and Wrap up agents do the usual ones. Beltline itself only reads GitHub and Jira, apart from a comment when a run is held (a [belt policy](belts.md#policies), off unless you turn it on) and the library repositories you configure. What an agent may do is what its brief and your belt allow; the [security model](security.md) explains what that means.
+Agents make every outward change themselves, with `gh` and `acli`: pushes, pull requests, comments, labels, reviews and ticket moves. The example Ship, Post review and Wrap up agents do the usual ones. Beltline itself only reads GitHub and Jira, apart from a comment when a run is held (a [belt policy](belts.md#policies), off unless you turn it on) and the library repositories you configure. What an agent may do is what its brief and your belt allow; the [security model](security.md) explains what that means.
 
 The daemon owns every fact and decision: which actions a run allows, whether a belt can be saved, every status and cost. The browser only shows what it's given, so two browsers on the same daemon never disagree.
 

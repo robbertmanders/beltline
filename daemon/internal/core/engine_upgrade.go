@@ -11,8 +11,38 @@ import (
 
 // UpgradeFormatVersion is the data folder format the upgrade writes: belts with
 // trigger entries and stage keys, runs with legs, sources, agent copies and
-// stage keys, and belt states with a cursor per schedule entry.
-const UpgradeFormatVersion = 1
+// stage keys, and belt states with a cursor per schedule entry (1); every agent
+// version a belt or run pins saved in agents/, and the examples library
+// repository listed in the settings (2).
+const UpgradeFormatVersion = 2
+
+// UpgradeSampleAgent is the agent an older data folder pinned without saving it:
+// earlier versions of the app read a built-in agent at the version they shipped
+// from the app itself when agents/ lacked it. Only that version of a sample
+// agent counts (SampleAgentVersion); the upgrade saves it, since the app no
+// longer has agents of its own.
+func UpgradeSampleAgent(ref AgentRef) (Agent, bool) {
+	if ref.Version != SampleAgentVersion(ref.ID) {
+		return Agent{}, false
+	}
+	agent := SampleAgentNamed(ref.ID, nil)
+	if agent == nil {
+		return Agent{}, false
+	}
+	return *agent, true
+}
+
+// UpgradeLibraryRepositories are the settings' library repositories with the
+// examples repository (LibraryExamples) added at the end, unless one of them is
+// that repository already. The upgrade adds it once; removing it later sticks.
+func UpgradeLibraryRepositories(repos []LibraryRepository) []LibraryRepository {
+	out := slices.Clone(repos)
+	examples := LibraryExamples()
+	if slices.ContainsFunc(out, func(repo LibraryRepository) bool { return repo.Repository == examples.Repository }) {
+		return out
+	}
+	return append(out, examples)
+}
 
 // UpgradeBelt is a belt version as the current format saves it. Decoding has
 // already turned a single trigger into an entry, afkEnabled into afk, and the

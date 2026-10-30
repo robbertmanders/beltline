@@ -127,7 +127,7 @@ func realOneIssueTriage(t *testing.T, backend *core.Backend, model string) (*Coo
 	storage := realStorage(t, paths)
 	realOrigin(t, root, paths, "acme/calc", realCalcSetup(`# calc\nA tiny calculator.\n`))
 
-	belt := core.DefaultsBelt([]string{"acme/calc"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/calc"}, "agent", core.SampleAgents(), true)
 	belt.Base = "main"
 	belt.Stages = belt.Stages[:1]
 	if backend != nil {

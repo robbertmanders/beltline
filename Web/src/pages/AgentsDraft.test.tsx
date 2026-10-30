@@ -39,7 +39,7 @@ describe("saving a draft", () => {
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Newer unsaved edit" } });
     await waitFor(() => expect(finishSave).toBeTypeOf("function"));
     const submitted = posts(requests).find(request => request.path === "/api/v1/agents/save")!.body!.agent as Record<string, unknown>;
-    finishSave(json({ agent: { ...submitted, version: Number(submitted.version) + 1 }, archived: false, builtIn: false, glyph: "funnel", detail: `v${Number(submitted.version) + 1}` }));
+    finishSave(json({ agent: { ...submitted, version: Number(submitted.version) + 1 }, archived: false, glyph: "funnel", detail: `v${Number(submitted.version) + 1}` }));
     expect(await screen.findByDisplayValue("Newer unsaved edit")).toBeTruthy();
     // The status line under a dirty draft is the daemon's, from the draft presentation.
     expect(await screen.findByText(draftGolden().presentation.status as string)).toBeTruthy();
@@ -229,7 +229,7 @@ describe("saving a draft", () => {
       save: body => {
         attempts += 1;
         if (attempts === 1) return json({ message: "Fix these first.", problems: ["Give the agent a name.", "Write the agent's brief."] }, 422);
-        return json({ agent: { ...body.agent, version: Number(body.agent.version) + 1 }, archived: false, builtIn: true, glyph: body.agent.icon ?? "chip", detail: `v${Number(body.agent.version) + 1}` });
+        return json({ agent: { ...body.agent, version: Number(body.agent.version) + 1 }, archived: false, glyph: body.agent.icon ?? "chip", detail: `v${Number(body.agent.version) + 1}` });
       }
     });
     renderAgents();

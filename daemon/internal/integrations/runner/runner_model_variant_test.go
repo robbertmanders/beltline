@@ -283,7 +283,7 @@ func TestMixedContextThinkingGroupsAreRejected(t *testing.T) {
 
 func TestSavedAgentAndStageIdentifiersStayStrings(t *testing.T) {
 	t.Parallel()
-	agent := core.DefaultsAgent("triage")
+	agent := core.SampleAgent("triage")
 	agent.Model = "claude-opus-5-5[1m]"
 	parsed, err := core.AgentFileParse(core.AgentFileWrite(agent), agent.ID, agent.Version)
 	if err != nil {
@@ -307,18 +307,18 @@ func TestAcceptedLevelsAgreeWithValidation(t *testing.T) {
 					}
 					return
 				}
-				agent := core.DefaultsAgent("triage")
+				agent := core.SampleAgent("triage")
 				agent.Runner = backend
 				agent.Thinking = &level
 				if warnings := core.ValidationAgentWarnings(agent, nil); len(warnings) != 0 {
 					t.Fatalf("agent warnings = %v", warnings)
 				}
-				belt := core.DefaultsBelt([]string{"acme/calc"}, "agent", core.DefaultsBuiltInAgents(), true)
+				belt := core.SampleBelt([]string{"acme/calc"}, "agent", core.SampleAgents(), true)
 				belt.Stages[0].Runner = &backend
 				belt.Stages[0].Thinking = &level
 				agents := map[core.AgentRef]core.Agent{}
 				var keys []string
-				for _, builtIn := range core.DefaultsBuiltInAgents() {
+				for _, builtIn := range core.SampleAgents() {
 					agents[builtIn.Ref()] = builtIn
 					keys = append(keys, builtIn.Key)
 				}

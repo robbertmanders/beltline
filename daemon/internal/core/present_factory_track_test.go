@@ -10,7 +10,7 @@ import (
 // factoryTrackTestBelt is a belt of the issue line's stage kinds, named by names, with the
 // id-indexed stage ids and no routes.
 func factoryTrackTestBelt(id string, names []string) Belt {
-	defaults := DefaultsStages(TriggerKindIssues, nil, true)
+	defaults := SampleStages(TriggerKindIssues, nil, true)
 	stages := make([]Stage, 0, len(names))
 	for index, name := range names {
 		stage := defaults[index%len(defaults)]

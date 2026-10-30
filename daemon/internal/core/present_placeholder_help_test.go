@@ -229,7 +229,7 @@ func TestAgentHelpOffersFixedPlaceholdersOnly(t *testing.T) {
 // It includes the validation check: an agent keyed artifacts has no warning.
 func TestArtifactsAreOfferedAndReserved(t *testing.T) {
 	t.Parallel()
-	agent := DefaultsAgent("build")
+	agent := SampleAgent("build")
 	agent.Key = "artifacts"
 	if warnings := ValidationAgentWarnings(agent, nil); len(warnings) != 0 {
 		t.Fatalf("an agent keyed artifacts warns %q", warnings)

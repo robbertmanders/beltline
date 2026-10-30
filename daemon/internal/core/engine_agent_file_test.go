@@ -11,7 +11,7 @@ import (
 // TestEveryBuiltInAgentRoundTrips
 func TestEveryBuiltInAgentRoundTrips(t *testing.T) {
 	t.Parallel()
-	for _, id := range DefaultsBuiltInIDs {
+	for _, id := range SampleAgentIDs {
 		t.Run(id, func(t *testing.T) {
 			t.Parallel()
 			agent := mustBuiltInAgent(t, id)
@@ -30,10 +30,10 @@ func TestEveryBuiltInAgentRoundTrips(t *testing.T) {
 // what AgentFileWrite writes for it, so an agent saved by the app reads back to the same bytes.
 func TestBuiltInFilesAreWrittenCanonically(t *testing.T) {
 	t.Parallel()
-	for _, id := range DefaultsBuiltInIDs {
+	for _, id := range SampleAgentIDs {
 		t.Run(id, func(t *testing.T) {
 			t.Parallel()
-			file, _ := BuiltInAgentFile(id)
+			file, _ := SampleAgentText(id)
 			agent := mustBuiltInAgent(t, id)
 			if got := AgentFileWrite(agent); got != file {
 				t.Fatalf("written file differs from the bundled one:\n%s", testkit.Diff(file, got))
@@ -62,7 +62,7 @@ func TestThinkingChoicesStartAtTheRunnersDefault(t *testing.T) {
 	if mustBuiltInAgent(t, "build").Thinking != nil {
 		t.Fatal("the build agent sets a thinking level")
 	}
-	for _, id := range DefaultsBuiltInIDs {
+	for _, id := range SampleAgentIDs {
 		if agent := mustBuiltInAgent(t, id); agent.Thinking != nil {
 			t.Fatalf("built-in %s sets a thinking level", id)
 		}

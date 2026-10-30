@@ -104,7 +104,8 @@ func TestUpgradeRewritesAnOldFolderOnce(t *testing.T) {
 		t.Fatalf("state %s", fileText(t, filepath.Join(s.Paths.Belts(), "epics", "state.json")))
 	}
 	settings := upgradeFields(t, s.Paths.Settings())
-	if _, ok := settings["factoryRepository"]; ok || len(s.LoadSettings().LibraryRepositories) != 1 {
+	repos := s.LoadSettings().LibraryRepositories
+	if _, ok := settings["factoryRepository"]; ok || len(repos) != 2 || repos[0].Repository != "owner/factories" || repos[1] != core.LibraryExamples() {
 		t.Fatalf("settings %s", fileText(t, s.Paths.Settings()))
 	}
 
@@ -173,5 +174,70 @@ func TestUpgradeRefusesAFolderInANewerFormat(t *testing.T) {
 	}
 	if _, err := os.Stat(s.Paths.UpgradeBackups()); err == nil {
 		t.Fatal("a refused upgrade made a backup")
+	}
+}
+
+// TestUpgradeSavesTheSampleAgentsAFolderPins checks the agent versions an older
+// folder pinned without saving, which the app used to read from itself, are
+// saved with the text it read, and that only those are.
+func TestUpgradeSavesTheSampleAgentsAFolderPins(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	writeText(t, filepath.Join(s.Paths.Belts(), "epics", "v1.json"), upgradeOldBelt)
+	belt := core.SampleBelt([]string{"acme/app"}, "agent", nil, true)
+	for index := range belt.Stages {
+		if ref := belt.Stages[index].Agent; ref != nil && ref.ID == "spec" {
+			belt.Stages[index].Agent = &core.AgentRef{ID: "spec", Version: 1}
+		}
+	}
+	if err := s.Write(belt, filepath.Join(s.Paths.Belts(), belt.ID, "v1.json")); err != nil {
+		t.Fatal(err)
+	}
+	report, err := s.Upgrade(time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, ref := range []core.AgentRef{{ID: "build", Version: 1}, {ID: "triage", Version: 2}, {ID: "wrap-up", Version: 2}} {
+		want, _ := core.SampleAgentText(ref.ID)
+		if got := fileText(t, filepath.Join(s.agentFolder(ref.ID), "v"+strconv.Itoa(ref.Version)+".md")); got != want {
+			t.Errorf("%s v%d was not saved as the app read it", ref.ID, ref.Version)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(s.agentFolder("spec"), "v1.md")); err == nil {
+		t.Error("spec v1, which the app never read from itself, was saved")
+	}
+	if _, err := os.Stat(filepath.Join(s.agentFolder("plan-epic"), "v1.md")); err == nil {
+		t.Error("an agent no belt or run pins was saved")
+	}
+	if report.Agents != len(s.LoadAgents()) || report.Agents == 0 {
+		t.Errorf("report counts %d agents, the library holds %d", report.Agents, len(s.LoadAgents()))
+	}
+}
+
+// TestUpgradeListsTheExamplesRepositoryOnce checks a new folder gets settings
+// with the examples repository, and settings that list it already keep their entry.
+func TestUpgradeListsTheExamplesRepositoryOnce(t *testing.T) {
+	t.Parallel()
+	fresh := newTestStorage(t)
+	report, err := fresh.Upgrade(time.Now())
+	if err != nil || !report.Settings || report.Backup != "" {
+		t.Fatalf("report %+v %v", report, err)
+	}
+	if repos := fresh.LoadSettings().LibraryRepositories; len(repos) != 1 || repos[0] != core.LibraryExamples() {
+		t.Fatalf("a new folder lists %+v", repos)
+	}
+
+	listed := newTestStorage(t)
+	own := core.LibraryRepository{Repository: core.LibraryExamplesRepository, Path: "mine", Role: core.LibraryRoleShared, Publish: core.LibraryPublishPush}
+	settings := DefaultSettings()
+	settings.LibraryRepositories = []core.LibraryRepository{own}
+	if err := listed.SaveSettings(settings); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := listed.Upgrade(time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if repos := listed.LoadSettings().LibraryRepositories; len(repos) != 1 || repos[0] != own {
+		t.Fatalf("settings that list the examples repository became %+v", repos)
 	}
 }

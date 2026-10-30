@@ -17,7 +17,7 @@ type Entry struct {
 	Paused bool
 }
 
-// demoStep is one stage of a demo belt: a built-in agent by id, or an approval
+// demoStep is one stage of a demo belt: a sample agent by id, or an approval
 // or watch by its type name.
 type demoStep struct {
 	Step string
@@ -35,12 +35,12 @@ func st(step, name string, runner core.Backend, route string) demoStep {
 
 // Belts is the demo's belts, each with a trigger of its kind, in order.
 func Belts() []Entry {
-	agents := core.DefaultsBuiltInAgents()
+	agents := core.SampleAgents()
 	// Issues Triage finds ready to implement skip Spec and the approval, and Pi builds them.
 	size := core.Fork{ID: "size", Routes: []core.Route{{ID: "complex", Name: "Complex"}, {ID: "simple", Name: "Simple"}}}
 	// Once a pull request is open, conflicts and failing checks are fixed and watched again.
 	fixes := []demoStep{st("resolve-conflicts", "Resolve conflicts", core.BackendPi, "conflicts"), st("fix-checks", "Fix checks", core.BackendPi, "checks")}
-	afterMerge := core.DefaultsAfterMerge()
+	afterMerge := core.SampleAfterMerge()
 
 	issues := pipelineBelt(agents, "issues", "Issues to pull requests", issuesTrigger("agent", 30),
 		[]string{"acme/billing", "acme/web", "acme/platform"}, []core.Fork{size, afterMerge}, append([]demoStep{
@@ -52,7 +52,7 @@ func Belts() []Entry {
 
 	reviews := core.NewBeltFromTrigger(core.BeltFromTriggerArgs{
 		ID: "reviews", Name: "Pull request reviews", Trigger: reviewsTrigger(30),
-		Repos: []string{"acme/web", "acme/platform"}, Stages: core.DefaultsStages(core.TriggerKindReviews, agents, true),
+		Repos: []string{"acme/web", "acme/platform"}, Stages: core.SampleStages(core.TriggerKindReviews, agents, true),
 	})
 	reviews.Stages[0].Name = "Read"
 
@@ -82,7 +82,7 @@ func Belts() []Entry {
 			st("triage", "Triage", core.BackendPi, ""), st("spec", "Spec", core.BackendPi, ""), st("approve", "Approve", "", ""), st("build", "Build", core.BackendCopilot, ""),
 			st("verify", "Verify", core.BackendPi, ""), st("ship", "Ship", core.BackendPi, ""), st("watch", "Merge", "", ""), st("wrap-up", "Close the ticket", core.BackendPi, "merged"),
 		}, fixes...))},
-		{Belt: core.DefaultsEpicBelt(jiraTrigger("project = PAY AND issuetype = Epic", 30), []string{"acme/billing", "acme/infra"}, agents)},
+		{Belt: core.SampleEpicBelt(jiraTrigger("project = PAY AND issuetype = Epic", 30), []string{"acme/billing", "acme/infra"}, agents)},
 		{Belt: pipelineBelt(agents, "tasks", "Tasks", core.TriggerKindManual.Fresh(), []string{"acme/web", "acme/billing", "acme/platform"}, nil, []demoStep{
 			st("spec", "Spec", core.BackendClaude, ""), st("approve", "Approve", "", ""), st("build", "Build", core.BackendClaude, ""),
 			st("verify", "Verify", core.BackendClaude, ""), st("ship", "Ship", core.BackendClaude, ""), st("watch", "Merge", "", ""),
@@ -123,15 +123,15 @@ func pipelineBelt(agents []core.Agent, id, name string, trigger core.Trigger, re
 			stage.ID = "quick-" + s.Step
 		}
 	})
-	stages = core.DefaultsSendingFixes(stages, forks)
+	stages = core.SampleSendingFixes(stages, forks)
 	return core.NewBeltFromTrigger(core.BeltFromTriggerArgs{
-		ID: id, Name: name, Trigger: trigger, Repos: repos, Stages: core.DefaultsTaskBriefs(stages, agents), Forks: forks,
+		ID: id, Name: name, Trigger: trigger, Repos: repos, Stages: core.SampleTaskBriefs(stages, agents), Forks: forks,
 	})
 }
 
 // buildStages places each step after the ones before it, on its route:
 // an approval or watch by its type, anything else by its
-// built-in agent. The tune hook renames a stage's id for its step.
+// sample agent. The tune hook renames a stage's id for its step.
 func buildStages(agents []core.Agent, forks []core.Fork, steps []demoStep, tune func(stage *core.Stage, s demoStep)) []core.Stage {
 	var stages []core.Stage
 	for _, s := range steps {
@@ -166,15 +166,15 @@ func stageTypeNamed(name string) (core.StageType, bool) {
 	return "", false
 }
 
-// agentNamed is the built-in agent with id. It force-unwraps,
-// so an id that is not built in panics here too.
+// agentNamed is the sample agent with id. It force-unwraps,
+// so an id that is not a sample panics here too.
 func agentNamed(agents []core.Agent, id string) core.Agent {
 	for _, agent := range agents {
 		if agent.ID == id {
 			return agent
 		}
 	}
-	panic("demo: no built-in agent " + id)
+	panic("demo: no sample agent " + id)
 }
 
 // optionalString is nil for the empty string.
@@ -227,7 +227,7 @@ func nestedBelt(agents []core.Agent) core.Belt {
 	})
 	belt := core.NewBeltFromTrigger(core.BeltFromTriggerArgs{
 		ID: "nested", Name: "Nested forks", Trigger: issuesTrigger("agent", 30), Repos: []string{"acme/billing"},
-		Stages: core.DefaultsTaskBriefs(stages, agents), Forks: forks,
+		Stages: core.SampleTaskBriefs(stages, agents), Forks: forks,
 	})
 	belt.Stages[0].Outcomes[0].Then = core.NewThen(core.ThenArgs{Action: core.ThenActionRoute, Route: new("skip")})
 	if assess := stageIndex(belt, func(s core.Stage) bool { return s.Name == "Assess" }); assess >= 0 {

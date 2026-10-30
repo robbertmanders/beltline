@@ -157,7 +157,7 @@ func containsText(text, part string) bool { return strings.Contains(text, part) 
 // watch on its pull requests, opening none of them itself.
 func epicOneOfTwo(t *testing.T) *harness {
 	t.Helper()
-	build := core.DefaultsStageForAgent(core.DefaultsAgent("build"), nil, nil, nil, core.TriggerKindIssues)
+	build := core.DefaultsStageForAgent(core.SampleAgent("build"), nil, nil, nil, core.TriggerKindIssues)
 	build.Brief = "Build the requested change and write the result to {output}."
 	watch := core.DefaultsStage(core.StageTypeWatch, []core.Stage{build}, nil, []core.Stage{build})
 	belt := flowBelt(core.TriggerKindJira, "", []core.Stage{build, watch, epicApproval()})

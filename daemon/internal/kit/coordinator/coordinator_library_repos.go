@@ -348,8 +348,10 @@ func (c *Coordinator) reloadLibraryFromDisk() {
 }
 
 // InstallLibraryItem writes an item of a shared repository into the library: its latest version, with
-// the agent versions it pins that the library lacks. It returns the paths written. Lock: exported entry
-// point; takes c.mu. Suspends: the fetch runs without the lock.
+// the agent versions it pins that the library lacks. A belt new to the library is installed paused: a
+// shared belt names no repositories, so you choose them before you resume it. An update keeps the belt's
+// state. It returns the paths written. Lock: exported entry point; takes c.mu. Suspends: the fetch runs
+// without the lock.
 func (c *Coordinator) InstallLibraryItem(ctx context.Context, origin core.LibraryOrigin, kind, id string) ([]string, error) {
 	c.Lock()
 	defer c.EndTurn()
@@ -371,8 +373,14 @@ func (c *Coordinator) InstallLibraryItem(ctx context.Context, origin core.Librar
 	if err != nil {
 		return nil, err
 	}
+	isNewBelt := kind == "belt" && c.library.Belt(id) == nil
 	if err := c.storage.LibraryWriteFiles(files); err != nil {
 		return nil, err
+	}
+	if isNewBelt && len(files) > 0 {
+		if err := c.storage.SetPaused(id, true); err != nil {
+			return nil, err
+		}
 	}
 	c.reloadLibraryFromDisk()
 	c.libraryRepoRevision++

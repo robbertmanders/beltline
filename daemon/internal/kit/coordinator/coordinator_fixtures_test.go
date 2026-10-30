@@ -30,7 +30,7 @@ var sessionSampleT0 = time.Unix(1_800_000_000, 0)
 
 // sessionSampleRun is a started run of the default belt on acme/billing #142.
 func sessionSampleRun() core.Run {
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	run := core.NewRun(core.RunArgs{
 		Belt: belt,
 		Subject: core.Subject{
@@ -64,7 +64,7 @@ func coordLocal(month, day, hour int, minute ...int) time.Time {
 
 // issuesBelt is the default issues belt on acme/billing with the given stages and no forks.
 func issuesBelt(stages []core.Stage) core.Belt {
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	belt.Stages = stages
 	belt.Forks = nil
 	return belt
@@ -72,7 +72,7 @@ func issuesBelt(stages []core.Stage) core.Belt {
 
 // buildStage is a build agent stage with the brief the pause tests use.
 func buildStage(existing []core.Stage) core.Stage {
-	build := core.DefaultsStageForAgent(core.DefaultsAgent("build"), nil, nil, existing, core.TriggerKindIssues)
+	build := core.DefaultsStageForAgent(core.SampleAgent("build"), nil, nil, existing, core.TriggerKindIssues)
 	build.Brief = "Build the change and write {output}."
 	return build
 }
@@ -91,7 +91,7 @@ func coordForkedBelt(simple ...string) core.Belt {
 	var stages []core.Stage
 	add := func(agent string, route *string, id string) {
 		place := core.DefaultsPlace{Before: stages, Forks: []core.Fork{fork}, Route: route}
-		stage := core.DefaultsStageForAgentAt(core.DefaultsAgent(agent), place, stages, core.TriggerKindIssues)
+		stage := core.DefaultsStageForAgentAt(core.SampleAgent(agent), place, stages, core.TriggerKindIssues)
 		if id != "" {
 			stage.ID = id
 		}
@@ -118,7 +118,7 @@ func coordLegBelt() core.Belt {
 	for i := range belt.Stages {
 		if belt.Stages[i].ID == "quick-build" {
 			belt.Stages[i].Key = new("quick-evidence")
-			belt.Stages[i].Brief = strings.ReplaceAll(core.DefaultsAgent("build").Brief, "{evidence}", "{output}")
+			belt.Stages[i].Brief = strings.ReplaceAll(core.SampleAgent("build").Brief, "{evidence}", "{output}")
 		}
 	}
 	for i := range belt.Stages {
@@ -131,7 +131,7 @@ func coordLegBelt() core.Belt {
 
 // scheduleBelt is a schedule belt whose build stage runs at hour, then waits for approval.
 func scheduleBelt(hour int) core.Belt {
-	build := core.DefaultsStageForAgent(core.DefaultsAgent("build"), nil, nil, nil, core.TriggerKindSchedule)
+	build := core.DefaultsStageForAgent(core.SampleAgent("build"), nil, nil, nil, core.TriggerKindSchedule)
 	build.Brief = "Do the scheduled work and write {output}."
 	gate := core.DefaultsStage(core.StageTypeApprove, []core.Stage{build}, nil, []core.Stage{build})
 	schedule := core.DefaultSchedule()
@@ -237,7 +237,7 @@ func coordNowRun(h *harness, id string) *core.Run {
 
 // coordOptedInBelt is the default belt, opted in to AFK through the global switch.
 func coordOptedInBelt() core.Belt {
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	belt.Afk = core.AfkModeGlobal
 	return belt
 }
@@ -270,7 +270,7 @@ func waitingRun(t *testing.T, belt core.Belt, number int) core.Run {
 			continue
 		}
 		seen[*stage.Agent] = true
-		for _, agent := range core.DefaultsBuiltInAgents() {
+		for _, agent := range core.SampleAgents() {
 			if agent.Ref() == *stage.Agent {
 				run.Agents = append(run.Agents, core.NewAgentSnapshot(agent))
 			}
@@ -631,7 +631,7 @@ func newH5m3Watch(t *testing.T, opts watchOptions) *coordWatch {
 
 // pinnedRun is the run WatchFixture pins: belt `issues` with a build and a watch stage.
 func pinnedRun(opts watchOptions) core.Run {
-	build := core.DefaultsStageForAgent(core.DefaultsAgent("build"), nil, nil, nil, core.TriggerKindIssues)
+	build := core.DefaultsStageForAgent(core.SampleAgent("build"), nil, nil, nil, core.TriggerKindIssues)
 	watch := core.DefaultsStage(core.StageTypeWatch, []core.Stage{build}, nil, []core.Stage{build})
 	events := opts.events
 	if events == nil {
@@ -662,7 +662,7 @@ func pinnedRun(opts watchOptions) core.Run {
 	}
 	watch.Outcomes = outcomes
 
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	belt.Stages = []core.Stage{build, watch}
 	belt.Forks = nil
 	run := core.NewRun(core.RunArgs{

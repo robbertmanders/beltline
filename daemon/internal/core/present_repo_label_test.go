@@ -10,7 +10,7 @@ import (
 // rlRun is a run of the default issue belt on repo, numbered n.
 func rlRun(n int, repo string) Run {
 	return NewRun(RunArgs{
-		Belt:    DefaultsBelt([]string{repo}, "agent", DefaultsBuiltInAgents(), true),
+		Belt:    SampleBelt([]string{repo}, "agent", SampleAgents(), true),
 		Subject: Subject{Kind: SubjectKindIssue, Repo: repo, Number: n, Title: "T" + strconv.Itoa(n)},
 		Now:     time.Unix(int64(n), 0),
 	})

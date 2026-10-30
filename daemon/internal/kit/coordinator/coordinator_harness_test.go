@@ -185,7 +185,7 @@ func newHarness(t *testing.T, opts harnessOptions) *harness {
 	}
 	belts := opts.Belts
 	if len(belts) == 0 {
-		belts = []core.Belt{core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)}
+		belts = []core.Belt{core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)}
 	}
 	for _, belt := range belts {
 		saved, err := storage.SaveNewVersion(belt)
@@ -685,7 +685,7 @@ func seededLibraryStorage(t *testing.T) store.Storage {
 	if err := storage.SaveSettings(modelFixtureSettings()); err != nil {
 		t.Fatalf("save settings: %v", err)
 	}
-	saved, err := storage.SaveNewVersion(core.DefaultsBelt(nil, "agent", core.DefaultsBuiltInAgents(), true))
+	saved, err := storage.SaveNewVersion(core.SampleBelt(nil, "agent", core.SampleAgents(), true))
 	if err != nil {
 		t.Fatalf("save default belt: %v", err)
 	}
@@ -695,9 +695,9 @@ func seededLibraryStorage(t *testing.T) store.Storage {
 	return storage
 }
 
-// liveTestBelt is DefaultsBelt(repos:) with an id and a name.
+// liveTestBelt is SampleBelt(repos:) with an id and a name.
 func liveTestBelt(id, name string, repos ...string) core.Belt {
-	belt := core.DefaultsBelt(repos, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt(repos, "agent", core.SampleAgents(), true)
 	belt.ID = id
 	belt.Name = name
 	return belt
@@ -706,9 +706,9 @@ func liveTestBelt(id, name string, repos ...string) core.Belt {
 // Helpers the run tests share: a sample run and its finish helper, the main-actor calls the tests make
 // on the coordinator's parts (taken here under c.mu), and the runner stubs.
 
-// defaultBelt is DefaultsBelt(repos: ["acme/billing"]).
+// defaultBelt is SampleBelt(repos: ["acme/billing"]).
 func defaultBelt() core.Belt {
-	return core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	return core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 }
 
 // coordSampleRun is sampleRun(belt): a started run of belt on acme/billing #142.

@@ -15,7 +15,7 @@ import (
 func wgRun(n int, repo string, state RunState, belt string) Run {
 	subject := DefaultSubject(repo, "T"+strconv.Itoa(n))
 	subject.Number = n
-	run := NewRun(RunArgs{Belt: DefaultsBelt([]string{repo}, "agent", DefaultsBuiltInAgents(), true), Subject: subject, Now: time.Unix(int64(n), 0)})
+	run := NewRun(RunArgs{Belt: SampleBelt([]string{repo}, "agent", SampleAgents(), true), Subject: subject, Now: time.Unix(int64(n), 0)})
 	run.State = state
 	run.BeltName = belt
 	return run
@@ -91,8 +91,8 @@ func TestGroupOrderAndHeaders(t *testing.T) {
 func TestChildrenGroupUnderTheirEpic(t *testing.T) {
 	t.Parallel()
 	epicSubject := Subject{Kind: SubjectKindJira, Repo: "acme/billing", Key: "PAY-40", Title: "Split invoicing", Labels: []string{"epic"}, IsOpen: true}
-	epics := DefaultsEpicBelt(epicTestEpicTrigger(), []string{"acme/billing"}, DefaultsBuiltInAgents())
-	tickets := DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true)
+	epics := SampleEpicBelt(epicTestEpicTrigger(), []string{"acme/billing"}, SampleAgents())
+	tickets := SampleBelt([]string{"acme/billing"}, "agent", SampleAgents(), true)
 	tickets.Name = "Tickets"
 	parent := "PAY-40"
 	child := Subject{Kind: SubjectKindJira, Repo: "acme/billing", Key: "PAY-42", Title: "Part PAY-42", Parent: &parent, IsOpen: true}
@@ -107,7 +107,7 @@ func TestChildrenGroupUnderTheirEpic(t *testing.T) {
 		NewRun(RunArgs{Belt: tickets, Subject: child, Now: testT0}),
 		NewRun(RunArgs{Belt: tickets, Subject: ticket, Now: testT0}),
 		webEpic,
-		NewRun(RunArgs{Belt: DefaultsBelt([]string{"acme/web"}, "agent", DefaultsBuiltInAgents(), true), Subject: subIssue, Now: testT0}),
+		NewRun(RunArgs{Belt: SampleBelt([]string{"acme/web"}, "agent", SampleAgents(), true), Subject: subIssue, Now: testT0}),
 	}
 	groups := WorkGroupGroupRuns(runs, GroupByEpic)
 	if !wgKeysAre(groups, "acme/web#3 Web epic", "PAY-40 Split invoicing", WorkGroupNoEpic) {

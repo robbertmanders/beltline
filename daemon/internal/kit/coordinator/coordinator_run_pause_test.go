@@ -254,7 +254,7 @@ func TestAnEditDuringPauseWaitsForResumeAndAReadFailureOffersRetry(t *testing.T)
 func TestConfirmedAgentsReleaseTheirSlotAndABeltOrGlobalPauseDoesNotClearYours(t *testing.T) {
 	t.Parallel()
 	belt := issuesBelt(nil)
-	belt.Stages = []core.Stage{core.DefaultsStageForAgent(core.DefaultsAgent("triage"), nil, nil, nil, core.TriggerKindIssues)}
+	belt.Stages = []core.Stage{core.DefaultsStageForAgent(core.SampleAgent("triage"), nil, nil, nil, core.TriggerKindIssues)}
 	belt.Stages[0].Slots = 1
 	other := coordSubject(143, "Other")
 	h := coordLongRun(t, []core.Subject{coordSubject(142, "Export invoices as CSV"), other}, []core.Belt{belt})

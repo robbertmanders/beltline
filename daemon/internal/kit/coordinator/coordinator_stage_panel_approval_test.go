@@ -15,7 +15,7 @@ func TestPromptDecisionDefaultsToExcludedSourceAndPersistsConsent(t *testing.T) 
 			t.Parallel()
 			h := newHarness(t, harnessOptions{})
 			c := h.Coord()
-			belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+			belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 			gate := core.NewStage(core.StageArgs{ID: "prompt", Type: core.StageTypeApprove, Outcomes: []core.Outcome{
 				{ID: "go", Name: "go", Tone: core.ToneGood, Then: core.NewThen(core.ThenArgs{Action: core.ThenActionNext, WithOutput: true})},
 			}})

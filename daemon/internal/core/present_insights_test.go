@@ -20,7 +20,7 @@ func insightsTestRun(t *testing.T, n int, created time.Time) Run {
 	t.Helper()
 	subject := DefaultSubject("a/b", "Test")
 	subject.Number = n
-	return NewRun(RunArgs{Belt: DefaultsBelt(nil, "agent", DefaultsBuiltInAgents(), true), Subject: subject, Now: created})
+	return NewRun(RunArgs{Belt: SampleBelt(nil, "agent", SampleAgents(), true), Subject: subject, Now: created})
 }
 
 // insightsStageOf is the id of the run's index-th stage of kind.

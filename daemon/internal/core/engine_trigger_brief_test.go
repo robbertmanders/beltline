@@ -32,8 +32,8 @@ func triggerTestBelt(kind TriggerKind, stages []Stage) Belt {
 	}
 	var forks []Fork
 	if stages == nil {
-		stages = DefaultsStages(kind, DefaultsBuiltInAgents(), true)
-		forks = DefaultsForks(kind)
+		stages = SampleStages(kind, SampleAgents(), true)
+		forks = SampleForks(kind)
 	}
 	return NewBeltFromTrigger(BeltFromTriggerArgs{ID: string(kind), Name: string(kind), Trigger: trigger, Repos: repos, Stages: stages, Forks: forks})
 }

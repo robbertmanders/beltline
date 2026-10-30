@@ -19,7 +19,7 @@ import (
 // draft converts to are saved with it; a run started afterwards keeps them when the library changes.
 func TestSavingStoresKeysAndANewRunKeepsThemAfterTheLibraryChanges(t *testing.T) {
 	t.Parallel()
-	belt := core.DefaultsBelt([]string{"a/b"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"a/b"}, "agent", core.SampleAgents(), true)
 	belt.Triggers = []core.TriggerEntry{manualEntry("manual", "a/b")}
 	for i := range belt.Stages {
 		belt.Stages[i].SetKey(nil)

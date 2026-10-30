@@ -357,7 +357,7 @@ func TestLinksIgnoreRunState(t *testing.T) {
 	request := rlPull("acme/app", 9, "https://github.com/acme/app/pull/9", PullRequestStateMerged)
 	expected := RunLinksTargets(subject, []PullRequest{request}, nil)
 	for _, state := range AllRunState {
-		run := NewRun(RunArgs{Belt: DefaultsBelt([]string{subject.Repo}, "agent", DefaultsBuiltInAgents(), true), Subject: subject, Now: testT0})
+		run := NewRun(RunArgs{Belt: SampleBelt([]string{subject.Repo}, "agent", SampleAgents(), true), Subject: subject, Now: testT0})
 		run.State = state
 		run.PullRequests = []PullRequest{request}
 		if got := RunLinksTargets(run.Subject, run.PullRequests, nil); !reflect.DeepEqual(got, expected) {

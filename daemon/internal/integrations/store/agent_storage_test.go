@@ -21,21 +21,26 @@ func TestNewInstallHasNoAgentsAndSeedingAddsTheShippedVersions(t *testing.T) {
 	var ids []string
 	for _, record := range agents {
 		ids = append(ids, record.Agent.ID)
-		if record.Agent.Version != core.DefaultsShippedVersion(record.Agent.ID) || record.Archived {
+		if record.Agent.Version != core.SampleAgentVersion(record.Agent.ID) || record.Archived {
 			t.Fatalf("%s at version %d, archived %v", record.Agent.ID, record.Agent.Version, record.Archived)
 		}
 	}
-	if strings.Join(ids, ",") != strings.Join(core.DefaultsBuiltInIDs, ",") {
-		t.Fatalf("agents %v, want %v", ids, core.DefaultsBuiltInIDs)
+	if len(ids) != len(core.SampleAgentIDs) {
+		t.Fatalf("agents %v, want %v", ids, core.SampleAgentIDs)
+	}
+	for i := 1; i < len(agents); i++ {
+		if core.LocalizedStandardCompare(agents[i-1].Agent.Name, agents[i].Agent.Name) > 0 {
+			t.Fatalf("agents are not in name order: %q before %q", agents[i-1].Agent.Name, agents[i].Agent.Name)
+		}
 	}
 	for _, id := range []string{"triage", "spec"} {
 		agent, ok := s.Agent(id, 2)
-		builtIn := core.DefaultsBuiltIn(id, nil)
+		builtIn := core.SampleAgentNamed(id, nil)
 		if !ok || builtIn == nil || agent.Brief != builtIn.Brief {
 			t.Fatalf("%s v2 is not the shipped one", id)
 		}
 	}
-	file, _ := core.BuiltInAgentFile("verify")
+	file, _ := core.SampleAgentText("verify")
 	if fileText(t, s.agentFolder("verify")+"/v1.md") != file {
 		t.Fatal("the seeded file is not the bundled text")
 	}
@@ -52,10 +57,10 @@ func TestSeedingUpgradesOldTemplatesWithoutChangingSavedVersions(t *testing.T) {
 			if _, ok := s.Agent(id, 1); ok {
 				t.Fatal("version 1 exists before any save")
 			}
-			shipped, ok := s.Agent(id, 2)
-			if !ok {
-				t.Fatal("the shipped version is missing")
+			if _, ok := s.Agent(id, 2); ok {
+				t.Fatal("the sample version is read before it is saved")
 			}
+			shipped := core.SampleAgent(id)
 			old := shipped
 			old.Brief = "# Title\n\n## Goal\nOld wording.\n\n## Open questions\n1. (needs info) Which page?"
 			saved, err := s.SaveNewAgentVersion(old)

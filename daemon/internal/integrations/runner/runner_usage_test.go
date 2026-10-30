@@ -51,7 +51,7 @@ func attemptEnded(stage string, ended time.Time, session *string, usage *core.Us
 // usageRun is a run of the default belt for a test subject on a/b #1.
 func usageRun(t testing.TB, now time.Time) core.Run {
 	t.Helper()
-	belt := core.DefaultsBelt(nil, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt(nil, "agent", core.SampleAgents(), true)
 	return core.NewRun(core.RunArgs{Belt: belt, Subject: core.Subject{Kind: core.SubjectKindIssue, Repo: "a/b", Number: 1, Title: "Test"}, Now: now})
 }
 

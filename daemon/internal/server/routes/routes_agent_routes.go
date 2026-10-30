@@ -126,25 +126,3 @@ func agentSetArchived(c *coordinator.Coordinator, id string, archived bool) (api
 	}
 	return api.NewAgentRecordResponse(record, nil), nil
 }
-
-// AddAgentReset POST api/v1/agents/{id}/reset.
-// Lock: the handler calls coordinator methods, which take the lock.
-func AddAgentReset(mux *http.ServeMux, c *coordinator.Coordinator) {
-	mux.Handle("POST /api/v1/agents/{id}/reset", JSONRoute(c, func(r *http.Request) (any, error) {
-		id, err := ReadRouteSupportID(r)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := ReadRouteSupportJSON[api.BeltEmptyRequest](r, true); err != nil {
-			return nil, err
-		}
-		if c.ReadAgent(id) == nil {
-			return nil, api.MissingResource{}
-		}
-		record, err := c.ResetAgentCommand(id)
-		if err != nil {
-			return nil, err
-		}
-		return api.NewAgentRecordResponse(record, nil), nil
-	}))
-}

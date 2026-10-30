@@ -22,7 +22,7 @@ func wpMakeRun(id string, state RunState, updated float64, beltID, beltName, rep
 	if key != "" {
 		subject.Kind = SubjectKindJira
 	}
-	run := NewRun(RunArgs{Belt: DefaultsBelt([]string{repo}, "agent", DefaultsBuiltInAgents(), true), Subject: subject, Now: wpBase})
+	run := NewRun(RunArgs{Belt: SampleBelt([]string{repo}, "agent", SampleAgents(), true), Subject: subject, Now: wpBase})
 	run.ID = id
 	run.BeltID = beltID
 	run.BeltName = beltName

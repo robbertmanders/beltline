@@ -1,5 +1,5 @@
 // The agent commands,
-// the draft presentation and runner switch, and the invalid saves and resets that write nothing.
+// the draft presentation and runner switch, and the invalid saves that write nothing.
 package servertest
 
 import (
@@ -12,7 +12,7 @@ import (
 )
 
 // TestAgentCommandsReturnRecordsAndGoldens is WriteContractTests.agentCommandsReturnRecordsAndGoldens:
-// the steps in their order (the unchanged save comes before the archive and the reset).
+// the steps in their order (the unchanged save comes before the archive).
 func TestAgentCommandsReturnRecordsAndGoldens(t *testing.T) {
 	g := Start(t, Options{})
 	var draft core.Agent
@@ -58,14 +58,6 @@ func TestAgentCommandsReturnRecordsAndGoldens(t *testing.T) {
 	if unarchived.Archived {
 		t.Fatal("unarchive left the agent archived")
 	}
-	reset := postJSON(g, "/api/v1/agents/triage/reset", nil)
-	requireStatus(t, reset, 200)
-	CheckGolden(t, "agentReset", contractEndpoint(t, "agentReset").GoldenName, reset, g.Root)
-	var resetRecord api.AgentRecordResponse
-	mustDecode(t, reset, &resetRecord)
-	if resetRecord.Agent.Brief != core.DefaultsAgent("triage").Brief {
-		t.Fatal("reset did not restore the built-in brief")
-	}
 }
 
 // TestAgentDraftPresentationAndRunnerSwitchReturnGoldens is WriteContractTests.agentDraftPresentationAndRunnerSwitchReturnGoldens.
@@ -106,8 +98,8 @@ func TestAgentDraftPresentationAndRunnerSwitchReturnGoldens(t *testing.T) {
 	}
 }
 
-// TestInvalidAgentSavesAndCustomResetsReturn422AndWriteNothing is WriteContractTests.invalidAgentSavesAndCustomResets….
-func TestInvalidAgentSavesAndCustomResetsReturn422AndWriteNothing(t *testing.T) {
+// TestInvalidAgentSavesReturn422AndWriteNothing checks a rejected save, and that the reset command is gone.
+func TestInvalidAgentSavesReturn422AndWriteNothing(t *testing.T) {
 	g := Start(t, Options{})
 	before := contractInventory(t, g.Root)
 	agent := g.Coordinator.LatestAgent("triage").Agent
@@ -123,8 +115,8 @@ func TestInvalidAgentSavesAndCustomResetsReturn422AndWriteNothing(t *testing.T) 
 	if g.Coordinator.LatestAgent("triage").Agent.Version != version {
 		t.Fatal("the rejected save changed the agent")
 	}
-	reset := postJSON(g, "/api/v1/agents/fixture-agent/reset", []byte("{}"))
-	requireProblems(t, reset, []string{"Only the agents the app ships can be reset to their default."})
+	reset := postJSON(g, "/api/v1/agents/triage/reset", []byte("{}"))
+	requireStatus(t, reset, 404)
 	requireSameInventory(t, before, g.Root)
 }
 

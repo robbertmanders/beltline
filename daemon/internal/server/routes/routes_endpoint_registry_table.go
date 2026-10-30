@@ -86,7 +86,6 @@ var Endpoints = []Endpoint{
 	{Case: "agentDraftSwitchRunner", Method: EndpointMethodPost, Path: "/api/v1/agents/draft/switch-runner", Area: AreaAgents, GoldenName: "agent-draft-switch-runner.json"},
 	{Case: "agentArchive", Method: EndpointMethodPost, Path: "/api/v1/agents/:id/archive", Area: AreaAgents, GoldenName: "agent-archive.json"},
 	{Case: "agentUnarchive", Method: EndpointMethodPost, Path: "/api/v1/agents/:id/unarchive", Area: AreaAgents, GoldenName: "agent-unarchive.json"},
-	{Case: "agentReset", Method: EndpointMethodPost, Path: "/api/v1/agents/:id/reset", Area: AreaAgents, GoldenName: "agent-reset.json"},
 	{Case: "settings", Method: EndpointMethodGet, Path: "/api/v1/settings", Area: AreaStateSettings, GoldenName: "settings.json"},
 	{Case: "settingsPatch", Method: EndpointMethodPost, Path: "/api/v1/settings/patch", Area: AreaStateSettings, GoldenName: "command-settings-patch.json"},
 	{Case: "tools", Method: EndpointMethodGet, Path: "/api/v1/tools", Area: AreaTools, GoldenName: "tools.json"},

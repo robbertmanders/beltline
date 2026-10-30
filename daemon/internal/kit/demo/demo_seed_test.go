@@ -35,8 +35,8 @@ func TestSeedLoadsBackThroughStore(t *testing.T) {
 			t.Errorf("belt %s v%d does not decode", record.Belt.ID, record.Belt.Version)
 		}
 	}
-	if agents := storage.LoadAgents(); len(agents) != len(core.DefaultsBuiltInIDs) {
-		t.Errorf("agents loaded = %d, want %d", len(agents), len(core.DefaultsBuiltInIDs))
+	if agents := storage.LoadAgents(); len(agents) != len(core.SampleAgentIDs) {
+		t.Errorf("agents loaded = %d, want %d", len(agents), len(core.SampleAgentIDs))
 	}
 
 	runs := storage.LoadRuns()

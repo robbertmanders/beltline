@@ -66,9 +66,8 @@ func TestAdjustStageWithoutAThinkingLevelKeepsTheStage(t *testing.T) {
 	}
 }
 
-// TestAgentResourcePresentationOfAShippedAgent: a shipped agent that nothing changed is built in, and
-// has nothing to reset.
-func TestAgentResourcePresentationOfAShippedAgent(t *testing.T) {
+// TestAgentResourcePresentationOfASavedAgent: a saved agent is not new, and offers no reset.
+func TestAgentResourcePresentationOfASavedAgent(t *testing.T) {
 	t.Parallel()
 	h := newHarness(t, harnessOptions{})
 	record := h.Coord().LatestAgent("triage")
@@ -76,8 +75,13 @@ func TestAgentResourcePresentationOfAShippedAgent(t *testing.T) {
 		t.Fatal("no triage agent")
 	}
 	resource := h.Coord().ReadAgentResource(*record)
-	if !resource.Presentation.BuiltIn || resource.Presentation.IsNew || resource.Presentation.CanReset {
-		t.Fatalf("presentation = %+v, want built in, not new, nothing to reset", resource.Presentation)
+	if resource.Presentation.IsNew {
+		t.Fatalf("presentation = %+v, want not new", resource.Presentation)
+	}
+	for _, action := range resource.Actions {
+		if action.ID == "reset" {
+			t.Fatalf("actions = %+v, want no reset", resource.Actions)
+		}
 	}
 }
 

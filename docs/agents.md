@@ -16,9 +16,9 @@ An agent is a reusable stage definition: which runner and model it uses, where i
 
 **Agents** lists your library as cards, filtered to used, unused or archived. Open one to edit it, or choose **New agent**. Every save is a new version, and a saved version never changes: a belt's stage pins the version it was saved with, and a run keeps a copy of each agent version it uses. **Update stage** on a belt takes a newer version.
 
-![The Agents page: the built-in agents in a library](images/agents.png)
+![The Agents page: the example agents in a library](images/agents.png)
 
-**Reset to default** brings a built-in agent back to its shipped brief and outcomes, when your library has it.
+An agent installed from a [library repository](library.md) shows where it came from; the Library page offers its newer versions.
 
 ## The agent file
 
@@ -99,9 +99,9 @@ Outcome: ready to spec
 
 Copying the outcome's name is what counts; its description isn't accepted. When the file has no known outcome, Claude Code's last reply can supply it; otherwise the stage's fallback applies (hold, run again once, or drop).
 
-## Built-in agents
+## Example agents
 
-Beltline ships these agents. A fresh install has none of them until the configuration assistant adds them or you install them from a library repository. Demo mode has all of them.
+Beltline itself ships no agents. These are in the [examples library](library.md#the-examples-library), `robbertmanders/beltline-examples`: install the ones you want from the Library page, or install an example belt, which brings the agents it uses. Demo mode has all of them.
 
 | Agent | Workspace | Outcomes | What it does |
 | --- | --- | --- | --- |
@@ -116,4 +116,6 @@ Beltline ships these agents. A fresh install has none of them until the configur
 | **Review** | worktree, read-only | no blocking findings, blocking findings | Reviews a pull request's change. |
 | **Post review** | read-only | submitted, failed | Submits the review with `gh pr review`. |
 | **Plan the epic**, **Open the feature branch**, **File the wave**, **Assess the epic**, **Replan the epic**, **Land the epic** | | | The [epic belt](belts.md#epics). |
-| **Custom agent** | worktree | done, failed | A starting point for your own. |
+
+
+**New agent** starts from a plain agent with a worktree and *done* and *failed* outcomes, a starting point for your own.

@@ -1,16 +1,21 @@
 // Storage.Upgrade: the one-time rewrite of a data folder's settings, belts,
-// belt states and runs into the current format. The rules for each value are core's
+// belt states and runs into the current format, saving the agents they pin. The rules for each value are core's
 // (engine_upgrade.go); this walks the folder, keeps the originals and writes.
 
 package store
 
 import (
 	"bytes"
+	"cmp"
+	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
@@ -25,6 +30,9 @@ type UpgradeReport struct {
 	Settings bool
 	// Belts, States and Runs count the files rewritten.
 	Belts, States, Runs int
+	// Agents counts the agent versions saved that belts or runs pinned without
+	// agents/ holding them (core.UpgradeSampleAgent).
+	Agents int
 	// Unreadable are the files, relative to the data folder, that did not
 	// decode and were left as they are.
 	Unreadable []string
@@ -54,8 +62,9 @@ type upgradeFormat struct {
 }
 
 // Upgrade rewrites the settings and every belt version, belt state and run
-// that an older version saved into the current format, once: format.json records that it
-// ran, and a folder already at core.UpgradeFormatVersion is left alone. Each
+// that an older version saved into the current format, once, and saves each
+// agent version they pin that an older version read from the app itself:
+// format.json records that it ran, and a folder already at core.UpgradeFormatVersion is left alone. Each
 // file whose bytes change is first copied, as it was, below
 // upgrade-backups/<now>/ at its path in the folder. A file that does not
 // decode is left as it is and reported. A failed write stops the upgrade
@@ -73,7 +82,8 @@ func (s Storage) Upgrade(now time.Time) (UpgradeReport, error) {
 		}
 	}
 	u := upgrader{storage: s, backup: filepath.Join(s.Paths.UpgradeBackups(), now.UTC().Format("20060102T150405Z")),
-		agents: map[core.AgentRef]*core.Agent{}, belts: map[string]map[int]core.Belt{}, latest: map[string]core.Belt{}}
+		agents: map[core.AgentRef]*core.Agent{}, samples: map[core.AgentRef]core.Agent{},
+		belts: map[string]map[int]core.Belt{}, latest: map[string]core.Belt{}}
 	if err := u.upgradeSettings(); err != nil {
 		return u.report, err
 	}
@@ -81,6 +91,9 @@ func (s Storage) Upgrade(now time.Time) (UpgradeReport, error) {
 		return u.report, err
 	}
 	if err := u.upgradeRuns(); err != nil {
+		return u.report, err
+	}
+	if err := u.saveSamples(); err != nil {
 		return u.report, err
 	}
 	if err := s.Write(upgradeFormat{Version: core.UpgradeFormatVersion}, s.Paths.Format()); err != nil {
@@ -96,6 +109,8 @@ type upgrader struct {
 	storage Storage
 	backup  string
 	agents  map[core.AgentRef]*core.Agent
+	// samples are the pinned agents agents/ lacks that the upgrade saves.
+	samples map[core.AgentRef]core.Agent
 	// belts are the versions read, by belt id and version; latest is each belt's newest.
 	belts  map[string]map[int]core.Belt
 	latest map[string]core.Belt
@@ -103,10 +118,21 @@ type upgrader struct {
 }
 
 // upgradeSettings upgrades settings.json: an old factory and marketplace
-// repository become library repositories.
+// repository become library repositories, and the examples repository is
+// listed. A folder without settings.json gets one, with the default settings
+// and the examples repository.
 func (u *upgrader) upgradeSettings() error {
 	path := u.storage.Paths.Settings()
 	original, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		settings := DefaultSettings()
+		settings.LibraryRepositories = core.UpgradeLibraryRepositories(settings.LibraryRepositories)
+		if err := u.storage.SaveSettings(settings); err != nil {
+			return err
+		}
+		u.report.Settings = true
+		return nil
+	}
 	if err != nil {
 		return nil
 	}
@@ -115,6 +141,7 @@ func (u *upgrader) upgradeSettings() error {
 		u.unreadable(path)
 		return nil
 	}
+	settings.LibraryRepositories = core.UpgradeLibraryRepositories(settings.LibraryRepositories)
 	u.report.Settings, err = u.rewrite(path, original, settings)
 	return err
 }
@@ -147,11 +174,24 @@ func (u *upgrader) upgradeBelts() error {
 				u.report.Belts++
 			}
 		}
+		u.readShadows(folder)
 		if err := u.upgradeState(folder, id); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// readShadows reads the belt's shadow versions for the agents they pin, which the
+// upgrade saves when agents/ lacks them. The shadow files themselves stay as they are.
+func (u *upgrader) readShadows(folder string) {
+	shadows := filepath.Join(folder, "shadow")
+	for _, version := range versions(shadows, "json") {
+		var belt core.Belt
+		if u.storage.Read(filepath.Join(shadows, "v"+strconv.Itoa(version)+".json"), &belt) == nil {
+			u.agentsOf(belt.Stages)
+		}
+	}
 }
 
 // upgradeState upgrades a belt's state.json: a single lastFired becomes the cursor of
@@ -223,7 +263,8 @@ func (u *upgrader) upgradeRuns() error {
 	return nil
 }
 
-// agentsOf are the library's versions of the agents stages pin, those it has.
+// agentsOf are the library's versions of the agents stages pin, those it has,
+// and those an older version read from the app itself, which saveSamples saves.
 func (u *upgrader) agentsOf(stages []core.Stage) map[core.AgentRef]core.Agent {
 	out := map[core.AgentRef]core.Agent{}
 	for _, stage := range stages {
@@ -235,6 +276,9 @@ func (u *upgrader) agentsOf(stages []core.Stage) map[core.AgentRef]core.Agent {
 		if !seen {
 			if found, ok := u.storage.AgentRef(ref); ok {
 				agent = &found
+			} else if sample, ok := core.UpgradeSampleAgent(ref); ok {
+				agent = &sample
+				u.samples[ref] = sample
 			}
 			u.agents[ref] = agent
 		}
@@ -243,6 +287,33 @@ func (u *upgrader) agentsOf(stages []core.Stage) map[core.AgentRef]core.Agent {
 		}
 	}
 	return out
+}
+
+// saveSamples saves each pinned agent version that agents/ lacked, as
+// agents/<id>/v<n>.md, in id and version order, with the text the app read it from. A file that appeared since it was
+// read is left as it is.
+func (u *upgrader) saveSamples() error {
+	refs := slices.SortedFunc(maps.Keys(u.samples), func(a, b core.AgentRef) int {
+		return cmp.Or(strings.Compare(a.ID, b.ID), cmp.Compare(a.Version, b.Version))
+	})
+	for _, ref := range refs {
+		path := filepath.Join(u.storage.agentFolder(ref.ID), "v"+strconv.Itoa(ref.Version)+".md")
+		if _, err := os.Stat(path); err == nil {
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(path), 0o777); err != nil {
+			return err
+		}
+		text, ok := core.SampleAgentText(ref.ID)
+		if !ok {
+			text = core.AgentFileWrite(u.samples[ref])
+		}
+		if err := WriteFileAtomic(path, []byte(text)); err != nil {
+			return err
+		}
+		u.report.Agents++
+	}
+	return nil
 }
 
 // rewrite writes value at path when its current encoding differs from

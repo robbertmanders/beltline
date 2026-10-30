@@ -15,14 +15,14 @@ var libraryTestOrigin = LibraryOrigin{Repository: "owner/shared", Path: ""}
 // agents, and every built-in agent at its version, all from origin unless origin is nil.
 func libraryTestRepo(t *testing.T, version int, origin *LibraryOrigin) map[string][]byte {
 	t.Helper()
-	belt := DefaultsBelt([]string{"a/b"}, "agent", DefaultsBuiltInAgents(), true)
+	belt := SampleBelt([]string{"a/b"}, "agent", SampleAgents(), true)
 	belt.ID, belt.Version, belt.Name, belt.Origin = "team", version, "Team", origin
 	data, err := jsonx.MarshalStorage(belt)
 	if err != nil {
 		t.Fatal(err)
 	}
 	files := map[string][]byte{libraryVersionPath("belts", "team", version, "json"): data}
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		agent.Origin = origin
 		files[libraryVersionPath("agents", agent.ID, agent.Version, "md")] = []byte(AgentFileWrite(agent))
 	}
@@ -205,7 +205,7 @@ func TestLibraryRepoItemsTakeAnUnoriginedOlderVersionAsAnUpdate(t *testing.T) {
 func TestLibraryRepoItemsCountAnUnoriginedAgentFromTheRepository(t *testing.T) {
 	t.Parallel()
 	repo := libraryTestRepo(t, 2, &libraryTestOrigin)
-	agent := DefaultsBuiltInAgents()[0]
+	agent := SampleAgents()[0]
 	path := libraryVersionPath("agents", agent.ID, agent.Version, "md")
 	standing := func(local Agent) LibraryItem {
 		items, _ := LibraryRepoItems(libraryTestOrigin, repo, map[string][]byte{path: []byte(AgentFileWrite(local))})
