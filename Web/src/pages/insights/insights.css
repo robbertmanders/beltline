@@ -1,6 +1,7 @@
 /* The Insights page: every belt at a glance, or one belt's four figures and its stages with their models. Built on the Work table. */
 .insights-page { display: flex; flex-direction: column; gap: 22px; }
 .insights-toolbar { padding-bottom: 0; flex-wrap: wrap; }
+.insights-eyebrow { display: flex; align-items: center; gap: 8px; }
 .insights-section { display: flex; flex-direction: column; gap: 10px; }
 .insights-section-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .insights-section-head .paper-tag { margin: 0; }
