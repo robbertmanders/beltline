@@ -1252,6 +1252,7 @@ export interface LibraryRepoResponse {
   commit: string | null;
   problem: string | null;
   changedSinceBackup?: boolean;
+  takesShares: boolean;
   items: LibraryItem[];
   actions: LibraryAction[];
 }

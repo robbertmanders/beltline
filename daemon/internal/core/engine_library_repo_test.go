@@ -332,6 +332,21 @@ func TestLibraryBackupFilesLeaveOutTheStateFiles(t *testing.T) {
 	}
 }
 
+func TestOnlySharedRepositoriesOtherThanTheExamplesTakeShares(t *testing.T) {
+	t.Parallel()
+	if !LibraryShareAccepted(LibraryRepository{Repository: "acme/team", Role: LibraryRoleShared}) {
+		t.Error("a shared repository refuses shares")
+	}
+	if LibraryShareAccepted(LibraryRepository{Repository: "acme/backup", Role: LibraryRoleBackup}) {
+		t.Error("a backup repository takes shares")
+	}
+	examples := LibraryExamples()
+	examples.Publish = LibraryPublishPush
+	if LibraryShareAccepted(examples) {
+		t.Error("the examples repository takes shares")
+	}
+}
+
 func TestLibraryRepoActionsExplainWhatIsUnavailable(t *testing.T) {
 	t.Parallel()
 	shared := LibraryRepoActions(LibraryRoleShared, true, true)

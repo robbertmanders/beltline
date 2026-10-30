@@ -73,7 +73,7 @@ function RepoSection({ repo }: { repo: LibraryRepoResponse }) {
       <div className="library-repo-title">
         <Chip tone={backup ? "neutral" : "grey"}>{backup ? "Backup" : "Shared"}</Chip>
         <strong>{repo.repository}{folder}</strong>
-        {!backup && <span className="mono-note">{repo.publish === "push" ? "Share pushes" : "Share opens a pull request"}</span>}
+        {!backup && <span className="mono-note">{!repo.takesShares ? "Install only" : repo.publish === "push" ? "Share pushes" : "Share opens a pull request"}</span>}
         {backup && repo.changedSinceBackup && <Chip tone="gold">Changed since backup</Chip>}
       </div>
       <span className="mono-note">{repo.commit ? `${repo.commit.slice(0, 7)} · ${repo.syncedAt ?? ""}` : "Not synced yet"}</span>

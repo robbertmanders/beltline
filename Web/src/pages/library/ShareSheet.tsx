@@ -27,7 +27,8 @@ export function ShareSheet({ source, onClose }: { source: ShareSource; onClose: 
     retry: false,
     meta: { resourceDeps: resourcesForPath(libraryReposPath) }
   });
-  const shared = (repos.data?.repos ?? []).filter(repo => repo.role === "shared");
+  // The daemon says which repositories take shares: never the examples repository.
+  const shared = (repos.data?.repos ?? []).filter(repo => repo.takesShares);
   const [picked, setPicked] = useState("");
   const chosen: LibraryRepoResponse | undefined = shared.find(repo => repoKey(repo) === picked) ?? shared[0];
   const [shareResult, setShareResult] = useState<LibraryShareResponse | null>(null);

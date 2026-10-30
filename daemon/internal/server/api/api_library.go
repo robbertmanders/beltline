@@ -40,7 +40,8 @@ type LibraryReposResponse struct {
 
 // LibraryRepoResponse is one configured library repository. Items are what a shared
 // repository holds (empty for a backup one); changedSinceBackup is set for a backup
-// repository only. syncedAt, commit and problem are null until there is something to say.
+// repository only. takesShares says whether Share offers it. syncedAt, commit and problem
+// are null until there is something to say.
 type LibraryRepoResponse struct {
 	Repository         string               `json:"repository"`
 	Path               string               `json:"path"`
@@ -50,6 +51,7 @@ type LibraryRepoResponse struct {
 	Commit             *string              `json:"commit"`
 	Problem            *string              `json:"problem"`
 	ChangedSinceBackup *bool                `json:"changedSinceBackup,omitzero"`
+	TakesShares        bool                 `json:"takesShares"`
 	Items              []core.LibraryItem   `json:"items"`
 	Actions            []core.LibraryAction `json:"actions"`
 }
@@ -63,6 +65,7 @@ func NewLibraryRepoResponse(state coordinator.LibraryRepoState) LibraryRepoRespo
 		Publish:            state.Publish,
 		Problem:            core.CopyPointer(state.Problem),
 		ChangedSinceBackup: core.CopyPointer(state.ChangedSinceBackup),
+		TakesShares:        state.TakesShares,
 		Items:              append([]core.LibraryItem{}, state.Items...),
 		Actions:            append([]core.LibraryAction{}, state.Actions...),
 	}

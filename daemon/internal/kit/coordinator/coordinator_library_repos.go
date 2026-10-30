@@ -39,8 +39,10 @@ type LibraryRepoState struct {
 	// ChangedSinceBackup is set for a backup repository: whether the library
 	// differs from what the last backup or restore left.
 	ChangedSinceBackup *bool
-	Items              []core.LibraryItem
-	Actions            []core.LibraryAction
+	// TakesShares is whether Share may send items to it: a shared repository other than the examples one.
+	TakesShares bool
+	Items       []core.LibraryItem
+	Actions     []core.LibraryAction
 }
 
 // LibraryBackupResult is what a backup did: the commit it made, or nil when the repository already held the library.
@@ -78,7 +80,8 @@ func (c *Coordinator) libraryRepoStates() []LibraryRepoState {
 	local := store.LibraryFilesRead(c.paths)
 	for _, repo := range c.settings.LibraryRepositories {
 		origin := repo.Origin()
-		state := LibraryRepoState{Repository: repo.Repository, Path: repo.Path, Role: repo.Role, Publish: repo.Publish, Items: []core.LibraryItem{}}
+		state := LibraryRepoState{Repository: repo.Repository, Path: repo.Path, Role: repo.Role, Publish: repo.Publish,
+			TakesShares: core.LibraryShareAccepted(repo), Items: []core.LibraryItem{}}
 		if sync, ok := c.libraryRepoSyncs[origin]; ok {
 			at := sync.at
 			state.SyncedAt = &at
@@ -121,11 +124,11 @@ func (c *Coordinator) changedSinceBackup(repo core.LibraryRepository) bool {
 		!assistantStringsEqual(state.Signature, c.library.Signature())
 }
 
-// hasSharedLibraryRepository is whether a shared library repository is configured, the one share
-// goes to. Lock: runs with c.mu held.
+// hasSharedLibraryRepository is whether a library repository that takes shares is configured: a
+// shared one other than the examples repository. Lock: runs with c.mu held.
 func (c *Coordinator) hasSharedLibraryRepository() bool {
 	for _, repo := range c.settings.LibraryRepositories {
-		if repo.Role == core.LibraryRoleShared {
+		if core.LibraryShareAccepted(repo) {
 			return true
 		}
 	}
@@ -402,6 +405,9 @@ func (c *Coordinator) ShareLibraryItem(ctx context.Context, origin core.LibraryO
 		return LibraryShareResult{}, err
 	}
 	// A local remote has no pull requests, and gh must not be asked about one (demo mode never calls GitHub).
+	if !core.LibraryShareAccepted(repo) {
+		return LibraryShareResult{}, core.NewFailure(core.LibraryShareRefusedExamples)
+	}
 	if repo.Publish == core.LibraryPublishPullRequest && c.libraryRepos.Local() {
 		return LibraryShareResult{}, core.NewFailure("Pull requests aren't available for a local repository; set it to push.")
 	}

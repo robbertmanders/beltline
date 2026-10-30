@@ -25,7 +25,7 @@ Beltline keeps a clone of each in the data folder (`library-repos/`) and syncs i
 
 ## The examples library
 
-Beltline ships no belts or agents of its own: a fresh install starts with an empty library. The examples are in a shared library repository, [`robbertmanders/beltline-examples`](https://github.com/robbertmanders/beltline-examples), which **Settings → Library repositories** lists from the start. Nothing is installed from it until you choose to: open **Library**, refresh it, and install the belts and agents you want. It holds a belt for each trigger (GitHub issues, review requests, Jira tickets, an epic in waves, tasks you start and a schedule) and the agents they use.
+Beltline ships no belts or agents of its own: a fresh install starts with an empty library. The examples are in a shared library repository, [`robbertmanders/beltline-examples`](https://github.com/robbertmanders/beltline-examples), which **Settings → Library repositories** lists from the start. Nothing is installed from it until you choose to: open **Library**, refresh it, and install the belts and agents you want. It holds a belt for each trigger (GitHub issues, review requests, Jira tickets, an epic in waves, tasks you start and a schedule) and the agents they use. Beltline only reads it: **Share…** never offers it, and a share to it is refused.
 
 Upgrading from a version that shipped built-in agents adds the examples repository to your settings once, and saves into `agents/` every built-in agent version your belts and runs use, so they keep working. Remove the repository in Settings if you don't want it; it isn't added again.
 
