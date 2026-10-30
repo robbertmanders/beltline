@@ -44,6 +44,22 @@ func rowNamed(results []Result, name string) Result {
 	return Result{}
 }
 
+func TestOneAgentCLIMakesTheOthersOptional(t *testing.T) {
+	t.Parallel()
+	rec := toolRecorder(map[string]shell.Result{"claude": {Stdout: "2.1.0 (Claude Code)"}})
+	rows := Run(context.Background(), rec, func() bool { return false })
+	for _, name := range []string{"Copilot CLI", "Pi", "Claude Code", "Codex CLI", "Cursor CLI"} {
+		if !rowNamed(rows, name).Optional {
+			t.Errorf("%s is required although Claude Code was found", name)
+		}
+	}
+	for _, name := range []string{"gh", "git", "tmux"} {
+		if rowNamed(rows, name).Optional {
+			t.Errorf("%s is optional", name)
+		}
+	}
+}
+
 func TestRowsKeepTheSettingsOrderAndOptionalMeanings(t *testing.T) {
 	t.Parallel()
 	rec := toolRecorder(nil)
@@ -55,7 +71,7 @@ func TestRowsKeepTheSettingsOrderAndOptionalMeanings(t *testing.T) {
 	for _, row := range rows {
 		optional = append(optional, row.Optional)
 	}
-	if !reflect.DeepEqual(optional, []bool{false, false, false, false, false, true, true, true, true, true}) {
+	if !reflect.DeepEqual(optional, []bool{false, false, false, false, false, false, false, false, true, true}) {
 		t.Errorf("optional = %v", optional)
 	}
 	for _, row := range rows {

@@ -144,6 +144,10 @@ func Run(ctx context.Context, sh shell.Runner, ghostty GhosttyProbe) []Result {
 		acliDetail = "not installed: brew tap atlassian/homebrew-acli && brew install acli"
 	}
 
+	// Beltline needs one agent CLI, not each: once one is found the others are
+	// optional, and with none found every one is marked as missing.
+	agentFound := copilot.OK() || pi.OK() || claude.OK() || codex.OK() || cursor.OK()
+
 	ghosttyInstalled := ghostty()
 	ghosttyDetail := "not installed"
 	if ghosttyInstalled {
@@ -153,11 +157,11 @@ func Run(ctx context.Context, sh shell.Runner, ghostty GhosttyProbe) []Result {
 		{Name: "gh", Purpose: "issues, comments, pull requests, clones", OK: gh.OK(), Detail: ghDetail},
 		{Name: "git", Purpose: "checkouts and worktrees", OK: git.OK(), Detail: toolCheckLine(git, installHint(runtime.GOOS, "git"))},
 		{Name: "tmux", Purpose: "agent sessions", OK: tmux.OK(), Detail: toolCheckLine(tmux, installHint(runtime.GOOS, "tmux"))},
-		{Name: "Copilot CLI", Purpose: "agent: copilot", OK: copilot.OK(), Detail: toolCheckLine(copilot, "not installed: npm install -g @github/copilot")},
-		{Name: "Pi", Purpose: "agent: pi", OK: pi.OK(), Detail: toolCheckLine(pi, "not installed")},
-		{Name: "Claude Code", Purpose: "agent: claude", OK: claude.OK(), Detail: toolCheckLine(claude, "not installed: npm install -g @anthropic-ai/claude-code"), Optional: true},
-		{Name: "Codex CLI", Purpose: "agent: codex", OK: codex.OK(), Detail: toolCheckLine(codex, "not installed: npm install -g @openai/codex"), Optional: true},
-		{Name: "Cursor CLI", Purpose: "agent: cursor", OK: cursor.OK(), Detail: toolCheckLine(cursor, "not installed: install Cursor CLI from https://cursor.com/install"), Optional: true},
+		{Name: "Copilot CLI", Purpose: "agent: copilot", OK: copilot.OK(), Detail: toolCheckLine(copilot, "not installed: npm install -g @github/copilot"), Optional: agentFound},
+		{Name: "Pi", Purpose: "agent: pi", OK: pi.OK(), Detail: toolCheckLine(pi, "not installed"), Optional: agentFound},
+		{Name: "Claude Code", Purpose: "agent: claude", OK: claude.OK(), Detail: toolCheckLine(claude, "not installed: npm install -g @anthropic-ai/claude-code"), Optional: agentFound},
+		{Name: "Codex CLI", Purpose: "agent: codex", OK: codex.OK(), Detail: toolCheckLine(codex, "not installed: npm install -g @openai/codex"), Optional: agentFound},
+		{Name: "Cursor CLI", Purpose: "agent: cursor", OK: cursor.OK(), Detail: toolCheckLine(cursor, "not installed: install Cursor CLI from https://cursor.com/install"), Optional: agentFound},
 		{Name: "Atlassian CLI", Purpose: "Jira tickets (optional)", OK: acli.OK(), Detail: acliDetail, Optional: true},
 		{Name: "Ghostty", Purpose: "Open in Ghostty (optional)", OK: ghosttyInstalled, Detail: ghosttyDetail, Optional: true},
 	}
