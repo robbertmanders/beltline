@@ -70,7 +70,9 @@ type StageMenu struct {
 	// WatchEvents are the `when` values the stage's watch can report, for a watch stage.
 	WatchEvents []StageMenuOption `json:"watchEvents"`
 	WatchNote   *string           `json:"watchNote,omitzero"`
-	Actions     []StageMenuOption `json:"actions"`
+	// Sources are what a prompt stage's source choice can start as; empty for other stages.
+	Sources []StageMenuOption `json:"sources"`
+	Actions []StageMenuOption `json:"actions"`
 	// RoutesAfter are the routes of the fork right after the stage, by their full path.
 	RoutesAfter []StageMenuOption `json:"routesAfter"`
 	// RoutePaths are every route of the belt by its full path, to name a saved route that is unavailable here.
@@ -107,6 +109,9 @@ func StageMenuMake(belt Belt, stageID string) *StageMenu {
 	switch stage.Kind() {
 	case StageKindGate:
 		kind = "Approval"
+		if stage.Type == StageTypePrompt {
+			kind = "Prompt"
+		}
 	case StageKindWatch:
 		kind = "Watcher"
 	}
@@ -129,6 +134,12 @@ func StageMenuMake(belt Belt, stageID string) *StageMenu {
 	watchTargets := []StageMenuOption{}
 	if stage.Kind() == StageKindWatch {
 		watchTargets = stageMenuWatchTargets(*stage, belt)
+	}
+	sources := []StageMenuOption{}
+	if stage.Type == StageTypePrompt {
+		for _, sharing := range AllSourceSharing {
+			sources = append(sources, StageMenuOptionNew(string(sharing), sharing.Label()))
+		}
 	}
 	routesAfter := []StageMenuOption{}
 	for _, route := range layout.RoutesAfter(stage.ID) {
@@ -162,6 +173,7 @@ func StageMenuMake(belt Belt, stageID string) *StageMenu {
 		WatchTargets:   watchTargets,
 		WatchEvents:    watchEvents,
 		WatchNote:      watchNote,
+		Sources:        sources,
 		Actions:        stageMenuActions(*stage, belt),
 		RoutesAfter:    routesAfter,
 		RoutePaths:     routePaths,

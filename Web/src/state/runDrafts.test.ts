@@ -60,14 +60,21 @@ describe("run draft store", () => {
     const storage = memoryStorage();
     const first = new RunDraftStore(storage);
     first.setSendMessage("run", "build", "keep me");
-    first.setNote("run", "prompt", "refine", "My unsent prompt");
-    first.setIncludeSubject("run", "prompt", true);
     const reloaded = new RunDraftStore(storage);
     expect(reloaded.stage("run", "build").sendMessage).toBe("keep me");
     expect(storage.getItem(runDraftsStorageKey)).toContain("keep me");
-    expect(reloaded.stage("run", "prompt").notes.refine).toBe("My unsent prompt");
-    expect(reloaded.stage("run", "prompt").includeSubject).toBe(true);
+  });
+
+  it("keeps a prompt stage's prompt and source choice across a reload until the decision clears them", () => {
+    const storage = memoryStorage();
+    const first = new RunDraftStore(storage);
+    first.setPrompt("run", "prompt", "My unsent prompt");
+    first.setSource("run", "prompt", "shared");
+    const reloaded = new RunDraftStore(storage);
+    expect(reloaded.stage("run", "prompt").prompt).toBe("My unsent prompt");
+    expect(reloaded.stage("run", "prompt").source).toBe("shared");
     reloaded.clearDecide("run", "prompt");
-    expect(reloaded.stage("run", "prompt").includeSubject).toBeUndefined();
+    expect(reloaded.stage("run", "prompt").prompt).toBeNull();
+    expect(reloaded.stage("run", "prompt").source).toBeNull();
   });
 });

@@ -26,7 +26,7 @@ export function targetList(value: string | readonly string[] | undefined): strin
   return typeof value === "string" ? [value] : [...value];
 }
 
-type StageKind = "agent" | "approve" | "watch";
+type StageKind = "agent" | "approve" | "prompt" | "watch";
 
 /**
  * A stage's outcomes, edited locally and sent as one stage-update with Apply. Where each one goes comes from
@@ -102,14 +102,14 @@ function OutcomeRow({ stageId, kind, outcome, index, menu, label, disabled, onCh
         {events.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
       </select>
       : <textarea aria-label={`Outcome ${number} when`} rows={1} value={outcome.when} disabled={disabled}
-        placeholder={kind === "approve" ? "Button label" : "Describe when the agent should pick this"}
+        placeholder={kind === "approve" || kind === "prompt" ? "Button label" : "Describe when the agent should pick this"}
         onChange={event => { const when = event.target.value; onChange(item => ({ ...item, when })); }} />}
     </td>
     <td><select aria-label={`Outcome ${number} tone`} value={outcome.tone} disabled={disabled} onChange={event => { const tone = event.target.value as Outcome["tone"]; onChange(item => ({ ...item, tone })); }}>
       {toneValues.map(tone => <option key={tone} value={tone}>{toneLabels[tone]}</option>)}
     </select></td>
     <td className="outcome-then" title={label || undefined}>
-      <ThenControls number={number} then={then} actions={actions} gate={kind === "approve"} disabled={disabled}
+      <ThenControls number={number} then={then} actions={actions} gate={kind === "approve"} passesOn={kind !== "prompt"} disabled={disabled}
         onAction={action => setThen(current => ({ do: action, ...(current.withOutput ? { withOutput: true } : {}) }))}
         onChange={setThen}
         target={then.do === "goto"

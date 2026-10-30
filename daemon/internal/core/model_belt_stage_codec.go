@@ -28,7 +28,7 @@ func (s Stage) wire() stageWire {
 		ID: s.ID, Type: s.Type, Name: s.Name, Agent: s.Agent, Key: s.Key, Runner: s.Runner,
 		Model: s.Model, Thinking: s.Thinking, Workspace: s.Workspace, Writes: s.Writes(),
 		Slots: s.Slots, Brief: s.Brief, Outcomes: s.Outcomes, Fallback: s.Fallback,
-		Route: s.Route, Watch: s.Watch,
+		Route: s.Route, Watch: s.Watch, Source: s.Source,
 	}
 	if len(s.Alternates) > 0 {
 		w.Alternates = s.Alternates
@@ -57,6 +57,7 @@ type stageWire struct {
 	Fallback   Fallback          `json:"fallback"`
 	Route      *string           `json:"route,omitzero"`
 	Watch      *WatchTarget      `json:"watch,omitzero"`
+	Source     *SourceSharing    `json:"source,omitzero"`
 }
 
 // stageLegacyActionNames are the stage types LegacyAction reads: the action stages
@@ -135,6 +136,11 @@ func (s *Stage) UnmarshalJSON(data []byte) error {
 	}
 	if s.Type.Kind() != StageKindAgent {
 		s.Key = nil
+	}
+	if s.Type != StageTypePrompt {
+		s.Source = nil
+	} else if s.Source != nil && !s.Source.Known() {
+		return fmt.Errorf("unknown source sharing %q", *s.Source)
 	}
 	if len(s.Alternates) == 0 {
 		s.Alternates = nil

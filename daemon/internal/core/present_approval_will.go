@@ -44,6 +44,8 @@ func ApprovalWillOf(run Run, stage Stage, primary Outcome) ApprovalWill {
 			line = "Run " + next.Name + "."
 		case next.Type == StageTypeApprove:
 			line = "Wait for your " + LowercasedFull(next.Name) + "."
+		case next.Type == StageTypePrompt:
+			line = "Wait for your prompt at " + next.Name + "."
 		default:
 			if next.WatchesTicket() {
 				line = "Watch " + run.Subject.Ref() + " and the tickets under it."

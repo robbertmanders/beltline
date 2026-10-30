@@ -37,12 +37,20 @@ Do not change any files, push, comment, or contact anyone. Read what you need, t
 
 ## The run
 
-Belt: `) + run.BeltName + "\n" + CapitalizedFirst(noun) + ": " + run.Subject.Ref() + " " + run.Subject.Title
-	if run.Subject.URL != "" {
-		text += "\nLink: " + run.Subject.URL
+Belt: `) + run.BeltName + "\n" + CapitalizedFirst(noun) + ": " + run.Subject.Ref()
+	if run.WithholdsSource() {
+		text += "\n\n" + BriefCopyWithheld(run.Subject.Kind)
+	} else {
+		text += " " + run.Subject.Title
+		if run.Subject.URL != "" {
+			text += "\nLink: " + run.Subject.URL
+		}
+		if body := strings.TrimSpace(run.Subject.Body); body != "" {
+			text += "\n\n" + body
+		}
 	}
-	if body := strings.TrimSpace(run.Subject.Body); body != "" {
-		text += "\n\n" + body
+	if task := strings.TrimSpace(ValueOf(run.Task)); task != "" {
+		text += "\n\nThe task they wrote for the run:\n\n" + task
 	}
 	for _, pull := range run.PullRequests {
 		text += "\n\nPull request: " + pull.URL + " (" + string(pull.State) + ")"

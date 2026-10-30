@@ -29,6 +29,9 @@ func (r *Run) UnmarshalJSON(data []byte) error {
 	var legacy struct {
 		Trigger     *legacyTrigger `json:"trigger"`
 		PullRequest *PullRequest   `json:"pullRequest"`
+		// IncludeSubject is the source choice of a run saved by an approval that
+		// asked for a prompt, before prompt stages.
+		IncludeSubject *bool `json:"includeSubject"`
 	}
 	if err := json.Unmarshal(data, &legacy); err != nil {
 		return err
@@ -99,6 +102,33 @@ func (r *Run) UnmarshalJSON(data []byte) error {
 			}
 		}
 	}
+	// A run decided at an approval that asked for a prompt, before prompt stages:
+	// its choice is its sharing, and the prompt that approval took its task.
+	if legacy.IncludeSubject != nil && !f.present("sourceSharing") {
+		run.Sharing = SourceSharingWithheld
+		if *legacy.IncludeSubject {
+			run.Sharing = SourceSharingShared
+		}
+		if run.Task == nil {
+			run.Task = codecLegacyPromptTask(run)
+		}
+	}
 	*r = run
+	return nil
+}
+
+// codecLegacyPromptTask is the prompt the first decided approval of a run took,
+// as its attempt's detail; nil when it took none.
+func codecLegacyPromptTask(run Run) *string {
+	for _, attempt := range run.Attempts {
+		index := run.StageIndexOf(attempt.StageID)
+		if index < 0 || run.Stages[index].Kind() != StageKindGate || attempt.EndedAt == nil {
+			continue
+		}
+		if attempt.Detail == nil || *attempt.Detail == "" {
+			return nil
+		}
+		return new(*attempt.Detail)
+	}
 	return nil
 }

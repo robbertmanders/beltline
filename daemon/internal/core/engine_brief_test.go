@@ -15,7 +15,7 @@ func briefTestEpicChild(key string, labels []string) Subject {
 // TestTheBriefNamesTheParentAndTheBase
 func TestTheBriefNamesTheParentAndTheBase(t *testing.T) {
 	t.Parallel()
-	text := briefSubject(briefTestEpicChild("PAY-42", []string{"base:beltline/PAY-40"}), "beltline/PAY-40", nil)
+	text := briefSubject(briefTestEpicChild("PAY-42", []string{"base:beltline/PAY-40"}), "beltline/PAY-40", nil, false)
 	if !strings.Contains(text, "It is part of PAY-40") {
 		t.Fatalf("no parent line:\n%s", text)
 	}
@@ -23,7 +23,7 @@ func TestTheBriefNamesTheParentAndTheBase(t *testing.T) {
 		t.Fatalf("no base line:\n%s", text)
 	}
 	ticket := Subject{Kind: SubjectKindJira, Repo: "acme/billing", Key: "PAY-1", Title: "T", Labels: []string{"agent"}, Blockers: []string{}}
-	if strings.Contains(briefSubject(ticket, "main", nil), "merge into") {
+	if strings.Contains(briefSubject(ticket, "main", nil, false), "merge into") {
 		t.Fatal("a ticket without a base hint names its merge target")
 	}
 }
@@ -101,35 +101,6 @@ func briefTestFinish(run *Run, outcome string) {
 	EngineAdvance(run, Event{Kind: EventKindSessionFinished, Output: new("Some output.\n\nOutcome: " + outcome)}, engineT0)
 }
 
-func TestBriefSourceContextRequiresConsentAfterPromptEntry(t *testing.T) {
-	t.Parallel()
-	run := briefTestSampleRun(engineIssueBelt())
-	run.Subject = Subject{Kind: SubjectKindJira, Key: "SECRET-123", Title: "Source title",
-		Body: "Source description", URL: "https://jira.example/SECRET-123", Labels: []string{"source-label"}, Parent: new("SECRET-1")}
-	run.Note = new("Implement only my explicit task.")
-	stage := *run.Stage()
-	stage.Brief = "Task reference: {issue}. Write {output}."
-	for _, include := range []*bool{nil, new(true), new(false)} {
-		run.IncludeSubject = include
-		for _, text := range []string{
-			BriefRender(run, stage, briefTestContext()),
-			BriefRerun(run, stage, Attempt{}, briefTestContext()),
-		} {
-			for _, detail := range []string{"SECRET-123", "Source title", "Source description", "https://jira.example/", "source-label", "SECRET-1"} {
-				if strings.Contains(text, detail) != ValueOr(include, true) {
-					t.Fatalf("include=%v: source detail %q shared incorrectly:\n%s", include, detail, text)
-				}
-			}
-			if !strings.Contains(text, *run.Note) {
-				t.Fatal("human prompt was excluded with source context")
-			}
-			if include != nil && !*include && !strings.Contains(text, "do not fetch or infer the ticket") {
-				t.Fatal("excluded source lacks retrieval instructions")
-			}
-		}
-	}
-}
-
 // TestArtifactsAreOptInAndUseTheEffectiveBrief
 func TestArtifactsAreOptInAndUseTheEffectiveBrief(t *testing.T) {
 	t.Parallel()
@@ -156,7 +127,7 @@ func TestArtifactsAreOptInAndUseTheEffectiveBrief(t *testing.T) {
 	}
 	stage.Brief = "Write {output}."
 	plain := BriefRender(run, stage, ctx)
-	want := "Write /runs/r/02-spec-1/triage.md.\n\n" + briefSubject(run.Subject, ctx.Base, run.Repos) + "\n" + BriefFooter(stage, BriefOutputPath(stage, ctx))
+	want := "Write /runs/r/02-spec-1/triage.md.\n\n" + briefSubject(run.Subject, ctx.Base, run.Repos, false) + "\n" + BriefFooter(stage, BriefOutputPath(stage, ctx))
 	if plain != want {
 		t.Fatalf("plain brief = %q, want %q", plain, want)
 	}

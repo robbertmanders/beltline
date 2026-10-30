@@ -20,9 +20,15 @@ func validationStageWarnings(stage Stage, index int, layout BeltLayout, agents m
 	if stage.Kind() == StageKindGate {
 		warnings = append(warnings, validationGateLabelWarnings(stage)...)
 	}
+	if stage.Type == StageTypePrompt {
+		warnings = append(warnings, validationPromptWarnings(stage)...)
+	}
 	warnings = append(warnings, validationFlowWarnings(stage)...)
 	if stage.Kind() == StageKindAgent {
 		warnings = append(warnings, validationAgentStageWarnings(stage, agents)...)
+	}
+	if stage.Type == StageTypeApprove && index == 0 {
+		warnings = append(warnings, stage.Name+" is the first stage, so you would approve issues before any agent has looked at them.")
 	}
 	warnings = append(warnings, validationSlotWarnings(stage)...)
 	return warnings
@@ -93,6 +99,22 @@ func validationGateLabelWarnings(stage Stage) []string {
 		}
 	}
 	return nil
+}
+
+// validationPromptWarnings are a prompt stage's checks: its prompt reaches every
+// later stage as the run's task, so no outcome passes it on as a note too, and
+// the source choice it starts with is one there is.
+func validationPromptWarnings(stage Stage) []string {
+	var warnings []string
+	for _, outcome := range stage.Outcomes {
+		if outcome.Then.WithOutput {
+			warnings = append(warnings, fmt.Sprintf("%s: “%s” passes its text on as a note, but a prompt stage's prompt already reaches every later stage as the run's task.", stage.Name, outcome.Name))
+		}
+	}
+	if stage.Source != nil && !stage.Source.Known() {
+		warnings = append(warnings, stage.Name+" starts its source choice with a value there is none of.")
+	}
+	return warnings
 }
 
 // validationFlowWarnings are the checks that a stage with outcomes can move a run

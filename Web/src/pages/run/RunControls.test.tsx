@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../../api/errors";
 import { emptyStageDraft, type StageDraft } from "../../state/runDrafts";
 import type { CommandController } from "../../api/useCommand";
-import type { RunViewResponse } from "../../api/wire.gen";
+import type { PromptFacts, RunViewResponse, SourceSharing } from "../../api/wire.gen";
 import { RunControls, type RunCommandSubmit } from "./RunControls";
 import { RunInlineControls } from "./RunInlineControls";
 import { golden } from "../../test/golden";
@@ -24,7 +24,8 @@ function Harness({ view, stageId, command, submit = vi.fn(), adjustOpen }: { vie
     onAnswerChange: (value: string) => setDraft(current => ({ ...current, answer: value })),
     onDecisionNoteChange: (outcomeId: string, value: string) => setDraft(current => ({ ...current, notes: { ...current.notes, [outcomeId]: value } })),
     onPendingOutcomeChange: (value: string | null) => setDraft(current => ({ ...current, pendingOutcome: value })),
-    onIncludeSubjectChange: (value: boolean) => setDraft(current => ({ ...current, includeSubject: value })),
+    onPromptChange: (value: string) => setDraft(current => ({ ...current, prompt: value })),
+    onSourceChange: (value: SourceSharing) => setDraft(current => ({ ...current, source: value })),
     onSendMessageChange: (value: string) => setDraft(current => ({ ...current, sendMessage: value })),
     answerVersion: () => 0, command, submit, canRead: true, connection: "connected" as const, onErased: vi.fn(),
     adjustOpen
@@ -61,67 +62,69 @@ function gateView(): RunViewResponse {
   return view;
 }
 
-function promptView(): RunViewResponse {
+/** gateView's approval as a prompt stage, as the daemon sends one: its editor in place of the document. */
+function promptView(prompt: Partial<PromptFacts> = {}): RunViewResponse {
   const view = gateView();
   const panel = view.stages.find(stage => stage.id === "approve-plan")!;
   const approval = panel.facts!.approval!;
   approval.outcomes = [
-    { id: "refine", name: "refine", label: "Refine then implement", tone: "good" },
-    { id: "direct", name: "direct", label: "Implement directly", tone: "good" },
-    { id: "skip", name: "skip", label: "Skip this ticket", tone: "neutral" }
+    { id: "started", name: "started", label: "Start", tone: "good" },
+    { id: "parked", name: "parked", label: "Park it", tone: "neutral" }
   ];
-  approval.primary = "refine";
+  approval.primary = "started";
   approval.prompt = {
-    noteKey: "refine", label: "Your prompt", placeholder: "Describe your task.", help: "Write first, then choose.",
+    label: "Your prompt", placeholder: "Describe your task.", help: "Write the run's task.",
     contextLabel: "Source context", context: [{ type: "paragraph", text: "Ticket acceptance criteria" }],
-    includeLabel: "Include source context for agents", include: false
+    sourceLabel: "Include source context for agents", sourceHelp: "Unchecked, agents get the reference only.", source: "withheld",
+    ...prompt
   };
-  view.actions = approval.outcomes.map(outcome => ({
-    id: "decide", enabled: true, stage: panel.id, outcome: outcome.name, needsNote: outcome.id !== "skip"
-  }));
+  view.actions = [
+    ...view.actions.filter(action => action.id !== "decide"),
+    { id: "decide", enabled: true, stage: "approve-plan", outcome: "started", needsNote: true },
+    { id: "decide", enabled: true, stage: "approve-plan", outcome: "parked", needsNote: false }
+  ];
   return view;
 }
 
-describe("run controls", () => {
-  it("shows a shared prompt before choosing either path and excludes context by default", async () => {
+describe("prompt stage", () => {
+  it("sends the prompt and the source choice with an outcome that moves on, and parks without them", async () => {
     const user = userEvent.setup();
     const submit = vi.fn<RunCommandSubmit>();
     render(<Harness view={promptView()} stageId="approve-plan" command={controller()} submit={submit} />);
-    const text = screen.getByRole("textbox", { name: "Your prompt" });
-    const refine = screen.getByRole("button", { name: "Refine then implement" });
-    const direct = screen.getByRole("button", { name: "Implement directly" });
-    expect(refine.hasAttribute("disabled")).toBe(true);
-    expect(direct.hasAttribute("disabled")).toBe(true);
+    const start = screen.getByRole("button", { name: "Start" });
+    expect(start.hasAttribute("disabled")).toBe(true);
     expect(screen.getByText("Ticket acceptance criteria")).toBeTruthy();
-    expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(false);
-    await user.click(screen.getByRole("button", { name: "Skip this ticket" }));
-    expect(submit).toHaveBeenLastCalledWith("decide", { outcome: "skip", note: "", stage: "approve-plan", includeSubject: false });
-    await user.type(text, "My task\nwith constraints");
-    await user.click(refine);
-    expect(submit).toHaveBeenLastCalledWith("decide", { outcome: "refine", note: "My task\nwith constraints", stage: "approve-plan", includeSubject: false });
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(direct);
-    expect(submit).toHaveBeenLastCalledWith("decide", { outcome: "direct", note: "My task\nwith constraints", stage: "approve-plan", includeSubject: true });
+    const source = screen.getByRole("checkbox", { name: "Include source context for agents" }) as HTMLInputElement;
+    expect(source.checked).toBe(false);
+    await user.click(screen.getByRole("button", { name: "Park it" }));
+    expect(submit).toHaveBeenLastCalledWith("decide", { outcome: "parked", note: "", stage: "approve-plan" });
+    await user.type(screen.getByRole("textbox", { name: "Your prompt" }), "My task\nwith constraints");
+    await user.click(start);
+    expect(submit).toHaveBeenLastCalledWith("decide", { outcome: "started", note: "My task\nwith constraints", stage: "approve-plan", source: "withheld" });
+    await user.click(source);
+    await user.click(start);
+    expect(submit).toHaveBeenLastCalledWith("decide", { outcome: "started", note: "My task\nwith constraints", stage: "approve-plan", source: "shared" });
   });
 
-  it("keeps the prompt and context choice after refusal and respects unavailable actions", async () => {
+  it("starts a visit back from the run's task and choice, and keeps the draft after a refusal", async () => {
     const user = userEvent.setup();
-    const view = promptView();
-    view.actions.find(action => action.outcome === "direct")!.enabled = false;
+    const view = promptView({ task: "Earlier task", source: "shared" });
     const submit = vi.fn<RunCommandSubmit>();
     const { rerender } = render(<Harness view={view} stageId="approve-plan" command={controller()} submit={submit} />);
-    await user.type(screen.getByLabelText("Your prompt"), "Keep my input");
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Refine then implement" }));
+    const text = screen.getByRole("textbox", { name: "Your prompt" }) as HTMLTextAreaElement;
+    expect(text.value).toBe("Earlier task");
+    expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(true);
+    await user.type(text, " and more");
+    await user.click(screen.getByRole("button", { name: "Start" }));
     rerender(<Harness view={view} stageId="approve-plan" submit={submit} command={controller({
       error: new ApiError("Decision refused", 422), lastRequest: { path: "/api/v1/runs/run/decide", body: {}, affects: [], publish: vi.fn() }
     })} />);
-    expect((screen.getByLabelText("Your prompt") as HTMLTextAreaElement).value).toBe("Keep my input");
-    expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByRole("textbox", { name: "Your prompt" }) as HTMLTextAreaElement).value).toBe("Earlier task and more");
     expect(screen.getByText("Decision refused")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Implement directly" }).hasAttribute("disabled")).toBe(true);
   });
+});
 
+describe("run controls", () => {
   it("waits for the selected stage's settings instead of retaining an earlier stage's defaults", async () => {
     const view = golden<RunViewResponse>("views-run-forked.json");
     const agent = view.stages.find(item => item.adjust)!;

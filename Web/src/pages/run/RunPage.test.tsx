@@ -204,49 +204,6 @@ describe("Run page", () => {
     expect((textarea as HTMLTextAreaElement).value).toBe("  keep this text  ");
   });
 
-  it("uses the main panel for prompt entry and posts the shared text with explicit source consent", async () => {
-    const user = userEvent.setup();
-    const view = viewOf();
-    view.run.state = "waiting";
-    view.run.stageId = "approve-plan";
-    const panel = view.stages.find(stage => stage.id === "approve-plan")!;
-    panel.step = "waiting";
-    panel.attempts = [{ id: "approve-plan-1", number: 1, caption: "Attempt 1 of 1", content: "decision", isOpen: true }];
-    const approval = panel.facts!.approval!;
-    delete approval.blocks;
-    approval.outcomes = [
-      { id: "refine", name: "refine", label: "Refine then implement", tone: "good" },
-      { id: "direct", name: "direct", label: "Implement directly", tone: "good" }
-    ];
-    approval.primary = "refine";
-    approval.prompt = {
-      noteKey: "refine", label: "Your prompt", placeholder: "Your task", help: "Write first, then choose.",
-      contextLabel: "Source context", context: [{ type: "paragraph", text: "Ticket details for the human" }],
-      includeLabel: "Include source context for agents", include: false
-    };
-    view.actions = approval.outcomes.map(outcome => ({ id: "decide", enabled: true, stage: panel.id, outcome: outcome.name, needsNote: true }));
-    const daemon = stubDaemon({
-      [viewPath]: () => json(view), [`POST ${runPath}/decide`]: refusal("Decision refused", ["Keep editing"])
-    });
-    const first = renderRun();
-    const prompt = await screen.findByLabelText("Your prompt");
-    expect(prompt.closest(".stage-approval-side")).toBeNull();
-    expect(screen.queryByText(approval.emptyDocument)).toBeNull();
-    expect(screen.getByText("Ticket details for the human")).toBeTruthy();
-    await user.type(prompt, "Implement only this task.");
-    await user.click(screen.getByRole("checkbox", { name: approval.prompt.includeLabel }));
-    first.unmount();
-    renderRun();
-    expect((await screen.findByLabelText("Your prompt") as HTMLTextAreaElement).value).toBe("Implement only this task.");
-    expect((screen.getByRole("checkbox", { name: approval.prompt.includeLabel }) as HTMLInputElement).checked).toBe(true);
-    await user.click(screen.getByRole("button", { name: "Implement directly" }));
-    await screen.findByText("Decision refused");
-    expect(daemon.posts(`${runPath}/decide`)[0]!.body).toEqual({
-      outcome: "direct", note: "Implement only this task.", includeSubject: true
-    });
-    expect((screen.getByLabelText("Your prompt") as HTMLTextAreaElement).value).toBe("Implement only this task.");
-  });
-
   it("holds the run's controls first, then the open links after a divider, in one menu that dismisses on Escape and an outside click", async () => {
     const user = userEvent.setup();
     stubDaemon();

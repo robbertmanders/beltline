@@ -16,34 +16,36 @@ function promptEntryResponse(): string {
   const panel = view.stages.find(stage => stage.id === "approve-plan")!;
   view.run.state = "waiting";
   view.run.stageId = panel.id;
-  panel.name = "Write your prompt";
+  panel.name = "Prompt";
   panel.step = "waiting";
   panel.attempts = [{ id: "approve-plan-1", number: 1, caption: "Attempt 1 of 1", content: "decision", isOpen: true }];
   const facts = panel.facts!;
   facts.state = { text: "WAITING FOR YOU", tone: "you" };
+  facts.kindChip = "YOUR PROMPT";
   facts.attempts = [];
   const approval = facts.approval!;
   delete approval.blocks;
-  approval.primary = "refine";
+  approval.primary = "started";
   approval.outcomes = [
-    { id: "refine", name: "refine", label: "Refine then implement", tone: "good" },
-    { id: "direct", name: "direct", label: "Implement directly", tone: "good" },
-    { id: "skip", name: "skip", label: "Skip this ticket", tone: "neutral" }
+    { id: "started", name: "started", label: "Start", tone: "good" },
+    { id: "parked", name: "parked", label: "Park it", tone: "neutral" }
   ];
   approval.prompt = {
-    noteKey: "refine", label: "Your prompt",
-    placeholder: "Describe what you want the agent to do, including constraints and acceptance criteria.",
-    help: "Write your prompt first, then choose how to proceed. The same prompt is sent with either action. Source context is excluded unless you include it.",
+    label: "Your prompt",
+    placeholder: "Describe what you want the agents to do, with any constraints and acceptance criteria.",
+    help: "Write the run's task, then choose how to go on. Every stage after this one gets it.",
     contextLabel: "Source context",
     context: [
       { type: "heading", level: 2, text: "The Jira ticket" },
       { type: "paragraph", text: "PAY-40: Split invoicing into its own service" },
       { type: "paragraph", text: "Extract invoicing behind a stable API. Preserve existing invoice identifiers and make the migration reversible." }
     ],
-    includeLabel: "Include source context for agents", include: false
+    sourceLabel: "Include source context for agents",
+    sourceHelp: "Unchecked, agents get your prompt and the work item's reference only, not its title, description, labels, parent or link. Branch names and folders still carry the reference.",
+    source: "withheld"
   };
   view.actions = approval.outcomes.map(outcome => ({
-    id: "decide", enabled: true, stage: panel.id, outcome: outcome.name, needsNote: outcome.id !== "skip"
+    id: "decide", enabled: true, stage: panel.id, outcome: outcome.name, needsNote: outcome.id === "started"
   }));
   return JSON.stringify(view);
 }
@@ -62,7 +64,7 @@ export const runCases: SnapshotCase[] = [
     sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
     readiness: "run",
     apiResponses: [{ path: "/api/v1/views/run/epics%3Ajira%3APAY-40", status: 200, body: promptEntryResponse() }],
-    readyMarker: "#run-prompt-text",
+    readyMarker: ".run-prompt textarea",
     scrollToTop: ".stage-panel",
     steps: [{ kind: "fill", target: { role: "textbox", name: "Your prompt", exact: true },
       value: "Prepare the API boundary for invoicing. Keep existing callers working and add focused contract tests.\n\nDo not perform the data migration yet." }]

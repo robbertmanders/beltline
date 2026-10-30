@@ -15,13 +15,16 @@ export const toneLabels: Record<"good" | "you" | "problem" | "neutral", string> 
 
 /**
  * What an outcome does next, as the app laid it out: the action with its target beside it, then on their own
- * lines "pass the output along" (or "ask me for a note" on an approval), "at most N ×" and the hold's comment.
+ * lines "pass the output along" (or "ask me for a note" on an approval, and nothing on a prompt stage, whose
+ * prompt reaches every later stage as the run's task), "at most N ×" and the hold's comment.
  */
-export function ThenControls<T extends ThenFields>({ number, then, actions, gate = false, disabled, onAction, onChange, target }: {
+export function ThenControls<T extends ThenFields>({ number, then, actions, gate = false, passesOn = true, disabled, onAction, onChange, target }: {
   number: number;
   then: T;
   actions: readonly { id: string; label: string }[];
   gate?: boolean;
+  /** Whether the outcome can pass text on as a note; false on a prompt stage. */
+  passesOn?: boolean;
   disabled: boolean;
   onAction: (action: T["do"]) => void;
   onChange: (change: (then: T) => T) => void;
@@ -36,7 +39,7 @@ export function ThenControls<T extends ThenFields>({ number, then, actions, gate
       </select>
       {(action === "goto" || action === "route") && target}
     </div>
-    {(action === "goto" || action === "route" || action === "retry" || action === "next") && <label className="then-toggle"
+    {passesOn && (action === "goto" || action === "route" || action === "retry" || action === "next") && <label className="then-toggle"
       title="Pass this stage's output to the next attempt as a note">
       <input type="checkbox" checked={then.withOutput === true} disabled={disabled}
         onChange={event => { const on = event.target.checked; onChange(current => ({ ...current, withOutput: on })); }} />

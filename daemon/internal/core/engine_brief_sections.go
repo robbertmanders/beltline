@@ -137,29 +137,45 @@ func briefLastComponent(repo string) string {
 }
 
 // briefSubject is the section about what the run works on. repositories are the
-// repositories the subject touches.
-func briefSubject(subject Subject, base string, repositories []string) string {
+// repositories the subject touches. A withheld subject keeps its reference and
+// where its work happens, and leaves out its title, link, labels, parent and
+// description.
+func briefSubject(subject Subject, base string, repositories []string, withheld bool) string {
+	title := ": " + subject.Title
+	if withheld {
+		title = ""
+	}
 	var text string
 	switch subject.Kind {
 	case SubjectKindIssue:
-		text = "## The issue\n\n" + subject.Repo + "#" + strconv.Itoa(subject.Number) + ": " + subject.Title + "\n"
+		text = "## The issue\n\n" + subject.Repo + "#" + strconv.Itoa(subject.Number) + title + "\n"
 	case SubjectKindPullRequest:
-		text = "## The pull request\n\n" + subject.Repo + "#" + strconv.Itoa(subject.Number) + ": " + subject.Title + "\n"
+		text = "## The pull request\n\n" + subject.Repo + "#" + strconv.Itoa(subject.Number) + title + "\n"
 	case SubjectKindJira:
-		text = "## The Jira ticket\n\n" + subject.Key + ": " + subject.Title + "\n"
+		text = "## The Jira ticket\n\n" + subject.Key + title + "\n"
 	case SubjectKindManual:
-		text = "## The task\n\n" + subject.Title + "\n"
+		if withheld {
+			text = "## The task\n\n" + subject.Ref() + "\n"
+		} else {
+			text = "## The task\n\n" + subject.Title + "\n"
+		}
 	case SubjectKindScheduled:
-		text = "## The scheduled task\n\n" + subject.Title + ", for " + subject.Key + "\n"
+		if withheld {
+			text = "## The scheduled task\n\nFor " + subject.Key + "\n"
+		} else {
+			text = "## The scheduled task\n\n" + subject.Title + ", for " + subject.Key + "\n"
+		}
 	}
-	if subject.URL != "" {
-		text += subject.URL + "\n"
-	}
-	if len(subject.Labels) > 0 {
-		text += "Labels: " + strings.Join(subject.Labels, ", ") + "\n"
-	}
-	if subject.Parent != nil {
-		text += "It is part of " + *subject.Parent + "; read it for the design it follows.\n"
+	if !withheld {
+		if subject.URL != "" {
+			text += subject.URL + "\n"
+		}
+		if len(subject.Labels) > 0 {
+			text += "Labels: " + strings.Join(subject.Labels, ", ") + "\n"
+		}
+		if subject.Parent != nil {
+			text += "It is part of " + *subject.Parent + "; read it for the design it follows.\n"
+		}
 	}
 	if subject.Kind != SubjectKindPullRequest && subject.BaseHint() != nil {
 		if len(repositories) > 1 {
@@ -180,11 +196,36 @@ func briefSubject(subject Subject, base string, repositories []string) string {
 		}
 	case SubjectKindIssue:
 	}
+	if withheld {
+		return text + "\n" + BriefCopyWithheld(subject.Kind) + "\n"
+	}
 	body := strings.TrimSpace(subject.Body)
 	if body == "" {
 		body = "(The " + subject.Kind.Noun() + " has no description.)"
 	}
 	return text + "\n" + body + "\n"
+}
+
+// BriefCopyWithheld is what a brief says in place of a withheld subject's details.
+func BriefCopyWithheld(kind SubjectKind) string {
+	noun := kind.Noun()
+	return "The person withheld this " + noun + "'s details from agents. Work from their task below and the handoffs you are given. Use the reference above only where your brief asks you to link to the " + noun + ", comment on it or move it; don't read its title, description, comments or linked items."
+}
+
+// briefTask is the section with the task you wrote at a prompt stage; empty when
+// the run has none.
+func briefTask(run Run) string {
+	task := strings.TrimSpace(ValueOf(run.Task))
+	if task == "" {
+		return ""
+	}
+	text := "\n## Your task\n\nThe person wrote this task for the run. It is what the run is for"
+	if run.WithholdsSource() {
+		text += "."
+	} else {
+		text += ": where it and the " + run.Subject.Kind.Noun() + " above disagree, follow the task."
+	}
+	return text + "\n\n" + task + "\n"
 }
 
 // BriefFooter is the lines added to the end of every agent brief: the done

@@ -16,10 +16,12 @@ import (
 // lock-held form of that method (park, unpark, pauseRun, resumeRun, startNow,
 // adjustStage, overruleAfk), so the whole command is one main-actor turn.
 // DecideCommand picks one of the waiting approval's outcomes. A note is required
-// when the outcome asks for output. A parked or paused run ignores the decision
+// when the outcome asks for output, and the prompt when a prompt stage's outcome
+// moves the run on; source, only at a prompt stage, is whether agents get the
+// work item's details (nil takes the stage's own choice). A parked or paused run ignores the decision
 // and answers with the run as it is.
 // Lock: exported entry point; takes c.mu. Spawns: kick.
-func (c *Coordinator) DecideCommand(id, outcome string, note *string, includeSubject *bool) (core.Run, error) {
+func (c *Coordinator) DecideCommand(id, outcome string, note *string, source *core.SourceSharing) (core.Run, error) {
 	c.Lock()
 	defer c.EndTurn()
 	command, err := c.commandOn(id, core.RunCommandDecide)
@@ -46,17 +48,23 @@ func (c *Coordinator) DecideCommand(id, outcome string, note *string, includeSub
 		return core.Run{}, err
 	}
 	trimmed := trimmedOrNil(note)
-	if configured.Then.WithOutput && trimmed == nil {
+	if stage.NeedsNote(*configured) && trimmed == nil {
+		if stage.Type == core.StageTypePrompt {
+			return core.Run{}, core.NewValidationFailure(core.RunAvailabilityPromptRequired, nil)
+		}
 		return core.Run{}, core.NewValidationFailure(core.RunAvailabilityNoteRequired, nil)
 	}
-	prompt := c.approvalFacts(run, *stage).Prompt
-	if includeSubject != nil && prompt == nil {
-		return core.Run{}, core.NewValidationFailure("Source context can only be chosen at a prompt-entry gate.", nil)
+	var sharing core.SourceSharing
+	if source != nil {
+		if stage.Type != core.StageTypePrompt {
+			return core.Run{}, core.NewValidationFailure(core.RunAvailabilitySourceOnlyAtPrompt, nil)
+		}
+		if !source.Known() {
+			return core.Run{}, core.NewValidationFailure(core.RunAvailabilitySourceUnknown, nil)
+		}
+		sharing = *source
 	}
-	if prompt != nil {
-		includeSubject = new(core.ValueOr(includeSubject, prompt.Include))
-	}
-	if err := command.apply(core.Event{Kind: core.EventKindDecided, Outcome: configured.Name, Note: trimmed, IncludeSubject: includeSubject}, "Could not save the decision."); err != nil {
+	if err := command.apply(core.Event{Kind: core.EventKindDecided, Outcome: configured.Name, Note: trimmed, Sharing: sharing}, "Could not save the decision."); err != nil {
 		return core.Run{}, err
 	}
 	c.kick()

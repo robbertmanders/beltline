@@ -2,7 +2,7 @@ import { Fragment, useState, type ReactNode } from "react";
 import { ErrorProblems } from "../../components/ProblemList";
 import { Sheet } from "../../components/Sheet";
 import { findRunAction, type RunCommandId, type RunCommandOperands } from "../../api/runCommands";
-import type { Run, RunAction, RunMenuRow, RunStage, RunViewResponse, Stage } from "../../api/wire.gen";
+import type { Run, RunAction, RunMenuRow, RunStage, RunViewResponse, SourceSharing, Stage } from "../../api/wire.gen";
 import type { CommandController } from "../../api/useCommand";
 import type { ConnectionStatus } from "../../api/eventConnection";
 import type { StageDraft } from "../../state/runDrafts";
@@ -29,7 +29,8 @@ export interface RunControlsProps {
   onAnswerChange: (value: string) => void;
   onDecisionNoteChange: (outcomeId: string, value: string) => void;
   onPendingOutcomeChange: (value: string | null) => void;
-  onIncludeSubjectChange: (value: boolean) => void;
+  onPromptChange: (value: string) => void;
+  onSourceChange: (value: SourceSharing) => void;
   onSendMessageChange: (value: string) => void;
   answerVersion: () => number;
   command: CommandController;

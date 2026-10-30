@@ -5,6 +5,7 @@ package core
 
 import (
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -292,12 +293,24 @@ func engineDecided(run *Run, event Event, now time.Time) []Effect {
 	if outcome == nil {
 		return nil
 	}
-	if event.IncludeSubject != nil {
-		run.IncludeSubject = CopyPointer(event.IncludeSubject)
+	note := event.Note
+	if stage.Type == StageTypePrompt && stage.NeedsNote(*outcome) {
+		// The prompt becomes the run's task, which every later brief carries, so it
+		// is not passed on as a note too.
+		task := strings.TrimSpace(ValueOf(event.Note))
+		if task == "" {
+			return nil
+		}
+		run.Task = &task
+		run.Sharing = event.Sharing
+		if !run.Sharing.Known() {
+			run.Sharing = *stage.SourceSharing()
+		}
+		note = nil
 	}
 	if event.Note != nil && *event.Note != "" {
-		note := *event.Note
-		engineCloseAttempt(run, &at.ID, now, func(a *Attempt) { a.Detail = new(note) })
+		detail := *event.Note
+		engineCloseAttempt(run, &at.ID, now, func(a *Attempt) { a.Detail = new(detail) })
 	}
-	return engineApply(run, at.ID, *stage, *outcome, event.Note, now)
+	return engineApply(run, at.ID, *stage, *outcome, note, now)
 }
