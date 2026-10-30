@@ -4,10 +4,22 @@ Beltline turns GitHub issues, pull request reviews and Jira tickets into pull re
 
 It runs on your own machine, macOS or Linux: `beltlined` is a small daemon that runs your belts whether or not a window is open, and you work with it in your browser.
 
-![A run on its belt: Triage chose the Complex route, Spec is done, and the approval waits for you with the spec and what approving will do next](docs/images/run.png)
+![A run on its belt: you approve the spec, and Build, Verify and Ship run one after another until the Merge watch waits for the pull request](docs/images/run.gif)
 
 > [!WARNING]
 > Beltline runs coding agents (Claude Code, Codex, Copilot, Cursor, Pi) **with their approval prompts turned off**, as your user and with your `gh` and `acli` sign-ins. Agents read issue and ticket text that other people may have written. Read [docs/security.md](docs/security.md) before you point a belt at a repository, and start with a label only you can apply.
+
+## Try the demo first
+
+The demo needs only Go, Node.js and `make`. It touches no GitHub, Jira or agent, and installs nothing:
+
+```sh
+git clone https://github.com/robbertmanders/beltline.git
+cd beltline
+make demo
+```
+
+This builds `beltlined`, starts it on fixture belts, runs, issues and pull requests in a temporary folder, and opens your browser. Approve a waiting run and watch it ride the belt. Ctrl-C stops it and removes the folder.
 
 ## Requirements
 
@@ -33,14 +45,6 @@ Keep the clone where it is: the service starts `build/release/beltlined` from it
 To upgrade, pull `main` and install again: `git pull && make install && build/release/beltlined restart`.
 
 On Linux, the service stops when you log out unless you run `loginctl enable-linger "$USER"` once. See [docs/configuration.md](docs/configuration.md#running-at-login) for both systems and for WSL2.
-
-## Try it without touching anything
-
-```sh
-make demo
-```
-
-This starts a separate daemon on fixture belts, runs, issues and pull requests in a temporary folder, without GitHub, Jira or agents. Ctrl-C stops it and removes the folder.
 
 ## First steps
 

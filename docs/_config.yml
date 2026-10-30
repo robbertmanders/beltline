@@ -6,6 +6,8 @@ description: Turn GitHub issues, pull request reviews and Jira tickets into pull
 url: https://robbertmanders.github.io
 baseurl: /beltline
 lang: en
+# The picture link previews show (jekyll-seo-tag), also the repository's social preview.
+image: /images/social-preview.png
 
 remote_theme: just-the-docs/just-the-docs@v0.12.0
 plugins:
