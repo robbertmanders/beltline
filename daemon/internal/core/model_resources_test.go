@@ -18,7 +18,7 @@ func builtInShippedVersion(id string) int {
 // mustBuiltInAgent parses a bundled agent at its shipped version.
 func mustBuiltInAgent(t *testing.T, id string) Agent {
 	t.Helper()
-	file, ok := BuiltInAgentFile(id)
+	file, ok := SampleAgentText(id)
 	if !ok {
 		t.Fatalf("no bundled agent %q", id)
 	}
@@ -32,15 +32,15 @@ func mustBuiltInAgent(t *testing.T, id string) Agent {
 // TestBuiltInAgentFileLookup checks that only bundled agent ids are found.
 func TestBuiltInAgentFileLookup(t *testing.T) {
 	t.Parallel()
-	for _, id := range DefaultsBuiltInIDs {
-		if _, ok := BuiltInAgentFile(id); !ok {
+	for _, id := range SampleAgentIDs {
+		if _, ok := SampleAgentText(id); !ok {
 			t.Errorf("built-in %s has no file", id)
 		}
 	}
-	if _, ok := BuiltInAgentFile("missing"); ok {
+	if _, ok := SampleAgentText("missing"); ok {
 		t.Fatal("a missing agent is reported as bundled")
 	}
-	if _, ok := BuiltInAgentFile("../assistant/prompt"); ok {
+	if _, ok := SampleAgentText("../assistant/prompt"); ok {
 		t.Fatal("an id that leaves the folder is reported as bundled")
 	}
 }
@@ -49,10 +49,10 @@ func TestBuiltInAgentFileLookup(t *testing.T) {
 // with the AgentFile port and that writing it again gives the same agent and bytes.
 func TestBuiltInAgentsParseAndRoundTrip(t *testing.T) {
 	t.Parallel()
-	for _, id := range DefaultsBuiltInIDs {
+	for _, id := range SampleAgentIDs {
 		t.Run(id, func(t *testing.T) {
 			t.Parallel()
-			file, ok := BuiltInAgentFile(id)
+			file, ok := SampleAgentText(id)
 			if !ok {
 				t.Fatalf("no bundled file for %s", id)
 			}

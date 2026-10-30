@@ -24,7 +24,7 @@ describe("snapshot selection", () => {
       .flatMap(name => [`${name}-open`, `${name}-closed`]);
     const interactive = ["run-sessions-click", "gallery", "agents-new", "agents-dirty", "agents-cursor", "agents-empty", "agents-long-text", "agents-model-unavailable",
       "agents-save-problems", "agents-used-by", "agents-archived", "agents-revealed", "agents-back-hidden",
-      "agents-reset-confirmation", "agents-assistant-running", "agents-assistant-running-terminal", "agents-assistant-stopped", "agents-codex", "agents-model-rows"];
+      "agents-assistant-running", "agents-assistant-running-terminal", "agents-assistant-stopped", "agents-codex", "agents-model-rows"];
     const workOnly = ["work-epic", "work-grouped", "work-paused", "work-status", "work-watching"];
     const beltsOwn = beltsCases.map(item => item.id).filter(id => id !== "belts-open" && id !== "belts-closed");
     const overviewOwn = ["overview-floor-open", "overview-floor-closed", "overview-floor-pinned", "overview-paused"];

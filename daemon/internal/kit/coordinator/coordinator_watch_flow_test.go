@@ -79,12 +79,12 @@ func newH5m3Flow(t *testing.T, flow coordFlow) *harness {
 
 // coordBuildWatchWrapUp is build, then a watch, then Wrap up.
 func coordBuildWatchWrapUp() core.Belt {
-	agents := core.DefaultsBuiltInAgents()
-	build := core.DefaultsStageForAgent(core.DefaultsAgent("build"), nil, nil, nil, core.TriggerKindIssues)
+	agents := core.SampleAgents()
+	build := core.DefaultsStageForAgent(core.SampleAgent("build"), nil, nil, nil, core.TriggerKindIssues)
 	build.Brief = "Build the requested change and write the result to {output}."
 	watch := core.DefaultsStage(core.StageTypeWatch, []core.Stage{build}, nil, []core.Stage{build})
-	wrap := core.DefaultsStageForAgent(core.DefaultsAgent("wrap-up"), []core.Stage{build, watch}, nil, []core.Stage{build, watch}, core.TriggerKindIssues)
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", agents, true)
+	wrap := core.DefaultsStageForAgent(core.SampleAgent("wrap-up"), []core.Stage{build, watch}, nil, []core.Stage{build, watch}, core.TriggerKindIssues)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", agents, true)
 	belt.Stages = []core.Stage{build, watch, wrap}
 	belt.Forks = nil
 	return belt
@@ -299,7 +299,7 @@ func TestAReviewBeltWatchesThePullRequestUnderReview(t *testing.T) {
 	t.Parallel()
 	watch := core.DefaultsStage(core.StageTypeWatch, nil, nil, nil)
 	trigger := core.TriggerKindReviews.Fresh()
-	belt := core.DefaultsBelt([]string{"acme/web"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/web"}, "agent", core.SampleAgents(), true)
 	belt.Triggers = []core.TriggerEntry{{ID: "reviews", Trigger: trigger, Repos: []string{"acme/web"}}}
 	belt.Stages = []core.Stage{watch}
 	belt.Forks = nil

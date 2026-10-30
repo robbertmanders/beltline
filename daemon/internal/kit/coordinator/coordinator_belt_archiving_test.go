@@ -26,10 +26,10 @@ func coordJSON(t *testing.T, value any) string {
 
 // manualBelt is a manual belt on two repositories with the manual kind's stages.
 func manualBelt(id string) core.Belt {
-	agents := core.DefaultsBuiltInAgents()
+	agents := core.SampleAgents()
 	entry := core.TriggerEntry{ID: "manual", Trigger: core.TriggerKindManual.Fresh(), Repos: []string{"acme/web", "acme/billing"}}
-	belt := core.DefaultBelt(id, id, []core.TriggerEntry{entry}, core.DefaultsStages(core.TriggerKindManual, agents, true))
-	belt.Forks = core.DefaultsForks(core.TriggerKindManual)
+	belt := core.DefaultBelt(id, id, []core.TriggerEntry{entry}, core.SampleStages(core.TriggerKindManual, agents, true))
+	belt.Forks = core.SampleForks(core.TriggerKindManual)
 	return belt
 }
 

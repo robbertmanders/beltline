@@ -75,7 +75,7 @@ type beltRecordView struct {
 
 // defaultLibraryBelt is the default issues belt on a/b, the source most save tests start from.
 func defaultLibraryBelt() core.Belt {
-	return core.DefaultsBelt([]string{"a/b"}, "agent", core.DefaultsBuiltInAgents(), true)
+	return core.SampleBelt([]string{"a/b"}, "agent", core.SampleAgents(), true)
 }
 
 // TestCopiesKeepTheDefinitionAndSaveAsIndependentLiveBelts covers copying a saved belt's draft: the copy
@@ -467,7 +467,7 @@ func forkedTestBelt() core.Belt {
 	fork := core.Fork{ID: "size", Routes: []core.Route{{ID: "complex", Name: "Complex"}, {ID: "simple", Name: "Simple"}}}
 	var stages []core.Stage
 	add := func(agentID string, route *string, id string) {
-		agent := core.DefaultsAgent(agentID)
+		agent := core.SampleAgent(agentID)
 		place := core.DefaultsPlace{Before: append([]core.Stage{}, stages...), Forks: []core.Fork{fork}, Route: route}
 		stage := core.DefaultsStageForAgentAt(agent, place, stages, core.TriggerKindIssues)
 		if id != "" {

@@ -37,7 +37,6 @@ export type PreCaptureStep =
 /** Idempotent API fixtures applied before the page loads, so mutations do not leak between viewport captures. */
 export type SnapshotFixture =
   | { kind: "ensure-agent-archived"; id: string; archived: boolean }
-  | { kind: "ensure-agent-reset-available"; id: string }
   | { kind: "agents-empty" }
   | { kind: "empty-model-choices"; runner: string }
   | { kind: "unavailable-model-choice"; runner: string };
@@ -120,7 +119,7 @@ export function validateSnapshotCase(item: SnapshotCase): void {
     if (step.kind === "wait" && step.state !== "visible" && step.state !== "hidden") fail("wait needs a visible or hidden state");
   }
   for (const fixture of item.fixtures ?? []) {
-    if (!["ensure-agent-archived", "ensure-agent-reset-available", "agents-empty", "empty-model-choices", "unavailable-model-choice"].includes(fixture.kind)) fail("unknown fixture kind");
+    if (!["ensure-agent-archived", "agents-empty", "empty-model-choices", "unavailable-model-choice"].includes(fixture.kind)) fail("unknown fixture kind");
     if (fixture.kind === "agents-empty") continue;
     if (fixture.kind === "empty-model-choices" || fixture.kind === "unavailable-model-choice") {
       if (typeof fixture.runner !== "string" || !fixture.runner.trim()) fail("model fixture needs a runner");

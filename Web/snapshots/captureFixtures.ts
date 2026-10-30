@@ -25,27 +25,6 @@ export async function applyFixture(context: BrowserContext, origin: string, item
     });
     return;
   }
-  if (fixture.kind === "ensure-agent-reset-available") {
-    const detailPath = `/api/v1/agents/${encodeURIComponent(fixture.id)}`;
-    const response = await context.request.get(`${origin}/api/v1/agents`);
-    if (!response.ok()) throw new Error(`${item.id}: reset fixture could not list agents (HTTP ${response.status()})`);
-    const listing = await response.json() as { agents: Array<{ agent: Record<string, unknown>; archived: boolean; builtIn: boolean }> };
-    let record = listing.agents.find(entry => entry.agent.id === fixture.id);
-    if (!record) throw new Error(`${item.id}: reset fixture could not find ${fixture.id}`);
-    if (record.archived) {
-      const restored = await context.request.post(`${origin}/api/v1/agents/${encodeURIComponent(fixture.id)}/unarchive`, { data: {} });
-      if (!restored.ok()) throw new Error(`${item.id}: reset fixture could not restore ${fixture.id} (HTTP ${restored.status()})`);
-      record = { ...record, archived: false };
-    }
-    const detailResponse = await context.request.get(`${origin}${detailPath}`);
-    if (!detailResponse.ok()) throw new Error(`${item.id}: reset fixture could not read ${fixture.id} (HTTP ${detailResponse.status()})`);
-    const detail = await detailResponse.json();
-    detail.actions = [...detail.actions.filter((action: { id: string }) => action.id !== "reset"),
-      { id: "reset", label: "Reset to default", enabled: true }];
-    detail.presentation = { ...detail.presentation, canReset: true };
-    await context.route(`${origin}${detailPath}`, route => route.fulfill({ json: detail }));
-    return;
-  }
   const listResponse = await context.request.get(`${origin}/api/v1/agents`);
   if (!listResponse.ok()) throw new Error(`${item.id}: agent fixture could not list agents (HTTP ${listResponse.status()})`);
   const list = await listResponse.json() as { agents: Array<{ agent: Record<string, unknown>; archived: boolean }> };

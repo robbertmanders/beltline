@@ -314,7 +314,6 @@ export interface AgentChoice {
 export interface AgentDetailResponse {
   agent: Agent;
   archived: boolean;
-  builtIn: boolean;
   actions: AgentAction[];
   presentation: AgentPresentation;
   folder: string;
@@ -352,15 +351,12 @@ export interface AgentOutcomeTarget {
 
 export interface AgentPresentation {
   isNew: boolean;
-  builtIn: boolean;
   archived: boolean;
   warnings: string[];
   footer: string;
   placeholders: PlaceholderHelp;
   usedBy: AgentUsage[];
   outcomeTargets: AgentOutcomeTarget[];
-  canReset: boolean;
-  resetReason?: string;
   glyph: StageIcon;
   status: string;
 }
@@ -368,7 +364,6 @@ export interface AgentPresentation {
 export interface AgentRecordResponse {
   agent: Agent;
   archived: boolean;
-  builtIn: boolean;
   beltCount?: number;
   glyph: StageIcon;
   detail: string;
@@ -1249,6 +1244,7 @@ export interface LibraryRepoResponse {
   commit: string | null;
   problem: string | null;
   changedSinceBackup?: boolean;
+  takesShares: boolean;
   items: LibraryItem[];
   actions: LibraryAction[];
 }

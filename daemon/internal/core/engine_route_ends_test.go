@@ -16,7 +16,7 @@ func nfAskBelt(t *testing.T) Belt {
 	fork := Fork{ID: "details", Routes: []Route{{ID: "main", Name: "Main"}, {ID: "asking", Name: "Needs details", Feeds: true}}}
 	var stages []Stage
 	add := func(agent string, route *string, id string) {
-		stage := DefaultsStageForAgentAt(DefaultsAgent(agent), DefaultsPlace{Before: stages, Forks: []Fork{fork}, Route: route}, stages, TriggerKindIssues)
+		stage := DefaultsStageForAgentAt(SampleAgent(agent), DefaultsPlace{Before: stages, Forks: []Fork{fork}, Route: route}, stages, TriggerKindIssues)
 		if id != "" {
 			stage.ID = id
 		}
@@ -47,7 +47,7 @@ func nfAskBelt(t *testing.T) Belt {
 // TestRoutesAfterTheWatchThatGoBackDoNotJoin
 func TestRoutesAfterTheWatchThatGoBackDoNotJoin(t *testing.T) {
 	t.Parallel()
-	layout := DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true).Layout()
+	layout := SampleBelt([]string{"acme/billing"}, "agent", SampleAgents(), true).Layout()
 	if !layout.Joins("merged") {
 		t.Errorf("merged does not join")
 	}
@@ -126,7 +126,7 @@ func TestAForkAtTheStartLeavesARouteThatFeedsIn(t *testing.T) {
 	t.Parallel()
 	belt := nfAskBelt(t)
 	belt.Stages = belt.Stages[1:]
-	triage := DefaultsStageForAgentAt(DefaultsAgent("triage"), DefaultsPlace{Forks: belt.Forks, Route: new("main")}, belt.Stages, TriggerKindIssues)
+	triage := DefaultsStageForAgentAt(SampleAgent("triage"), DefaultsPlace{Forks: belt.Forks, Route: new("main")}, belt.Stages, TriggerKindIssues)
 	nfInsertStage(&belt, 0, triage)
 	belt.Tidy()
 	run := engineStartRun(belt)
@@ -144,7 +144,7 @@ func TestAForkAtTheStartLeavesARouteThatFeedsIn(t *testing.T) {
 // TestDoneAfterAForkAtTheEndOfTheBeltJoins
 func TestDoneAfterAForkAtTheEndOfTheBeltJoins(t *testing.T) {
 	t.Parallel()
-	belt := DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true)
+	belt := SampleBelt([]string{"acme/billing"}, "agent", SampleAgents(), true)
 	wrap := nfStageIndex(t, belt, "wrap-up")
 	for i := range belt.Stages[wrap].Outcomes {
 		if belt.Stages[wrap].Outcomes[i].Then.Action == ThenActionNext {

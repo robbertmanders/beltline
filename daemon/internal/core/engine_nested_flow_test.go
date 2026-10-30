@@ -304,7 +304,7 @@ func TestThreeLevelsJoinFromTheInsideOut(t *testing.T) {
 	first := deep.Routes[0].ID
 	second := deep.Routes[1].ID
 	nfSetOutcomes(t, &belt, "thorough-spec", nfOutcome("split", nfRoutesThen(first, second)))
-	side := DefaultsStageForAgentAt(DefaultsAgent("build"), DefaultsPlace{Before: belt.Stages, Route: new(second)}, belt.Stages, TriggerKindIssues)
+	side := DefaultsStageForAgentAt(SampleAgent("build"), DefaultsPlace{Before: belt.Stages, Route: new(second)}, belt.Stages, TriggerKindIssues)
 	side.ID = "side"
 	side.Route = new(second)
 	side.Outcomes = []Outcome{nfOutcome("done", nfThenOf(ThenActionNext))}

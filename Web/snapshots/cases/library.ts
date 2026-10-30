@@ -7,12 +7,12 @@ const action = (id: string, enabled = true, reason?: string) => (enabled ? { id,
 const repositories = {
   repos: [
     {
-      repository: "acme/beltline-backup", path: "", role: "backup", publish: "pullRequest", syncedAt: "2026-10-14T09:00:00Z", commit: "4f2a9c1",
+      repository: "acme/beltline-backup", path: "", role: "backup", publish: "pullRequest", takesShares: false, syncedAt: "2026-10-14T09:00:00Z", commit: "4f2a9c1",
       problem: null, changedSinceBackup: true, items: [],
       actions: [action("refresh"), action("backup"), action("restore")]
     },
     {
-      repository: "acme/team-library", path: "shared", role: "shared", publish: "pullRequest", syncedAt: "2026-10-14T09:00:00Z", commit: "9c0be37",
+      repository: "acme/team-library", path: "shared", role: "shared", publish: "pullRequest", takesShares: true, syncedAt: "2026-10-14T09:00:00Z", commit: "9c0be37",
       problem: null,
       items: [
         { kind: "belt", id: "issue-flow", name: "Issue flow", version: 3, localVersion: 2, state: "update", reason: null, actions: [action("install")] },

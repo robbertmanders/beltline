@@ -95,7 +95,7 @@ func TestRealPiTakesAnIssueFromLabelToAVerifiedBranch(t *testing.T) {
 	storage := realStorage(t, paths)
 	realOrigin(t, root, paths, "acme/calc", realCalcSetup(`# calc\nA tiny calculator. Run tests with: python3 -m unittest\n`))
 
-	belt := core.DefaultsBelt([]string{"acme/calc"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/calc"}, "agent", core.SampleAgents(), true)
 	belt.Base = "main"
 	var stages []core.Stage
 	for _, stage := range belt.Stages {

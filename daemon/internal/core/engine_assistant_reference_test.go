@@ -58,9 +58,7 @@ func TestTheReferenceNamesEveryStageWatchActionAndTrigger(t *testing.T) {
 	for _, placeholder := range BriefFixedPlaceholders {
 		names = append(names, "`{"+placeholder+"}`")
 	}
-	for _, id := range DefaultsBuiltInIDs {
-		names = append(names, "`"+id+"` v")
-	}
+	names = append(names, "`"+LibraryExamplesRepository+"`", "`library-repos/<owner>__<repo>/`")
 	for _, name := range names {
 		if !strings.Contains(text, name) {
 			t.Errorf("missing %s", name)
@@ -69,7 +67,7 @@ func TestTheReferenceNamesEveryStageWatchActionAndTrigger(t *testing.T) {
 }
 
 // TestTheExamplesDecodeAndPassTheChecks
-// The examples are what a new belt starts with, and pass Save once the built-ins are in the library.
+// The examples decode, and pass Save once the agents they pin are in the library.
 func TestTheExamplesDecodeAndPassTheChecks(t *testing.T) {
 	t.Parallel()
 	blocks := assistantReferenceJSONBlocks(AssistantReferenceText())
@@ -110,7 +108,7 @@ func TestTheExamplesDecodeAndPassTheChecks(t *testing.T) {
 		t.Fatalf("belt example has watch %v and %d forks", hasWatch, len(belt.Forks))
 	}
 	files := map[string][]byte{"belts/issues/v1.json": []byte(blocks[1])}
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		files["agents/"+agent.ID+"/v"+strconv.Itoa(agent.Version)+".md"] = []byte(AgentFileWrite(agent))
 	}
 	if problems := LibraryCheckProblems(files, nil); len(problems) != 0 {

@@ -376,7 +376,7 @@ func TestRemovingAnEntryLeavesItsRunAndStopsNewAdmissions(t *testing.T) {
 	second := multiIssueEntry("2", "bug", 30, "acme/web")
 	h := newFlowHarness(t, flowOptions{
 		issues: []core.Subject{flowIssue("acme/billing", 1, "Keep", "agent"), flowIssue("acme/web", 2, "Also", "bug")},
-		belts:  []core.Belt{multiBelt("shared", []core.TriggerEntry{first, second}, core.DefaultsStages(core.TriggerKindIssues, core.DefaultsBuiltInAgents(), true), core.DefaultsForks(core.TriggerKindIssues))},
+		belts:  []core.Belt{multiBelt("shared", []core.TriggerEntry{first, second}, core.SampleStages(core.TriggerKindIssues, core.SampleAgents(), true), core.SampleForks(core.TriggerKindIssues))},
 		now:    time.Unix(1_000, 0),
 	})
 	h.Tick()

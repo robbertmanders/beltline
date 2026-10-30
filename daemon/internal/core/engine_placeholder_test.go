@@ -16,13 +16,13 @@ import (
 
 // placeholderTestBelt is Defaults.belt(repos:) with the given repositories.
 func placeholderTestBelt(repos ...string) Belt {
-	return DefaultsBelt(repos, "agent", DefaultsBuiltInAgents(), true)
+	return SampleBelt(repos, "agent", SampleAgents(), true)
 }
 
 // placeholderTestAgents is every built-in agent keyed by its reference.
 func placeholderTestAgents() map[AgentRef]Agent {
 	agents := map[AgentRef]Agent{}
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		agents[agent.Ref()] = agent
 	}
 	return agents
@@ -269,7 +269,7 @@ func TestAnIdMatchingAKeyIsNotACollision(t *testing.T) {
 func TestLegacyAgentKeysAreNotValidatedAsBeltPlaceholders(t *testing.T) {
 	t.Parallel()
 	for _, key := range []string{"", "Draft", "two words", "é"} {
-		agent := DefaultsAgent("build")
+		agent := SampleAgent("build")
 		agent.Key = key
 		for _, warning := range ValidationAgentWarnings(agent, nil) {
 			if strings.Contains(warning, "placeholder") {
@@ -285,22 +285,22 @@ func TestAllShippedBriefsAcceptTheShippedNames(t *testing.T) {
 	agents := placeholderTestAgents()
 	for _, kind := range AllTriggerKind {
 		belt := placeholderTestBelt("a/b")
-		belt.Stages = DefaultsStages(kind, DefaultsBuiltInAgents(), true)
+		belt.Stages = SampleStages(kind, SampleAgents(), true)
 		keys := placeholderTestKeys(belt, agents)
 		if got := validationPlaceholders(belt, keys, agents); len(got) != 0 {
 			t.Fatalf("%s: placeholders warn %q", kind, got)
 		}
 	}
-	for _, id := range DefaultsBuiltInIDs {
+	for _, id := range SampleAgentIDs {
 		// The epic agents read each other's outputs, so they are tried on the epic belt.
 		belt := placeholderTestBelt("a/b")
-		if slices.Contains(DefaultsEpicAgents, id) {
-			belt = DefaultsEpicBelt(epicTestEpicTrigger(), []string{"a/b"}, DefaultsBuiltInAgents())
+		if slices.Contains(SampleEpicAgents, id) {
+			belt = SampleEpicBelt(epicTestEpicTrigger(), []string{"a/b"}, SampleAgents())
 		}
 		for index := range belt.Stages {
 			belt.Stages[index].ID = fmt.Sprintf("stage-%d", index)
 		}
-		stage := DefaultsStageForAgent(DefaultsAgent(id), belt.Stages, nil, belt.Stages, TriggerKindIssues)
+		stage := DefaultsStageForAgent(SampleAgent(id), belt.Stages, nil, belt.Stages, TriggerKindIssues)
 		stage.ID = "agent-under-test"
 		belt.Stages = append(belt.Stages, stage)
 		keys := placeholderTestKeys(belt, agents)

@@ -73,7 +73,7 @@ func ContractDraft() core.Belt {
 // ContractSaveDraft is the saveDraft of the contract: the standard belt for acme/app under the
 // id the write contract uses, with stable outcome ids and a custom Build outcome list.
 func ContractSaveDraft() core.Belt {
-	belt := core.DefaultsBelt([]string{"acme/app"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/app"}, "agent", core.SampleAgents(), true)
 	belt.ID = "contract-draft"
 	belt.Name = "Contract draft"
 	belt.Version = 0

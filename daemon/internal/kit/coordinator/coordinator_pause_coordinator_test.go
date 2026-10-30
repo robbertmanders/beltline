@@ -259,10 +259,10 @@ func TestTheTwoPausesAreIndependent(t *testing.T) {
 // TestYourOwnDecisionsKeepWorkingWhilePaused
 func TestYourOwnDecisionsKeepWorkingWhilePaused(t *testing.T) {
 	t.Parallel()
-	spec := core.DefaultsStageForAgent(core.DefaultsAgent("spec"), nil, nil, nil, core.TriggerKindManual)
+	spec := core.DefaultsStageForAgent(core.SampleAgent("spec"), nil, nil, nil, core.TriggerKindManual)
 	spec.Brief = "Write {output}."
 	gate := core.DefaultsStage(core.StageTypeApprove, []core.Stage{spec}, nil, []core.Stage{spec})
-	build := core.DefaultsStageForAgent(core.DefaultsAgent("build"), []core.Stage{spec, gate}, nil, []core.Stage{spec, gate}, core.TriggerKindManual)
+	build := core.DefaultsStageForAgent(core.SampleAgent("build"), []core.Stage{spec, gate}, nil, []core.Stage{spec, gate}, core.TriggerKindManual)
 	belt := core.DefaultBelt("tasks", "Tasks", []core.TriggerEntry{manualEntry("tasks", "acme/web", "acme/billing")}, []core.Stage{spec, gate, build})
 	h := newHarness(t, harnessOptions{Issues: []core.Subject{}, Belts: []core.Belt{belt}, Runner: func(script *harnessScript) runner.AgentRunner {
 		return runner.NewSimulatedRunner(func(spec runner.SessionSpec) float64 {

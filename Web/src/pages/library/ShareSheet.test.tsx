@@ -39,6 +39,14 @@ describe("Share sheet", () => {
     expect((await screen.findByRole("button", { name: "Done" })).textContent).toBe("Done");
   });
 
+  it("never offers a repository that takes no shares, such as the examples repository", async () => {
+    const examples = { ...sharedRepo, repository: "robbertmanders/beltline-examples", takesShares: false };
+    mockLibrary({ "/api/v1/library/repos": repos(examples) });
+    renderShare();
+    expect(await screen.findByText(/No shared repository is set up/)).toBeTruthy();
+    expect(screen.queryByText(/robbertmanders\/beltline-examples/)).toBeNull();
+  });
+
   it("says what a push did when the repository publishes by push", async () => {
     mockLibrary({
       "/api/v1/library/repos": repos(pushRepo),

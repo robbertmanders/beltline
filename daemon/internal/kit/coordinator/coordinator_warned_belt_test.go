@@ -18,7 +18,7 @@ import (
 
 // kindBelt is a belt of kind with its starting stages and a trigger that passes validation.
 func kindBelt(kind core.TriggerKind, id string) core.Belt {
-	agents := core.DefaultsBuiltInAgents()
+	agents := core.SampleAgents()
 	var trigger core.Trigger
 	var repos []string
 	switch kind {
@@ -51,7 +51,7 @@ func kindBelt(kind core.TriggerKind, id string) core.Belt {
 	}
 	return core.NewBeltFromTrigger(core.BeltFromTriggerArgs{
 		ID: id, Name: id, Trigger: trigger, Repos: repos,
-		Stages: core.DefaultsStages(kind, agents, true), Forks: core.DefaultsForks(kind),
+		Stages: core.SampleStages(kind, agents, true), Forks: core.SampleForks(kind),
 	})
 }
 
@@ -245,7 +245,7 @@ func TestPreparationThatFinishesAfterAWarnedSaveDoesNotJoin(t *testing.T) {
 // saved run, and a queued run can still be started by hand.
 func TestAWarnedSaveLeavesTheRunningSessionAndStillAllowsStartNow(t *testing.T) {
 	t.Parallel()
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	belt.Stages[0].Slots = 1
 	issues := []core.Subject{
 		{Kind: core.SubjectKindIssue, Repo: "acme/billing", Number: 142, Title: "Issue 142", Labels: []string{"agent"}, IsOpen: true},

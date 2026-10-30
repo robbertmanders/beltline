@@ -1,6 +1,6 @@
 // Fixtures for the engine tests: the clock, the sample run and its finish helpers,
 // and the brief context of the rerun tests, for the engine
-// tests. The belt is Defaults.belt(repos: ["acme/billing"]) as DefaultsBelt builds
+// tests. The belt is Defaults.belt(repos: ["acme/billing"]) as SampleBelt builds
 // it from the shipped agents.
 
 package core
@@ -18,7 +18,7 @@ var engineT0 = time.Unix(1_800_000_000, 0).UTC()
 // engineIssueBelt is the issues belt the sample runs use:
 // Defaults.belt(repos: ["acme/billing"]).
 func engineIssueBelt() Belt {
-	return DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true)
+	return SampleBelt([]string{"acme/billing"}, "agent", SampleAgents(), true)
 }
 
 // engineIssueSubject is the issue sampleRun works on: acme/billing#142.
@@ -97,7 +97,7 @@ func engineRunningRun() Run {
 // attempt folder /runs/test/<folder>, and every built-in agent.
 func engineRerunContext(folder string) BriefContext {
 	agents := map[AgentRef]Agent{}
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		agents[agent.Ref()] = agent
 	}
 	return BriefContext{

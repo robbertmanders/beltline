@@ -7,7 +7,7 @@ import (
 // TestParses: each way the outcome line can be written names the outcome.
 func TestParses(t *testing.T) {
 	t.Parallel()
-	outcomes := DefaultsOutcomesForAgentAt(DefaultsAgent("triage"), DefaultsPlace{})
+	outcomes := DefaultsOutcomesForAgentAt(SampleAgent("triage"), DefaultsPlace{})
 	cases := []struct{ line, name string }{
 		{"Outcome: ready to spec", "ready to spec"},
 		{"**Outcome:** `needs info`", "needs info"},
@@ -29,7 +29,7 @@ func TestParses(t *testing.T) {
 // TestTheLastOutcomeLineWins: when several outcome lines appear, the last one decides.
 func TestTheLastOutcomeLineWins(t *testing.T) {
 	t.Parallel()
-	outcomes := DefaultsOutcomesForAgentAt(DefaultsAgent("triage"), DefaultsPlace{})
+	outcomes := DefaultsOutcomesForAgentAt(SampleAgent("triage"), DefaultsPlace{})
 	text := "Outcome: needs info\nThen I read more.\nOutcome: ready to spec"
 	if got := OutcomeParserParse(text, outcomes); got == nil || got.Name != "ready to spec" {
 		t.Errorf("parse = %+v, want ready to spec", got)
@@ -40,7 +40,7 @@ func TestTheLastOutcomeLineWins(t *testing.T) {
 // outcome line at all, parses to nothing.
 func TestAnUnknownLastLineIsNoOutcome(t *testing.T) {
 	t.Parallel()
-	outcomes := DefaultsOutcomesForAgentAt(DefaultsAgent("triage"), DefaultsPlace{})
+	outcomes := DefaultsOutcomesForAgentAt(SampleAgent("triage"), DefaultsPlace{})
 	if got := OutcomeParserParse("Outcome: ready to spec\nOutcome: maybe", outcomes); got != nil {
 		t.Errorf("parse = %+v, want nil", got)
 	}
@@ -52,7 +52,7 @@ func TestAnUnknownLastLineIsNoOutcome(t *testing.T) {
 // TestANameIsNotMatchedInsideALongerWord: "pass" does not match "passable".
 func TestANameIsNotMatchedInsideALongerWord(t *testing.T) {
 	t.Parallel()
-	verify := DefaultsOutcomesForAgentAt(DefaultsAgent("verify"), DefaultsPlace{})
+	verify := DefaultsOutcomesForAgentAt(SampleAgent("verify"), DefaultsPlace{})
 	if got := OutcomeParserParse("Outcome: passable", verify); got != nil {
 		t.Errorf("parse = %+v, want nil", got)
 	}
@@ -62,7 +62,7 @@ func TestANameIsNotMatchedInsideALongerWord(t *testing.T) {
 // completes the output; a reply that does not gives nothing.
 func TestAReplyCompletesAnOutputWithoutAnOutcomeLine(t *testing.T) {
 	t.Parallel()
-	outcomes := DefaultsOutcomesForAgentAt(DefaultsAgent("triage"), DefaultsPlace{})
+	outcomes := DefaultsOutcomesForAgentAt(SampleAgent("triage"), DefaultsPlace{})
 	reply := "Wrote triage.md.\n\n**Outcome:** ready to spec"
 	if got := OutcomeParserCompleting("# Title\n\nReason.\n", reply, outcomes); got == nil || *got != "# Title\n\nReason.\n\n**Outcome:** ready to spec\n" {
 		t.Errorf("completing = %v", engineStr(got))

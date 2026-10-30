@@ -68,7 +68,7 @@ func TestFinishedSessionPersistsUsageAndStartMark(t *testing.T) {
 				return &costRunner{SimulatedRunner: sim, reportsUsage: reportsUsage}
 			}})
 			c := h.Coord()
-			belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+			belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 			subject := core.Subject{Kind: core.SubjectKindIssue, Repo: "acme/billing", Number: 1, Title: "Test"}
 			var run core.Run
 			h.Turn(func() { run = c.book.add(core.NewRun(core.RunArgs{Belt: belt, Subject: subject, Now: testkitNow()})) })
@@ -204,7 +204,7 @@ func TestASessionStartsOnTheStageCurrentSettings(t *testing.T) {
 		for _, sendBack := range []bool{true, false} {
 			t.Run(fmt.Sprintf("earlier=%t/sendBack=%t", earlier, sendBack), func(t *testing.T) {
 				t.Parallel()
-				belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+				belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 				high := core.ThinkingHigh
 				belt.Stages[1].Thinking = &high
 				h := newHarness(t, harnessOptions{Belts: []core.Belt{belt}})
@@ -420,7 +420,7 @@ func TestAnIssueGoesFromLabelToPullRequestWithOneApproval(t *testing.T) {
 // comments the questions on the issue and holds.
 func TestNeedsInfoCommentsTheQuestionsAndHolds(t *testing.T) {
 	t.Parallel()
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	belt.Policies.CommentOnHold = true
 	h := newHarness(t, harnessOptions{Belts: []core.Belt{belt}})
 	h.Script.add("triage", "needs info")
@@ -442,7 +442,7 @@ func TestNeedsInfoCommentsTheQuestionsAndHolds(t *testing.T) {
 // TestAnAnswerContinuesTheHeldSessionAndTheRunMovesOn: an answer continues the held session and the run moves on.
 func TestAnAnswerContinuesTheHeldSessionAndTheRunMovesOn(t *testing.T) {
 	t.Parallel()
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	high := core.ThinkingHigh
 	belt.Stages[0].Thinking = &high
 	h := newHarness(t, harnessOptions{Belts: []core.Belt{belt}})
@@ -778,7 +778,7 @@ func TestRunsOnTheSameSubjectKeepSeparateSessions(t *testing.T) {
 	h.Script.add("triage", "needs info", "needs info")
 	h.Until("r := h.nowRun(); return r != nil && r.State == core.RunStateHeld", func() bool { r := h.nowRun(); return r != nil && r.State == core.RunStateHeld })
 	earlier := h.Run()
-	belt := core.DefaultsBelt([]string{earlier.Subject.Repo}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{earlier.Subject.Repo}, "agent", core.SampleAgents(), true)
 	belt.ID = "another-belt"
 	if _, err := c.SaveBelt(belt); err != nil {
 		t.Fatalf("save belt: %v", err)

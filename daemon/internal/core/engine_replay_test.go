@@ -13,7 +13,7 @@ func engineForkedBelt(simple []string) Belt {
 	var stages []Stage
 	add := func(agent string, route *string, id string) {
 		place := DefaultsPlace{Before: stages, Forks: []Fork{fork}, Route: route}
-		stage := DefaultsStageForAgentAt(DefaultsAgent(agent), place, stages, TriggerKindIssues)
+		stage := DefaultsStageForAgentAt(SampleAgent(agent), place, stages, TriggerKindIssues)
 		if id != "" {
 			stage.ID = id
 		}

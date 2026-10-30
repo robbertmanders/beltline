@@ -36,8 +36,8 @@ function titleCase(value: string): string {
 
 export interface AgentEditorProps {
   agent: Agent;
-  /** The saved agent the editor compares with: its version and whether it is built in. */
-  saved: Pick<AgentRecordResponse, "agent" | "builtIn"> | null;
+  /** The saved agent the editor compares with. */
+  saved: Pick<AgentRecordResponse, "agent"> | null;
   actions: readonly AgentAction[];
   presentation: AgentPresentation | undefined;
   /** The agent's folder on the daemon's Mac, from the saved agent's detail. */
@@ -59,7 +59,6 @@ export interface AgentEditorProps {
   saving?: boolean;
   onDiscard: () => void;
   onArchive: (archived: boolean) => void;
-  onReset: () => void;
   onShare: () => void;
   /** The configuration assistant's button, at the end of the header's actions. */
   assistantButton?: ReactNode;
@@ -71,7 +70,7 @@ export interface AgentEditorProps {
 export function AgentEditor(props: AgentEditorProps) {
   const { agent, saved, actions, presentation, isNew, dirty, canCommand, commandReason, commandError, onRetry, onChange, onChangeRunner } = props;
   const breadcrumb = [
-    saved?.builtIn || presentation?.builtIn ? "Built in" : "Your agent",
+    agent.origin ? "Installed" : "Your agent",
     isNew ? "new" : `v${agent.version}`,
     presentation?.archived ? "archived" : null
   ].filter(Boolean).join(" · ");
@@ -85,7 +84,6 @@ export function AgentEditor(props: AgentEditorProps) {
   const shareReason = !saved ? "Save this agent before sharing it." : dirty || isNew ? "Save changes before sharing"
     : shareAction && !shareAction.enabled ? shareAction.reason ?? "Sharing is not available for this agent." : undefined;
   const archiveAction = presentation?.archived ? action("unarchive") : action("archive");
-  const resetAction = action("reset");
   const glyph: StageIcon = agent.icon ?? presentation?.glyph ?? "chip";
   return <section className="agent-editor" data-column="agents-editor" data-agent-id={agent.id} data-ready={presentation ? "true" : undefined} aria-label="Agent editor">
     <header className="belt-editor-header agent-editor-header">
@@ -95,8 +93,6 @@ export function AgentEditor(props: AgentEditorProps) {
       </div>
       <div className="belt-actions">
         <button type="button" className="action-button slate" disabled={!!shareReason} title={shareReason ?? "Share this saved agent version to a library repository"} onClick={props.onShare}>Share…</button>
-        {!isNew && !dirty && resetAction?.enabled && <button type="button" className="action-button" disabled={!canCommand}
-          title={commandReason ?? "Save the agent as the app ships it, as a new version"} onClick={props.onReset}>Reset to default</button>}
         {!isNew && !dirty && archiveAction && <button type="button" className="action-button" disabled={!canCommand || !archiveAction.enabled}
           title={archiveAction.reason ?? commandReason ?? (presentation?.archived ? "Let new stages use this agent again, and put it back in this list" : "Take it out of this list and the + menu. Belts that use it keep working.")}
           onClick={() => props.onArchive(!presentation?.archived)}>{archiveAction.label}</button>}

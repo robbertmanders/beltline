@@ -16,7 +16,7 @@ func boxTestLook(stage Stage) StageLook {
 
 // boxTestStraightBelt is the manual belt's default stages, in one row.
 func boxTestStraightBelt() Belt {
-	return draftTestBelt(DefaultsStages(TriggerKindManual, DefaultsBuiltInAgents(), true))
+	return draftTestBelt(SampleStages(TriggerKindManual, SampleAgents(), true))
 }
 
 // boxTestNode is the node with id, failing the test when there is none.

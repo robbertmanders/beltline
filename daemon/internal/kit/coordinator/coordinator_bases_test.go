@@ -30,8 +30,8 @@ func basesTestRun(base string, subject core.Subject) core.Run {
 	trigger.Jira = &query
 	belt := core.NewBeltFromTrigger(core.BeltFromTriggerArgs{
 		ID: "jira", Name: "Jira", Trigger: trigger, Repos: []string{"acme/billing", "acme/web"},
-		Stages: core.DefaultsStages(core.TriggerKindJira, core.DefaultsBuiltInAgents(), true),
-		Forks:  core.DefaultsForks(core.TriggerKindJira), Base: base,
+		Stages: core.SampleStages(core.TriggerKindJira, core.SampleAgents(), true),
+		Forks:  core.SampleForks(core.TriggerKindJira), Base: base,
 	})
 	return core.NewRun(core.RunArgs{Belt: belt, Subject: subject, Now: sessionSampleT0})
 }

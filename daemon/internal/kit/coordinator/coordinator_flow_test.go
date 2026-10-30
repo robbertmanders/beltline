@@ -82,7 +82,7 @@ func flowBelt(kind core.TriggerKind, id string, stages []core.Stage) core.Belt {
 	}
 	built, forks := stages, []core.Fork(nil)
 	if stages == nil {
-		built, forks = core.DefaultsStages(kind, core.DefaultsBuiltInAgents(), true), core.DefaultsForks(kind)
+		built, forks = core.SampleStages(kind, core.SampleAgents(), true), core.SampleForks(kind)
 	}
 	return core.NewBeltFromTrigger(core.BeltFromTriggerArgs{
 		ID: id, Name: kind.Title(), Trigger: trigger, Repos: repos, Stages: built, Forks: forks,
@@ -91,7 +91,7 @@ func flowBelt(kind core.TriggerKind, id string, stages []core.Stage) core.Belt {
 
 // flowTriageApproval is Triage, then an approval gate.
 func flowTriageApproval(kind core.TriggerKind) []core.Stage {
-	triage := core.DefaultsStageForAgent(core.DefaultsAgent("triage"), nil, nil, nil, kind)
+	triage := core.DefaultsStageForAgent(core.SampleAgent("triage"), nil, nil, nil, kind)
 	approve := core.DefaultsStage(core.StageTypeApprove, []core.Stage{triage}, nil, []core.Stage{triage})
 	return []core.Stage{triage, approve}
 }

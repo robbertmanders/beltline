@@ -12,7 +12,6 @@ import { useRuntime } from "../app/runtime";
 import { LibraryBrowser, LibraryDetailHeader } from "../components/LibraryBrowser";
 import { useElementWidth } from "../components/useElementWidth";
 import { AgentEditor } from "./AgentEditor";
-import { AgentResetSheet } from "./AgentResetSheet";
 import { AssistantOpenButton, AssistantSidebar } from "../components/AssistantSidebar";
 import { usePreferences } from "../state/usePreferences";
 import { newAgentDraftKey, runnerSwitchDraft, useAgentDrafts } from "../state/agentDrafts";
@@ -30,9 +29,9 @@ function publishAgentResource(client: QueryClient, record: AgentRecordResponse) 
     return { ...list, agents: previous ? list.agents.map(entry => entry.agent.id === record.agent.id ? updated : entry) : [...list.agents, updated] };
   });
   const detailPath = `${agentsListPath}/${record.agent.id}`;
-  client.setQueriesData<{ agent: Agent; archived: boolean; builtIn: boolean }>({
+  client.setQueriesData<{ agent: Agent; archived: boolean }>({
     predicate: query => query.queryKey[0] === "api" && query.queryKey[1] === detailPath
-  }, detail => detail && { ...detail, agent: record.agent, archived: record.archived, builtIn: record.builtIn });
+  }, detail => detail && { ...detail, agent: record.agent, archived: record.archived });
 }
 
 /** The content comparison the Save button uses; the version is the daemon's to change. */
@@ -52,7 +51,6 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
   const search = params.get("search") ?? "";
   const filter = params.get("filter") ?? "all";
   const draft = agentKey ? drafts[agentKey] ?? null : null;
-  const [resetOpen, setResetOpen] = useState(false);
   const [assistantRequest, setAssistantRequest] = useState("");
   const [columnsRef, availableWidth] = useElementWidth<HTMLDivElement>();
   const latestDrafts = useRef(drafts);
@@ -89,7 +87,7 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
   const missingSaved = activeId !== null && detailQuery.isError && detailQuery.error instanceof ApiError && detailQuery.error.status === 404;
   const missingSelectedAgent = draft === null && missingSaved;
   // The saved version is the detail's once it has arrived, so the fields and the presentation describe the same version.
-  const savedInfo = activeId !== null && detailQuery.data ? { agent: detailQuery.data.agent, builtIn: detailQuery.data.builtIn } : listedRecord;
+  const savedInfo = activeId !== null && detailQuery.data ? { agent: detailQuery.data.agent } : listedRecord;
   const savedAgent: Agent | null = savedInfo?.agent ?? null;
   const current = draft ?? (missingSelectedAgent ? null : savedAgent);
   const isNew = current?.version === 0;
@@ -134,7 +132,6 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
   const saveCommand = useCommand();
   const archiveCommand = useCommand();
   const unarchiveCommand = useCommand();
-  const resetCommand = useCommand();
   const [runnerError, setRunnerError] = useState<unknown>(null);
 
   function patchParams(next: Record<string, string | null>) {
@@ -206,21 +203,6 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
     });
   }
 
-  function submitReset() {
-    if (!current || !canCommand || !isActionEnabled(savedActions, "reset") || resetCommand.pending) return;
-    setResetOpen(false);
-    const target = current.id;
-    const requestKey = agentKey;
-    const editRevision = requestKey ? revision(requestKey) : 0;
-    resetCommand.submit({
-      path: `/api/v1/agents/${encodeURIComponent(target)}/reset`, body: {}, affects: ["library", "settings", "models"],
-      publish: (client, record: AgentRecordResponse) => {
-        publishAgentResource(client, record);
-        if (requestKey && revision(requestKey) === editRevision) discardDraft(requestKey);
-      }
-    });
-  }
-
   async function changeRunner(runner: Backend, alternateIndex?: number) {
     if (!canCommand) return;
     const key = agentKey;
@@ -247,8 +229,8 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
     }
   }
 
-  const commandError = saveCommand.error ?? newCommand.error ?? resetCommand.error ?? archiveCommand.error ?? unarchiveCommand.error ?? runnerError;
-  const retry = () => { if (saveCommand.error) saveCommand.retry(); else if (newCommand.error) newCommand.retry(); else if (resetCommand.error) resetCommand.retry(); else if (archiveCommand.error) archiveCommand.retry(); else if (unarchiveCommand.error) unarchiveCommand.retry(); };
+  const commandError = saveCommand.error ?? newCommand.error ?? archiveCommand.error ?? unarchiveCommand.error ?? runnerError;
+  const retry = () => { if (saveCommand.error) saveCommand.retry(); else if (newCommand.error) newCommand.retry(); else if (archiveCommand.error) archiveCommand.retry(); else if (unarchiveCommand.error) unarchiveCommand.retry(); };
   const assistantButton = <AssistantOpenButton open={preferences.assistantOpen} dirty={dirty}
     saveAvailable={dirty && canCommand && !missingSaved && isActionEnabled(savedActions, "save") && !saveCommand.pending}
     onOpenChange={assistantOpen => updatePreferences({ assistantOpen })}
@@ -280,7 +262,7 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
               presentation={presentation} folder={draft ? undefined : detailQuery.data?.folder} isNew={isNew} dirty={dirty} canCommand={canCommand} commandReason={commandReason} commandError={commandError} onRetry={retry}
               onChange={agent => agentKey && putDraft(agentKey, agent, savedAgent ?? undefined)} onChangeRunner={changeRunner} onNew={openNew} onSave={requestSave} actionsLoading={actionsLoading} saving={saveRequested || saveCommand.pending}
               onDiscard={() => { if (agentKey) discardDraft(agentKey); if (isNew) back(); }}
-              onArchive={submitArchive} onReset={() => setResetOpen(true)}
+              onArchive={submitArchive}
               onShare={() => onShare(current.id, current.version, current.name)}
               onOpenBelt={beltId => navigate(`/belts?belt=${encodeURIComponent(beltId)}`)}
               origin={detailQuery.data?.origin}
@@ -293,8 +275,5 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
       request={assistantRequest} onRequestChange={setAssistantRequest} dirty={dirty} />}
   </div>;
 
-  return <>
-    {body}
-    <AgentResetSheet agent={current} open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={submitReset} />
-  </>;
+  return body;
 }

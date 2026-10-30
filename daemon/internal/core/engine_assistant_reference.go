@@ -9,17 +9,12 @@ package core
 
 import (
 	"sort"
-	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
-
-// AssistantReferenceBuiltInFolder is where the built-in agents' files are copied
-// for the assistant, relative to the data folder.
-const AssistantReferenceBuiltInFolder = "assistant/built-in"
 
 // assistantReferenceQuote turns the § of a literal into a backtick.
 func assistantReferenceQuote(text string) string {
@@ -35,7 +30,7 @@ func AssistantReferenceText() string {
 		assistantReferenceActions(),
 		assistantReferenceTriggers(),
 		assistantReferencePlaceholders(),
-		assistantReferenceBuiltIns(),
+		assistantReferenceLibraryRepositories(),
 		assistantReferenceExample(),
 	}, "\n\n")
 }
@@ -199,32 +194,23 @@ A brief may use these fixed placeholders and §{<placeholder>}§ for each output
 ` + strings.Join(fixed, "\n"))
 }
 
-// assistantReferenceBuiltIns is the built-in agents section.
-func assistantReferenceBuiltIns() string {
-	var list []string
-	for _, agent := range DefaultsBuiltInAgents() {
-		var outcomes []string
-		for _, outcome := range agent.Outcomes {
-			outcomes = append(outcomes, outcome.Name)
-		}
-		list = append(list, "- §"+agent.ID+"§ v"+strconv.Itoa(agent.Version)+", "+agent.Name+": §"+string(agent.Workspace)+"§; outcomes "+strings.Join(outcomes, ", "))
-	}
-	return assistantReferenceQuote(`### Built-in agents
-The app ships these. One is in the library only when §agents/<id>/§ holds it; to use one that isn't, copy its file from ` +
-		"§" + AssistantReferenceBuiltInFolder + `/<id>.md§ to §agents/<id>/v1.md§ first, then pin it.
-` + strings.Join(list, "\n"))
+// assistantReferenceLibraryRepositories is the section on the library repositories,
+// where the ready-made belts and agents are: the app has none of its own.
+func assistantReferenceLibraryRepositories() string {
+	return assistantReferenceQuote(`### Example belts and agents
+The app ships no agents or belts. Ready-made ones are in the shared library repositories the settings list, such as §` + LibraryExamplesRepository + `§: once the Library page has refreshed one, its clone is §library-repos/<owner>__<repo>/§, laid out like the library (under the repository's path when it has one). Read them for examples. To use one, ask the user to install it from the Library page, which also adds the agent versions a belt pins and installs a new belt paused. When you copy an agent's file into §agents/<id>/v<n>.md§ yourself, keep its id, version and text unchanged, so the Library page sees it came from that repository.`)
 }
 
-// assistantReferenceExample is an example belt, encoded from the defaults a new
-// belt starts with.
+// assistantReferenceExample is an example belt, encoded from the sample library's
+// issues belt.
 func assistantReferenceExample() string {
-	belt := DefaultsBelt([]string{"owner/repo"}, "agent", DefaultsBuiltInAgents(), true)
+	belt := SampleBelt([]string{"owner/repo"}, "agent", SampleAgents(), true)
 	for index := range belt.Stages {
 		belt.Stages[index].Outcomes = assistantReferenceReadable(belt.Stages[index].Outcomes, belt.Stages[index].ID)
 	}
 	return assistantReferenceQuote(`### A whole belt
-The belt a new GitHub issues belt starts with: approval and watch stages, a fork after the watch and the routes back to it. ` +
-		`It pins the built-in agents, so each must be in §agents/§ first; its runners and models are placeholders, so use ones the user allows.
+A GitHub issues belt: approval and watch stages, a fork after the watch and the routes back to it. ` +
+		`It pins the example agents, so each must be in §agents/§ first; its runners and models are placeholders, so use ones the user allows.
 ` + "```json\n" + assistantReferenceJSON(belt) + "\n```")
 }
 

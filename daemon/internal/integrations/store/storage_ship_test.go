@@ -16,7 +16,7 @@ import (
 
 // shipStoreBelt is a belt of one build stage whose done outcome takes the given action.
 func shipStoreBelt(action core.ThenAction) core.Belt {
-	stage := core.DefaultsStageForAgentAt(core.DefaultsAgent("build"), core.DefaultsPlace{}, nil, core.TriggerKindIssues)
+	stage := core.DefaultsStageForAgentAt(core.SampleAgent("build"), core.DefaultsPlace{}, nil, core.TriggerKindIssues)
 	stage.Outcomes[0].Then = core.NewThen(core.ThenArgs{Action: action})
 	trigger := core.DefaultIssueFilter()
 	trigger.Label = "agent"

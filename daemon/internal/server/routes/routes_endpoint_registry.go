@@ -241,7 +241,6 @@ func registerAgents(mux *http.ServeMux, c *coordinator.Coordinator) {
 	AddAgentDraftPresentation(mux, c)
 	AddAgentDraftSwitchRunner(mux, c)
 	AddAgentArchive(mux, c)
-	AddAgentReset(mux, c)
 }
 
 // registerTools is the register tools.

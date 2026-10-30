@@ -230,7 +230,7 @@ func coordDrive(t *testing.T, c *Coordinator, timeout time.Duration, what string
 // agentBelt is Defaults.belt(repos:) with an id and base, each agent stage on the given backend, and the
 // stages' workspace set to the given one when it is not nil.
 func agentBelt(repos []string, backend core.Backend, base string) core.Belt {
-	belt := core.DefaultsBelt(repos, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt(repos, "agent", core.SampleAgents(), true)
 	for i := range belt.Stages {
 		if belt.Stages[i].Type == core.StageTypeAgent {
 			runnerBackend := backend
@@ -245,7 +245,7 @@ func agentBelt(repos []string, backend core.Backend, base string) core.Belt {
 // firstStageBelt is Defaults.belt(repos:) with an id and base, and only its first stage on the given backend
 // .
 func firstStageBelt(repos []string, backend core.Backend, base string) core.Belt {
-	belt := core.DefaultsBelt(repos, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt(repos, "agent", core.SampleAgents(), true)
 	runnerBackend := backend
 	belt.Stages[0].Runner = &runnerBackend
 	belt.ID = fmt.Sprintf("tmux-%d", time.Now().UnixNano())
@@ -527,8 +527,8 @@ func coordCheckJiraRepositories(t *testing.T, workspace core.Workspace) {
 	}
 	repos := []string{"acme/billing", "acme/infra"}
 	coordOrigin(t, root, paths, repos...)
-	build := *core.DefaultsBuiltIn("build", nil)
-	triage := *core.DefaultsBuiltIn("triage", nil)
+	build := *core.SampleAgentNamed("build", nil)
+	triage := *core.SampleAgentNamed("triage", nil)
 	builder := core.DefaultsStageForAgent(build, nil, nil, nil, core.TriggerKindJira)
 	builder.Brief = "Make a small code change and record what changed in {output}."
 	stage := core.DefaultsStageForAgent(triage, []core.Stage{builder}, nil, []core.Stage{builder}, core.TriggerKindJira)
@@ -878,7 +878,7 @@ func TestPausingInterruptsGenerationAndResumeSendsContinue(t *testing.T) {
 			if err := storage.SaveSettings(tmuxSettings()); err != nil {
 				t.Fatalf("settings: %v", err)
 			}
-			belt := core.DefaultsBelt([]string{"acme/pause"}, "agent", core.DefaultsBuiltInAgents(), true)
+			belt := core.SampleBelt([]string{"acme/pause"}, "agent", core.SampleAgents(), true)
 			belt.Stages[0].Runner = new(backend)
 			belt.ID = fmt.Sprintf("pause-%s-%d", backend, time.Now().UnixNano()%1_000_000)
 			saveTmuxBelt(t, storage, belt)
@@ -1156,7 +1156,7 @@ func TestTheAfkAssistantApprovesInTmux(t *testing.T) {
 			paths := store.Paths{Root: root}
 			storage := store.NewStorage(paths)
 			storage.SeedAgents()
-			belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+			belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 			belt.Afk = core.AfkModeGlobal
 			saveTmuxBelt(t, storage, belt)
 			run := sessionSampleRun()

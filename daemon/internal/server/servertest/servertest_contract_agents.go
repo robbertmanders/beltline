@@ -16,12 +16,12 @@ import (
 // agentContractCases are the agent area's contract cases, in registry order.
 var agentContractCases = []string{
 	"agents", "agent", "agentNew", "agentSave", "agentDraftPresentation", "agentDraftSwitchRunner",
-	"agentArchive", "agentUnarchive", "agentReset",
+	"agentArchive", "agentUnarchive",
 }
 
 // agentCommandCases are the cases whose replies come from the command sequence.
 var agentCommandCases = map[string]bool{
-	"agentNew": true, "agentSave": true, "agentArchive": true, "agentUnarchive": true, "agentReset": true,
+	"agentNew": true, "agentSave": true, "agentArchive": true, "agentUnarchive": true,
 }
 
 func init() {
@@ -66,8 +66,8 @@ func exerciseAgentContract(f *Fixture, t testing.TB, contractCase string) bool {
 }
 
 // agentCommandReplies replays the agent command contract (agentCommandsReturnRecordsAndGoldens) on a fresh
-// fixture: a new draft, the triage agent saved with a brief, review archived and unarchived, and triage
-// reset. It returns each command's reply by its case.
+// fixture: a new draft, the triage agent saved with a brief, and review archived and unarchived. It
+// returns each command's reply by its case.
 func agentCommandReplies(t testing.TB) (*Fixture, map[string]Reply) {
 	t.Helper()
 	g := Start(t, Options{})
@@ -81,13 +81,11 @@ func agentCommandReplies(t testing.TB) (*Fixture, map[string]Reply) {
 	post("agentSave", "/api/v1/agents/save", contractBody(t, api.AgentSaveRequest{Agent: agent}))
 	post("agentArchive", "/api/v1/agents/review/archive", nil)
 	post("agentUnarchive", "/api/v1/agents/review/unarchive", nil)
-	post("agentReset", "/api/v1/agents/triage/reset", nil)
 	return g, replies
 }
 
 // checkAgentsShape checks the `.agents` assertions: the rows are the library's agents, each
-// has its belt count, the new action is enabled, the browser is the daemon's, and both built-in and custom
-// agents are listed.
+// has its belt count, the new action is enabled, and the browser is the daemon's.
 func checkAgentsShape(t testing.TB, g *Fixture, body []byte) {
 	t.Helper()
 	tree := contractTree(t, body)
@@ -96,16 +94,10 @@ func checkAgentsShape(t testing.TB, g *Fixture, body []byte) {
 		t.Fatalf("agents: %d rows, want %d", len(rows), len(g.Coordinator.ReadAgents()))
 	}
 	contractSameAsValue(t, "agents browser", contractMember(t, tree, "browser"), g.Coordinator.ReadAgentBrowser("", "all"))
-	var builtIn, custom bool
 	for _, row := range rows {
 		if contractMember(t, row, "beltCount") == nil {
 			t.Fatal("agents: a row has no belt count")
 		}
-		builtIn = builtIn || contractMember(t, row, "builtIn").(bool)
-		custom = custom || !contractMember(t, row, "builtIn").(bool)
-	}
-	if !builtIn || !custom {
-		t.Fatal("agents: the list lacks built-in or custom agents")
 	}
 	newEnabled := false
 	for _, action := range contractMember(t, tree, "actions").([]any) {
@@ -137,9 +129,6 @@ func checkAgentShape(t testing.TB, g *Fixture, body []byte) {
 	contractSameAsValue(t, "agent", contractMember(t, tree, "agent"), listed.Agent)
 	if contractMember(t, tree, "archived") != listed.Archived {
 		t.Fatal("agent: archived differs")
-	}
-	if contractMember(t, tree, "builtIn") != listed.BuiltIn() {
-		t.Fatal("agent: builtIn differs")
 	}
 	contractSameAsValue(t, "agent actions", contractMember(t, tree, "actions"), resource.Actions)
 	contractSameAsValue(t, "agent presentation", contractMember(t, tree, "presentation"), resource.Presentation)

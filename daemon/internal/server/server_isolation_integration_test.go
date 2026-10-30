@@ -126,7 +126,7 @@ func TestStoppingLeavesCoordinatorWorkSessionsAndDataAlone(t *testing.T) {
 	var models []core.ModelChoice
 	seen := map[string]bool{"fixture-model": true}
 	names := []string{"fixture-model"}
-	for _, agent := range core.DefaultsBuiltInAgents() {
+	for _, agent := range core.SampleAgents() {
 		if !seen[agent.Model] {
 			seen[agent.Model] = true
 			names = append(names, agent.Model)
@@ -152,7 +152,7 @@ func TestStoppingLeavesCoordinatorWorkSessionsAndDataAlone(t *testing.T) {
 	if err := storage.SaveSettings(settings); err != nil {
 		t.Fatalf("settings: %v", err)
 	}
-	belt, err := storage.SaveNewVersion(core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true))
+	belt, err := storage.SaveNewVersion(core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true))
 	if err != nil {
 		t.Fatalf("belt: %v", err)
 	}

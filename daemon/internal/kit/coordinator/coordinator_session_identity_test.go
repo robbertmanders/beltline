@@ -18,7 +18,7 @@ func TestRepositoriesWithTheSameNameHaveSeparateSessions(t *testing.T) {
 	for _, repo := range repos {
 		issues = append(issues, flowIssue(repo, 1, "Work", "agent"))
 	}
-	h := newFlowHarness(t, flowOptions{issues: issues, belts: []core.Belt{core.DefaultsBelt(repos, "agent", core.DefaultsBuiltInAgents(), true)}})
+	h := newFlowHarness(t, flowOptions{issues: issues, belts: []core.Belt{core.SampleBelt(repos, "agent", core.SampleAgents(), true)}})
 	h.Tick()
 	var sessions []string
 	for _, run := range h.Coord().Runs() {
@@ -40,7 +40,7 @@ func TestNewReviewRequestsHaveSeparateSessionsFromEarlierRequests(t *testing.T) 
 	h := newFlowHarness(t, flowOptions{belts: []core.Belt{defaultBelt()}})
 	belt := core.NewBeltFromTrigger(core.BeltFromTriggerArgs{
 		ID: "reviews", Name: "Reviews", Trigger: core.TriggerKindReviews.Fresh(), Repos: []string{"acme/web"},
-		Stages: core.DefaultsStages(core.TriggerKindReviews, core.DefaultsBuiltInAgents(), true),
+		Stages: core.SampleStages(core.TriggerKindReviews, core.SampleAgents(), true),
 	})
 	first := core.NewRun(core.RunArgs{Belt: belt, Subject: core.Subject{
 		Kind: core.SubjectKindPullRequest, Repo: "acme/web", Number: 1, Title: "Review", IsOpen: true, Occurrence: new("1"),

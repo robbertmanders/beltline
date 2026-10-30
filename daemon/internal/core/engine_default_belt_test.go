@@ -392,7 +392,7 @@ func TestApprovedFollowsTheOutcomeItWasGivenWithoutMerging(t *testing.T) {
 // watch. A pull request opened on the way is not shipping, and a posted review is done.
 func TestDeliveryFlowsShipAndAReviewFinishesAsDone(t *testing.T) {
 	t.Parallel()
-	agents := DefaultsBuiltInAgents()
+	agents := SampleAgents()
 	outcomeOf := func(stages []Stage, id, name string) Then {
 		t.Helper()
 		for _, stage := range stages {
@@ -408,7 +408,7 @@ func TestDeliveryFlowsShipAndAReviewFinishesAsDone(t *testing.T) {
 		t.Fatalf("no outcome %q on stage %q", name, id)
 		return Then{}
 	}
-	issues := DefaultsBelt([]string{"acme/billing"}, "agent", agents, true).Stages
+	issues := SampleBelt([]string{"acme/billing"}, "agent", agents, true).Stages
 	if got := outcomeOf(issues, "wrap-up", "done").Action; got != ThenActionShip {
 		t.Errorf("issue wrap-up done = %q, want ship", got)
 	}
@@ -424,7 +424,7 @@ func TestDeliveryFlowsShipAndAReviewFinishesAsDone(t *testing.T) {
 	if got := outcomeOf(issues, "ship", "failed").Action; got != ThenActionHold {
 		t.Errorf("issue ship failed = %q, want hold", got)
 	}
-	jira := DefaultsStages(TriggerKindJira, agents, true)
+	jira := SampleStages(TriggerKindJira, agents, true)
 	if got := outcomeOf(jira, "wrap-up", "done").Action; got != ThenActionShip {
 		t.Errorf("Jira wrap-up done = %q, want ship", got)
 	}
@@ -441,7 +441,7 @@ func TestDeliveryFlowsShipAndAReviewFinishesAsDone(t *testing.T) {
 		t.Errorf("Jira merged = %q, want next to wrap up", got)
 	}
 	for _, kind := range []TriggerKind{TriggerKindManual, TriggerKindSchedule} {
-		stages := DefaultsStages(kind, agents, true)
+		stages := SampleStages(kind, agents, true)
 		var watch *Stage
 		for i := range stages {
 			if stages[i].Kind() == StageKindWatch {
@@ -455,18 +455,18 @@ func TestDeliveryFlowsShipAndAReviewFinishesAsDone(t *testing.T) {
 			t.Errorf("%s merged = %q, want ship", kind, got)
 		}
 	}
-	reviews := DefaultsStages(TriggerKindReviews, agents, true)
+	reviews := SampleStages(TriggerKindReviews, agents, true)
 	if got := outcomeOf(reviews, "post-review", "submitted").Action; got != ThenActionDone {
 		t.Errorf("review submitted = %q, want done", got)
 	}
 	if got := outcomeOf(reviews, "post-review", "failed").Action; got != ThenActionHold {
 		t.Errorf("review failed = %q, want hold", got)
 	}
-	if DefaultsShippedVersion("wrap-up") != 2 || DefaultsShippedVersion("post-review") != 2 {
+	if SampleAgentVersion("wrap-up") != 2 || SampleAgentVersion("post-review") != 2 {
 		t.Errorf("wrap-up and post-review ship as version %d and %d, want 2 and 2",
-			DefaultsShippedVersion("wrap-up"), DefaultsShippedVersion("post-review"))
+			SampleAgentVersion("wrap-up"), SampleAgentVersion("post-review"))
 	}
-	if DefaultsShippedVersion("build") != 1 {
-		t.Errorf("build ships as version %d, want 1", DefaultsShippedVersion("build"))
+	if SampleAgentVersion("build") != 1 {
+		t.Errorf("build ships as version %d, want 1", SampleAgentVersion("build"))
 	}
 }

@@ -5,7 +5,6 @@ package core
 
 import (
 	"reflect"
-	"slices"
 	"time"
 )
 
@@ -305,10 +304,4 @@ func (t Thinking) Label() string {
 type AgentRecord struct {
 	Agent    Agent
 	Archived bool
-}
-
-// BuiltIn reports whether the app ships this agent, so it can be reset to its
-// default. It checks the built-in agent ids.
-func (r AgentRecord) BuiltIn() bool {
-	return slices.Contains(DefaultsBuiltInIDs, r.Agent.ID)
 }

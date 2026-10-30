@@ -68,7 +68,7 @@ func TestDemoSeedsAMultiRepositoryWatch(t *testing.T) {
 func TestTheDemoBeltsValidate(t *testing.T) {
 	t.Parallel()
 	agents := map[core.AgentRef]core.Agent{}
-	for _, agent := range core.DefaultsBuiltInAgents() {
+	for _, agent := range core.SampleAgents() {
 		agents[agent.Ref()] = agent
 	}
 	for _, entry := range Belts() {

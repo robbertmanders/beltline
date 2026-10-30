@@ -68,6 +68,10 @@ func exerciseLibrary(f *Fixture, t testing.TB, contractCase string) bool {
 		g := libraryFixture(t)
 		reply := g.Do(Request{Method: "POST", Path: "/api/v1/library/install", Token: ContractToken, Body: []byte(libraryInstallBody)})
 		CheckGolden(t, "library install", "library-install.json", withoutCommitIDs(reply), g.Root)
+		// The shared belt names no repositories, so a belt new to the library lands paused.
+		if record := g.Coordinator.ReadBelt("team-nightly"); record == nil || !record.Paused {
+			t.Fatalf("library install: the installed belt is %+v, want it paused", record)
+		}
 	case "libraryShare":
 		g := libraryFixture(t)
 		reply := g.Do(Request{Method: "POST", Path: "/api/v1/library/share", Token: ContractToken, Body: []byte(libraryShareBody)})

@@ -10,7 +10,6 @@ import (
 type AgentRecordResponse struct {
 	Agent     core.Agent `json:"agent"`
 	Archived  bool       `json:"archived"`
-	BuiltIn   bool       `json:"builtIn"`
 	BeltCount *int       `json:"beltCount,omitzero"`
 	// Glyph is the icon a stage box of this agent shows: its own, else the chip.
 	Glyph core.StageIcon `json:"glyph"`
@@ -24,7 +23,6 @@ func NewAgentRecordResponse(record core.AgentRecord, beltCount *int) AgentRecord
 	return AgentRecordResponse{
 		Agent:     record.Agent,
 		Archived:  record.Archived,
-		BuiltIn:   record.BuiltIn(),
 		BeltCount: core.CopyPointer(beltCount),
 		Glyph:     record.Agent.Glyph(),
 		Detail:    core.AgentListDetail(record.Agent, uses),
@@ -71,7 +69,6 @@ func NewAgentsResponseFromCoordinator(c *coordinator.Coordinator, search, filter
 type AgentDetailResponse struct {
 	Agent        core.Agent             `json:"agent"`
 	Archived     bool                   `json:"archived"`
-	BuiltIn      bool                   `json:"builtIn"`
 	Actions      []core.AgentAction     `json:"actions"`
 	Presentation core.AgentPresentation `json:"presentation"`
 	// Folder is the agent's folder on this Mac, where its version files live.
@@ -85,7 +82,6 @@ func NewAgentDetailResponse(resource coordinator.AgentResource, folder string) A
 	return AgentDetailResponse{
 		Agent:        resource.Record.Agent,
 		Archived:     resource.Record.Archived,
-		BuiltIn:      resource.Record.BuiltIn(),
 		Actions:      append([]core.AgentAction{}, resource.Actions...),
 		Presentation: resource.Presentation,
 		Folder:       folder,

@@ -76,7 +76,7 @@ func TestRecordsBeforeLaunchAndFailureCreatesOnlyOneAttempt(t *testing.T) {
 			name = "allocation fails"
 		}
 		t.Run(name, func(t *testing.T) {
-			belt := core.DefaultsBelt([]string{"acme/web"}, "agent", core.DefaultsBuiltInAgents(), true)
+			belt := core.SampleBelt([]string{"acme/web"}, "agent", core.SampleAgents(), true)
 			cursor := core.BackendCursor
 			belt.Stages[0].Runner = &cursor
 			belt.Policies.CommentOnHold = false

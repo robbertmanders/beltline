@@ -15,7 +15,7 @@ const nfParkWatchGrace = 600
 
 // nfDefaultRun is a run on the default issues belt.
 func nfDefaultRun() Run {
-	return engineStartRun(DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true))
+	return engineStartRun(SampleBelt([]string{"acme/billing"}, "agent", SampleAgents(), true))
 }
 
 // nfToWatch moves the run to its watch stage, the Ship

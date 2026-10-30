@@ -38,7 +38,7 @@ func TestAgentsAreChecked(t *testing.T) {
 	t.Parallel()
 	agent := vtWriterAgent()
 	agent.Key = "spec"
-	if got := ValidationAgentWarnings(agent, DefaultsBuiltInAgents()); len(got) != 0 {
+	if got := ValidationAgentWarnings(agent, SampleAgents()); len(got) != 0 {
 		t.Fatalf("shared key warnings %v", got)
 	}
 	agent.Key = "output"
@@ -54,7 +54,7 @@ func TestAgentsAreChecked(t *testing.T) {
 
 	writer := vtWriterAgent()
 	writer.ID = "build"
-	if got := ValidationAgentWarnings(writer, DefaultsBuiltInAgents()); !slices.Contains(got, "Another agent already has the id “build”.") {
+	if got := ValidationAgentWarnings(writer, SampleAgents()); !slices.Contains(got, "Another agent already has the id “build”.") {
 		t.Fatalf("missing id warning in %v", got)
 	}
 }

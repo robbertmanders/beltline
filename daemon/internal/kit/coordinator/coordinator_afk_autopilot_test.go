@@ -206,7 +206,7 @@ func twoBeltWorld(t *testing.T, belts []core.Belt, opts harnessOptions) *harness
 
 // afkBelt is a manual-trigger belt on acme/billing for the AFK world: belt(id, optedIn:).
 func afkBelt(id string, optedIn bool) core.Belt {
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	belt.ID = id
 	belt.Name = id
 	belt.Triggers = []core.TriggerEntry{manualEntry("manual", "acme/billing")}

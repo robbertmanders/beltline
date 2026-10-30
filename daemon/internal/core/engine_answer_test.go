@@ -138,7 +138,7 @@ func TestTheFollowUpBriefCarriesTheAnswerAndTheOutcomes(t *testing.T) {
 		t.Error("artifacts follow-up does not end with the footer")
 	}
 
-	agent := DefaultsAgent("triage")
+	agent := SampleAgent("triage")
 	agent.Brief = stage.Brief
 	inherited := context
 	inherited.Agents = map[AgentRef]Agent{agent.Ref(): agent}

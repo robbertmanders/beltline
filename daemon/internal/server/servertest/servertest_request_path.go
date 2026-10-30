@@ -26,7 +26,7 @@ func RequestPath(f *Fixture, endpoint routes.Endpoint) string {
 		return "/api/v1/views/insights/evolution?belt=" + EncodeSegment(firstBelt())
 	case "beltArchive", "beltUnarchive", "beltPause", "beltAfk", "beltShadowSave", "beltShadowAccept", "beltShadowDiscard":
 		return strings.ReplaceAll(path, ":id", EncodeSegment(firstBelt()))
-	case "agentArchive", "agentUnarchive", "agentReset":
+	case "agentArchive", "agentUnarchive":
 		return strings.ReplaceAll(path, ":id", EncodeSegment("triage"))
 	case "runDecide", "runResume", "runAnswer", "runAbort", "runDrop", "runPark", "runUnpark", "runPause",
 		"runResumeRun", "runRetryContinuation", "runStartNow", "runContinueSession", "runAdjustStage", "runAdjustSwitch",

@@ -32,7 +32,7 @@ func wpStageIndexOfKind(run Run, kind StageKind) int {
 // TestStageResolvesAgainstTheFloorAndUnknownSelectsNothing
 func TestStageResolvesAgainstTheFloorAndUnknownSelectsNothing(t *testing.T) {
 	t.Parallel()
-	belt := DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true)
+	belt := SampleBelt([]string{"acme/billing"}, "agent", SampleAgents(), true)
 	merged := factoryTrackKey(belt.Stages[0].Name)
 	track := NewFactoryTrack([]FactoryTrackBelt{{ID: belt.ID, Name: belt.Name, Layout: belt.Layout()}})
 	first := wpMakeRun("first", RunStateRunning, 0, "issues", "Issues", "acme/billing", "T", 1, "")

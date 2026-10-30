@@ -3,7 +3,7 @@ import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { AppSocket } from "../test/setup";
-import { detailFor, detailGolden, listGolden, posts, renderAgents, resetAgentsEnvironment, stubAgents } from "./agentsTestKit";
+import { listGolden, posts, renderAgents, resetAgentsEnvironment, stubAgents } from "./agentsTestKit";
 import { json } from "../test/response";
 
 beforeEach(resetAgentsEnvironment);
@@ -181,33 +181,6 @@ describe("archive, restore and reset", () => {
     await waitFor(() => expect(posts(requests).some(request => request.path === "/api/v1/agents/triage/archive")).toBe(true));
     // The list refetch from the same fixture still contains triage, so selection stays; the command was sent once.
     expect(posts(requests).filter(request => request.path === "/api/v1/agents/triage/archive")).toHaveLength(1);
-  });
-
-  it("confirms a reset in a named sheet and sends exactly one request only on Confirm", async () => {
-    const user = userEvent.setup();
-    const detail = detailGolden();
-    const { requests } = stubAgents({
-      detail: id => id === "triage"
-        ? { agent: listGolden().agents.find(record => record.agent.id === "triage")!.agent, archived: false, builtIn: true, folder: detail.folder,
-            actions: detail.actions.map(action => action.id === "reset" ? { ...action, enabled: true, reason: undefined } : action),
-            presentation: { ...detail.presentation, canReset: true, resetReason: undefined } }
-        : detailFor(listGolden().agents.find(record => record.agent.id === id)!)
-    });
-    renderAgents();
-    await screen.findByLabelText("Brief");
-    const reset = await screen.findByRole("button", { name: "Reset to default" });
-    await waitFor(() => expect(reset.hasAttribute("disabled")).toBe(false));
-    await user.click(reset);
-    const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText(/Reset Triage/)).toBeTruthy();
-    // Escape closes without a request.
-    await user.keyboard("{Escape}");
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(posts(requests).some(request => request.path === "/api/v1/agents/triage/reset")).toBe(false);
-    // Confirm sends exactly one.
-    await user.click(screen.getByRole("button", { name: "Reset to default" }));
-    await user.click(await screen.findByRole("button", { name: "Confirm" }));
-    await waitFor(() => expect(posts(requests).filter(request => request.path === "/api/v1/agents/triage/reset")).toHaveLength(1));
   });
 
   it("shows Used by with Open belt navigation", async () => {

@@ -1,15 +1,15 @@
 package core
 
-// DefaultsEpicAgents are the agents an epic belt uses, in its order.
-var DefaultsEpicAgents = []string{"plan-epic", "open-branches", "file-wave", "assess-epic", "replan-epic", "land-epic", "wrap-up"}
+// SampleEpicAgents are the agents an epic belt uses, in its order.
+var SampleEpicAgents = []string{"plan-epic", "open-branches", "file-wave", "assess-epic", "replan-epic", "land-epic", "wrap-up"}
 
-// DefaultsAfterAssess is the fork after Assess: plan the next wave, or land the
+// SampleAfterAssess is the fork after Assess: plan the next wave, or land the
 // epic.
-func DefaultsAfterAssess() Fork {
+func SampleAfterAssess() Fork {
 	return Fork{ID: "after-assess", Routes: []Route{{ID: "next-wave", Name: "Next wave"}, {ID: "land", Name: "Land"}}}
 }
 
-// DefaultsEpicBelt is the epics-to-tickets belt: Plan, Approve the plan, Open the feature
+// SampleEpicBelt is the epics-to-tickets belt: Plan, Approve the plan, Open the feature
 // branch, File the wave, then Watch the ticket, which wakes Assess when a ticket
 // under the epic is added or changes status, or someone comments. Assess waits
 // for more, or takes a route: Next wave (Replan, Approve the wave, which files it)
@@ -18,9 +18,9 @@ func DefaultsAfterAssess() Fork {
 // that builds tickets, by their labels; `base:` puts their work on the feature
 // branch. Callers pass the defaults explicitly: the trigger is a Jira query
 // for issuetype = Epic AND labels = beltline, repos nil, agents
-// DefaultsBuiltInAgents().
-func DefaultsEpicBelt(trigger Trigger, repos []string, agents []Agent) Belt {
-	forks := []Fork{DefaultsAfterAssess()}
+// SampleAgents().
+func SampleEpicBelt(trigger Trigger, repos []string, agents []Agent) Belt {
+	forks := []Fork{SampleAfterAssess()}
 	var stages []Stage
 	place := func(route *string) DefaultsPlace {
 		return DefaultsPlace{Before: append([]Stage{}, stages...), Forks: forks, Route: route}
@@ -34,7 +34,7 @@ func DefaultsEpicBelt(trigger Trigger, repos []string, agents []Agent) Belt {
 			}
 		}
 		if agent == nil {
-			agent = DefaultsBuiltIn(id, nil)
+			agent = SampleAgentNamed(id, nil)
 		}
 		if agent == nil {
 			return
@@ -136,7 +136,7 @@ func epicAgentOf(stage Stage, agents []Agent) *Agent {
 			return &agents[index]
 		}
 	}
-	return DefaultsBuiltIn(stage.Agent.ID, nil)
+	return SampleAgentNamed(stage.Agent.ID, nil)
 }
 
 // epicStageNamed is the first stage whose agent or id is name, if there is one.

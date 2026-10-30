@@ -17,7 +17,7 @@ import (
 func costTestRun(now time.Time) Run {
 	subject := DefaultSubject("a/b", "Test")
 	subject.Number = 1
-	return NewRun(RunArgs{Belt: DefaultsBelt(nil, "agent", DefaultsBuiltInAgents(), true), Subject: subject, Now: now})
+	return NewRun(RunArgs{Belt: SampleBelt(nil, "agent", SampleAgents(), true), Subject: subject, Now: now})
 }
 
 // costTestAttempt is an attempt of stage at spring that ended at ended (nil while open), with usage.

@@ -222,7 +222,7 @@ func TestTheUpgradeMakesAFirstApprovalThatAskedForAPromptAPromptStage(t *testing
 	t.Parallel()
 	belt := engineIssueBelt()
 	belt.Stages = append([]Stage{promptTestImplicitGate()}, belt.Stages...)
-	upgraded := UpgradeBelt(belt, vtPinned(DefaultsBuiltInAgents()))
+	upgraded := UpgradeBelt(belt, vtPinned(SampleAgents()))
 	first := upgraded.Stages[0]
 	if first.Type != StageTypePrompt || first.Name != "Ask" || first.Outcomes[0].Then.WithOutput || first.Source != nil {
 		t.Fatalf("upgraded = %+v", first)

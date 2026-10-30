@@ -46,6 +46,27 @@ type LibraryRepository struct {
 	Publish    LibraryPublish `json:"publish"`
 }
 
+// LibraryExamplesRepository is the shared library repository of example belts and
+// agents. A new data folder lists it, and the upgrade adds it once to an older
+// one's settings; nothing is installed from it until you choose to. The app only
+// reads it: no share goes to it, whatever its entry says (LibraryShareAccepted).
+const LibraryExamplesRepository = "robbertmanders/beltline-examples"
+
+// LibraryExamples is the examples repository's settings entry: shared, at the
+// repository's root, and shared to by pull request.
+func LibraryExamples() LibraryRepository {
+	return LibraryRepository{Repository: LibraryExamplesRepository, Role: LibraryRoleShared, Publish: LibraryPublishPullRequest}
+}
+
+// LibraryShareAccepted reports whether a share may go to repo: a shared repository
+// other than the examples one, which the app never writes to.
+func LibraryShareAccepted(repo LibraryRepository) bool {
+	return repo.Role == LibraryRoleShared && repo.Repository != LibraryExamplesRepository
+}
+
+// LibraryShareRefusedExamples is why a share to the examples repository is refused.
+const LibraryShareRefusedExamples = LibraryExamplesRepository + " only offers examples to install; share to your own shared repository."
+
 // LibraryOrigin is the repository and path an installed belt or agent came from.
 // The same value keys a repository in settings.
 type LibraryOrigin struct {

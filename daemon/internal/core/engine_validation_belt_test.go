@@ -105,13 +105,13 @@ func TestWatchOutcomesNeedAnEvent(t *testing.T) {
 // TestEveryBuiltInAgentHasABriefAndValidSettings checks that every built-in agent has a brief and valid settings.
 func TestEveryBuiltInAgentHasABriefAndValidSettings(t *testing.T) {
 	t.Parallel()
-	agents := DefaultsBuiltInAgents()
+	agents := SampleAgents()
 	ids := make([]string, len(agents))
 	for index, agent := range agents {
 		ids[index] = agent.ID
 	}
-	if !reflect.DeepEqual(ids, DefaultsBuiltInIDs) {
-		t.Fatalf("ids %v, want %v", ids, DefaultsBuiltInIDs)
+	if !reflect.DeepEqual(ids, SampleAgentIDs) {
+		t.Fatalf("ids %v, want %v", ids, SampleAgentIDs)
 	}
 	for _, agent := range agents {
 		var others []Agent

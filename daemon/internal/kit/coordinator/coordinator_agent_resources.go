@@ -21,10 +21,6 @@ func (r AgentResource) Agent() core.Agent { return r.Record.Agent }
 // Lock: none (pure).
 func (r AgentResource) Archived() bool { return r.Record.Archived }
 
-// BuiltIn reports whether the record is one of the app's built-in agents.
-// Lock: none (pure).
-func (r AgentResource) BuiltIn() bool { return r.Record.BuiltIn() }
-
 // AgentPresentation is the editor context for a saved agent or an unsaved draft.
 // It is pure: it reads the library and settings and writes nothing.
 // Lock: exported entry point; takes c.mu.
@@ -38,23 +34,12 @@ func (c *Coordinator) AgentPresentation(agent core.Agent, archived bool) core.Ag
 // Lock: runs with c.mu held.
 func (c *Coordinator) agentPresentation(agent core.Agent, archived bool) core.AgentPresentation {
 	isNew := agent.Version == 0
-	shipped := core.DefaultsBuiltIn(agent.ID, nil)
-	builtIn := shipped != nil
-	canReset := !isNew && shipped != nil && !shipped.SameContent(agent)
 	warnings := append([]string{}, c.library.SavedVersionWarnings(agent)...)
 	warnings = append(warnings, core.ValidationAgentWarnings(agent, c.library.OtherAgents(agent))...)
 	warnings = append(warnings, c.modelWarnings(agent)...)
 
 	stage := core.DefaultsStageForAgent(agent, nil, nil, nil, core.TriggerKindIssues)
 	usedBy := c.library.AgentUsages(agent.ID)
-	var resetReason *string
-	if !canReset {
-		reason := core.AgentActionsResetNotBuiltIn
-		if builtIn {
-			reason = core.AgentActionsResetUnchanged
-		}
-		resetReason = &reason
-	}
 	var latest *core.Agent
 	if record := c.library.LatestAgent(agent.ID); record != nil {
 		value := record.Agent
@@ -62,15 +47,12 @@ func (c *Coordinator) agentPresentation(agent core.Agent, archived bool) core.Ag
 	}
 	return core.AgentPresentation{
 		IsNew:          isNew,
-		BuiltIn:        builtIn,
 		Archived:       archived,
 		Warnings:       warnings,
 		Footer:         core.BriefFooter(stage, stage.Writes()),
 		Placeholders:   core.PlaceholderHelpAgent(),
 		UsedBy:         usedBy,
 		OutcomeTargets: core.AgentOutcomeTargets(agent.ID, c.library.agents),
-		CanReset:       canReset,
-		ResetReason:    resetReason,
 		Glyph:          agent.Glyph(),
 		Status:         core.AgentStatusLine(agent, latest),
 	}
@@ -91,7 +73,7 @@ func (c *Coordinator) readAgentResourceNow(record core.AgentRecord) AgentResourc
 	presentation := c.agentPresentation(record.Agent, record.Archived)
 	return AgentResource{
 		Record:       record,
-		Actions:      core.AgentActionsForSaved(record.Archived, record.BuiltIn(), presentation.CanReset, c.hasSharedLibraryRepository()),
+		Actions:      core.AgentActionsForSaved(record.Archived, c.hasSharedLibraryRepository()),
 		Presentation: presentation,
 	}
 }

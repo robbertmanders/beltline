@@ -151,14 +151,6 @@ func (c *Coordinator) SetAgentArchived(id string, archived bool) {
 	c.library.SetAgentArchived(id, archived)
 }
 
-// ResetAgent restores a built-in agent to its shipped content.
-// Lock: exported entry point; takes c.mu.
-func (c *Coordinator) ResetAgent(id string) (core.Agent, error) {
-	c.Lock()
-	defer c.EndTurn()
-	return c.library.ResetAgent(id)
-}
-
 // saveBelt saves a belt as a new version and kicks.
 // Lock: runs with c.mu held. Spawns: kick.
 func (c *Coordinator) saveBelt(belt core.Belt) (core.Belt, error) {

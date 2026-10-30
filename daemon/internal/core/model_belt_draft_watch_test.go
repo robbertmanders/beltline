@@ -17,7 +17,7 @@ func draftWatchStage(belt Belt) *Stage {
 // TestChangingAWatchTargetResetsItsDefaultOutcomesAndDefaultName
 func TestChangingAWatchTargetResetsItsDefaultOutcomesAndDefaultName(t *testing.T) {
 	t.Parallel()
-	base := DefaultsBelt([]string{"acme/app"}, "agent", DefaultsBuiltInAgents(), true)
+	base := SampleBelt([]string{"acme/app"}, "agent", SampleAgents(), true)
 	watch := draftWatchStage(base)
 	if watch == nil {
 		t.Fatal("no watch stage")
@@ -49,7 +49,7 @@ func TestChangingAWatchTargetResetsItsDefaultOutcomesAndDefaultName(t *testing.T
 // TestACustomWatchNameIsKeptWhenTheTargetChanges
 func TestACustomWatchNameIsKeptWhenTheTargetChanges(t *testing.T) {
 	t.Parallel()
-	base := DefaultsBelt([]string{"acme/app"}, "agent", DefaultsBuiltInAgents(), true)
+	base := SampleBelt([]string{"acme/app"}, "agent", SampleAgents(), true)
 	watch := draftWatchStage(base)
 	if watch == nil {
 		t.Fatal("no watch stage")

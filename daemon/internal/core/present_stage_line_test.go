@@ -48,7 +48,7 @@ func TestStageLineShowsANewerAgentVersionOnlyWhenTheLibraryHasOne(t *testing.T) 
 	t.Parallel()
 	belt := nfAskBelt(t)
 	pinned := *belt.Stages[0].Agent
-	newer := DefaultsAgent(pinned.ID)
+	newer := SampleAgent(pinned.ID)
 	newer.Version = pinned.Version + 1
 
 	blockUpdate := func(agents []AgentRecord) *int {
@@ -65,10 +65,10 @@ func TestStageLineShowsANewerAgentVersionOnlyWhenTheLibraryHasOne(t *testing.T) 
 	if update := blockUpdate(nil); update != nil {
 		t.Errorf("update without a library = %d", *update)
 	}
-	if update := blockUpdate([]AgentRecord{{Agent: DefaultsAgent(pinned.ID)}}); update != nil {
+	if update := blockUpdate([]AgentRecord{{Agent: SampleAgent(pinned.ID)}}); update != nil {
 		t.Errorf("update for the same version = %d", *update)
 	}
-	update := blockUpdate([]AgentRecord{{Agent: newer}, {Agent: DefaultsAgent(pinned.ID), Archived: true}})
+	update := blockUpdate([]AgentRecord{{Agent: newer}, {Agent: SampleAgent(pinned.ID), Archived: true}})
 	if update == nil || *update != newer.Version {
 		t.Errorf("update = %v, want %d", update, newer.Version)
 	}

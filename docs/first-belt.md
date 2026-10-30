@@ -26,7 +26,7 @@ On **Belts**, open **Agent** and describe the belt you want, for example:
 
 > A belt for issues labelled `agent` in owner/repo: triage, spec, an approval, build, verify, ship, then wait for the merge.
 
-Choose the runner and model for the conversation and press **Start**. The configuration assistant is an agent session that adds the built-in agents you need to your library and writes the belt into your data folder. Every change it makes is a new version, and it asks before it archives, pauses or removes anything. See [Configure with an agent](configuration.md#configure-with-an-agent).
+Choose the runner and model for the conversation and press **Start**. The configuration assistant is an agent session that writes the belt into your data folder, and asks you to install the agents it needs from the [examples library](library.md#the-examples-library). Every change it makes is a new version, and it asks before it archives, pauses or removes anything. See [Configure with an agent](configuration.md#configure-with-an-agent).
 
 You can also build a belt by hand: **New belt** opens the editor with a trigger and no stages, and the **+** buttons between stages add agent, approval and watch stages.
 

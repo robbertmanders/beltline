@@ -38,7 +38,7 @@ func (l *coordLatch) wait() { <-l.ch }
 
 // approvalBeltStages are a triage agent and an approval gate.
 func approvalBeltStages() []core.Stage {
-	triage := core.DefaultsStageForAgent(core.DefaultsAgent("triage"), nil, nil, nil, core.TriggerKindIssues)
+	triage := core.DefaultsStageForAgent(core.SampleAgent("triage"), nil, nil, nil, core.TriggerKindIssues)
 	approve := core.DefaultsStage(core.StageTypeApprove, []core.Stage{triage}, nil, []core.Stage{triage})
 	return []core.Stage{triage, approve}
 }
@@ -178,7 +178,7 @@ func TestAStopStillFinishingDoesNotStartAReplacementAndAFailureStaysParked(t *te
 func TestUnparkWaitsForAFullStageAPausedBeltAndAGlobalPause(t *testing.T) {
 	t.Parallel()
 	belt := issuesBelt(nil)
-	belt.Stages = []core.Stage{core.DefaultsStageForAgent(core.DefaultsAgent("triage"), nil, nil, nil, core.TriggerKindIssues)}
+	belt.Stages = []core.Stage{core.DefaultsStageForAgent(core.SampleAgent("triage"), nil, nil, nil, core.TriggerKindIssues)}
 	belt.Stages[0].Slots = 1
 	issues := []core.Subject{coordSubject(1, "One"), coordSubject(2, "Two")}
 	h := newHarness(t, harnessOptions{Issues: issues, Belts: []core.Belt{belt}, StageDuration: 3600})

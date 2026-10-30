@@ -335,7 +335,7 @@ func TestStartNeedsANonBlankTitleAndAValidRepository(t *testing.T) {
 		t.Errorf("TaskDraftCanStart accepts a repository the entry lacks")
 	}
 }
-func TestNewAgentIsVersionZeroAndResetRestoresShippedContent(t *testing.T) {
+func TestNewAgentIsVersionZeroAndSaveMakesTheNextVersion(t *testing.T) {
 	t.Parallel()
 	h := newLibraryHarness(t, liveTestBelt("command", "Command belt", "acme/app"))
 	c := h.Coord()
@@ -358,16 +358,5 @@ func TestNewAgentIsVersionZeroAndResetRestoresShippedContent(t *testing.T) {
 	}
 	if saved.Agent.Brief != "changed" || saved.Agent.Version <= agent.Version {
 		t.Errorf("saved agent = %+v", saved.Agent)
-	}
-
-	reset, err := c.ResetAgentCommand("triage")
-	if err != nil {
-		t.Fatalf("reset: %v", err)
-	}
-	if want := core.DefaultsBuiltIn("triage", nil).Brief; reset.Agent.Brief != want {
-		t.Errorf("reset brief does not match the shipped one")
-	}
-	if _, err := c.ResetAgentCommand("fixture-agent"); err == nil {
-		t.Errorf("resetting a non-built-in agent was accepted")
 	}
 }

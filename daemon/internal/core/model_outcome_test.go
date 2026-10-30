@@ -53,7 +53,7 @@ func TestAllWatchEventsSaveLoadAndValidate(t *testing.T) {
 	}
 
 	// The default belt saves, loads and passes validation with every event on its merge stage.
-	belt := DefaultsBelt([]string{"a/b"}, "agent", DefaultsBuiltInAgents(), true)
+	belt := SampleBelt([]string{"a/b"}, "agent", SampleAgents(), true)
 	var loaded Belt
 	if err := json.Unmarshal(vtMarshal(t, belt), &loaded); err != nil {
 		t.Fatalf("decode belt: %v", err)

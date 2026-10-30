@@ -59,7 +59,7 @@ Each belt has four policies, all on by default except **Comment when held**, in 
 
 ## Epics
 
-An epic belt breaks a large issue or Jira epic into waves of tickets that ordinary belts then build. Its built-in agents:
+An epic belt breaks a large issue or Jira epic into waves of tickets that ordinary belts then build. The [examples library](library.md#the-examples-library) has one; its agents:
 
 1. **Plan the epic** writes the plan, and you approve it.
 2. **Open the feature branch** opens the run's branch as the epic's feature branch.

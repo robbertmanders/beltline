@@ -46,7 +46,7 @@ func vtDuplicateWarnings(belt Belt, key string) []string {
 		}
 	}
 	var out []string
-	for _, warning := range ValidationWarnings(belt, keys, vtPinned(DefaultsBuiltInAgents())) {
+	for _, warning := range ValidationWarnings(belt, keys, vtPinned(SampleAgents())) {
 		if strings.Contains(warning, "{"+key+"} is used by") {
 			out = append(out, warning)
 		}
@@ -127,7 +127,7 @@ func TestDuplicateKeysFollowRouteExclusivity(t *testing.T) {
 
 	aliased := vtKeysBelt([]Stage{vtWriterOn("draft", "Draft", "draft", nil), vtWriterOn("writer-2", "Writer", "copy", nil)}, nil)
 	aliased.Stages[1].ID = "draft"
-	for _, warning := range ValidationWarnings(aliased, []string{"draft", "copy"}, vtPinned(DefaultsBuiltInAgents())) {
+	for _, warning := range ValidationWarnings(aliased, []string{"draft", "copy"}, vtPinned(SampleAgents())) {
 		if strings.Contains(warning, "wins over") || strings.Contains(warning, "{draft} is used by") {
 			t.Errorf("alias warning %q", warning)
 		}
@@ -193,7 +193,7 @@ func TestReservedInvalidAndArtifactsKeys(t *testing.T) {
 
 	run := NewRun(RunArgs{Belt: belt, Subject: Subject{Kind: SubjectKindIssue, Repo: "a/b", Number: 1, Title: "T"}, Now: vtNow()})
 	run.Stages[0].ID = "artifacts"
-	context := BriefContext{RunFolder: "/run", AttemptFolder: "/attempt", Base: "main", Branch: "b", Agents: vtPinned(DefaultsBuiltInAgents())}
+	context := BriefContext{RunFolder: "/run", AttemptFolder: "/attempt", Base: "main", Branch: "b", Agents: vtPinned(SampleAgents())}
 	values := briefPlaceholders(run, run.Stages[1], context)
 	if values["artifacts"] != "/attempt/artifacts" {
 		t.Errorf("artifacts placeholder %q", values["artifacts"])

@@ -191,7 +191,7 @@ func TestTranscriptCountsOnlyMainTurnsAndOnlyNewReplies(t *testing.T) {
 	if reply == nil || *reply != "Done.\nOutcome: ready to spec" {
 		t.Fatalf("reply(5) = %v", reply)
 	}
-	outcomes := core.DefaultsBelt([]string{"acme/calc"}, "agent", core.DefaultsBuiltInAgents(), true).Stages[0].Outcomes
+	outcomes := core.SampleBelt([]string{"acme/calc"}, "agent", core.SampleAgents(), true).Stages[0].Outcomes
 	if core.OutcomeParserCompleting("# Output", *reply, outcomes) == nil {
 		t.Fatalf("the reply does not complete with an outcome")
 	}

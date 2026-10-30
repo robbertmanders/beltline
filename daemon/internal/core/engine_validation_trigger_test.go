@@ -38,8 +38,8 @@ func vtBeltOfKind(kind TriggerKind, stages []Stage) Belt {
 	}
 	var forks []Fork
 	if stages == nil {
-		stages = DefaultsStages(kind, DefaultsBuiltInAgents(), true)
-		forks = DefaultsForks(kind)
+		stages = SampleStages(kind, SampleAgents(), true)
+		forks = SampleForks(kind)
 	}
 	return NewBeltFromTrigger(BeltFromTriggerArgs{
 		ID: string(kind), Name: kind.Title(), Trigger: trigger, Repos: repos, Stages: stages, Forks: forks,
@@ -292,7 +292,7 @@ func TestReviewAndManualShareReadOnlyAgentsAndRejectAWorktree(t *testing.T) {
 // TestATicketWatchIsIncompatibleWithAManualEntry
 func TestATicketWatchIsIncompatibleWithAManualEntry(t *testing.T) {
 	t.Parallel()
-	stages := DefaultsStages(TriggerKindIssues, DefaultsBuiltInAgents(), true)
+	stages := SampleStages(TriggerKindIssues, SampleAgents(), true)
 	if watch := vtStageIndex(stages, StageKindWatch); watch >= 0 {
 		target := WatchTargetTicket
 		stages[watch].Watch = &target
@@ -300,7 +300,7 @@ func TestATicketWatchIsIncompatibleWithAManualEntry(t *testing.T) {
 	belt := vtMultiBelt("mix", "Mix", []TriggerEntry{
 		vtEntry("2", Trigger{Kind: TriggerKindManual}, "acme/web"),
 		vtEntry("1", vtIssuesTrigger(), "acme/billing"),
-	}, stages, DefaultsForks(TriggerKindIssues))
+	}, stages, SampleForks(TriggerKindIssues))
 	warnings := vtWarnings(belt)
 	if !vtAny(warnings, func(w string) bool {
 		return strings.HasPrefix(w, "Trigger 1 (Manual):") && strings.Contains(w, "issue or ticket")

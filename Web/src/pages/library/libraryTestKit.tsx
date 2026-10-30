@@ -5,13 +5,13 @@ import { stubDaemon, type Handler } from "../../test/daemon";
 const action = (id: string, enabled = true, reason?: string) => (enabled ? { id, enabled } : { id, enabled, reason });
 
 export const backupRepo = {
-  repository: "acme/beltline-backup", path: "", role: "backup", publish: "pullRequest", syncedAt: "2026-10-14T09:00:00Z", commit: "4f2a9c1",
+  repository: "acme/beltline-backup", path: "", role: "backup", publish: "pullRequest", takesShares: false, syncedAt: "2026-10-14T09:00:00Z", commit: "4f2a9c1",
   problem: null, changedSinceBackup: true, items: [],
   actions: [action("refresh"), action("backup"), action("restore")]
 };
 
 export const sharedRepo = {
-  repository: "acme/team-library", path: "", role: "shared", publish: "pullRequest", syncedAt: "2026-10-14T09:00:00Z", commit: "9c0be37",
+  repository: "acme/team-library", path: "", role: "shared", publish: "pullRequest", takesShares: true, syncedAt: "2026-10-14T09:00:00Z", commit: "9c0be37",
   problem: null,
   items: [
     { kind: "belt", id: "issue-flow", name: "Issue flow", version: 3, localVersion: 2, state: "update", reason: null, actions: [action("install")] },

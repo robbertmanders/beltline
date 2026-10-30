@@ -14,7 +14,7 @@ func agentListTestRecords(archived ...string) []AgentRecord {
 		gone[id] = true
 	}
 	records := []AgentRecord{}
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		records = append(records, AgentRecord{Agent: agent, Archived: gone[agent.ID]})
 	}
 	return records
@@ -22,7 +22,7 @@ func agentListTestRecords(archived ...string) []AgentRecord {
 
 func TestRowDetailsShowUsageWithoutAnAgentPlaceholder(t *testing.T) {
 	t.Parallel()
-	agent := DefaultsAgent("build")
+	agent := SampleAgent("build")
 	agent.Key = "legacy-build-name"
 	if got, want := AgentListDetail(agent, 1), "v"+strconv.Itoa(agent.Version)+" · 1 belt"; got != want {
 		t.Errorf("detail with one belt = %q, want %q", got, want)

@@ -37,7 +37,7 @@ func mrLegBelt() core.Belt {
 
 // mrNestedStage is a nested fixture stage: an agent on route, with one outcome.
 func mrNestedStage(id, agent string, route *string, name string, outcome core.Outcome) core.Stage {
-	stage := core.DefaultsStageForAgentAt(core.DefaultsAgent(agent), core.DefaultsPlace{Route: route}, nil, core.TriggerKindIssues)
+	stage := core.DefaultsStageForAgentAt(core.SampleAgent(agent), core.DefaultsPlace{Route: route}, nil, core.TriggerKindIssues)
 	stage.ID = id
 	stage.Name = name
 	stage.Route = route
@@ -101,7 +101,7 @@ func mrNestedWorkBelt() core.Belt {
 		id := belt.Stages[i].ID
 		if spec, ok := keys[id]; ok {
 			belt.Stages[i].Key = new(spec[0])
-			belt.Stages[i].Brief = strings.ReplaceAll(core.DefaultsAgent(spec[1]).Brief, "{"+spec[2]+"}", "{output}")
+			belt.Stages[i].Brief = strings.ReplaceAll(core.SampleAgent(spec[1]).Brief, "{"+spec[2]+"}", "{output}")
 		}
 		if id == "quick-build" || id == "thorough-spec" || id == "thorough-build" || id == "skip-build" {
 			belt.Stages[i].Workspace = core.WorkspaceWorktree

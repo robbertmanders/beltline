@@ -19,7 +19,7 @@ func ovFloorBelt(id string, archived, paused bool) OverviewBelt {
 
 // ovRun is a run on beltID in state, with the fixture subject.
 func ovRun(id, beltID string, state RunState) Run {
-	source := DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true)
+	source := SampleBelt([]string{"acme/billing"}, "agent", SampleAgents(), true)
 	run := NewRun(RunArgs{Belt: source, Subject: DefaultSubject("acme/billing", id), Now: ovNow})
 	run.ID = id
 	run.BeltID = beltID
@@ -314,7 +314,7 @@ func TestSummaryUsesTheSuppliedClockAndCalendarAndMatchesRunSummary(t *testing.T
 // TestOverviewBuildsTheSharedTrack checks the Overview lays its Floor out on the track of its belts.
 func TestOverviewBuildsTheSharedTrack(t *testing.T) {
 	t.Parallel()
-	source := DefaultsBelt([]string{"acme/billing"}, "agent", DefaultsBuiltInAgents(), true)
+	source := SampleBelt([]string{"acme/billing"}, "agent", SampleAgents(), true)
 	docs := source
 	docs.ID = "docs"
 	docs.Name = "Docs"

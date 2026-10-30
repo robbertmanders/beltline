@@ -21,7 +21,7 @@ import (
 // issueRun is a run on the default issues belt (the harness's belt) for one issue. It does not
 // read the coordinator, so it can be called inside a turn.
 func issueRun(number int, created time.Time) core.Run {
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	run := core.NewRun(core.RunArgs{
 		Belt:    belt,
 		Subject: core.Subject{Kind: core.SubjectKindIssue, Repo: "acme/billing", Number: number, Title: "Run"},

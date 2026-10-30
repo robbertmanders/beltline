@@ -55,7 +55,7 @@ func watchIndex(t *testing.T, belt core.Belt) int {
 func TestLibraryUpgradesOnceWithoutChangingPinnedRunsOrState(t *testing.T) {
 	t.Parallel()
 	storage := seededNoBelts(t)
-	old := core.DefaultsBelt([]string{"a/b"}, "agent", core.DefaultsBuiltInAgents(), true)
+	old := core.SampleBelt([]string{"a/b"}, "agent", core.SampleAgents(), true)
 	old.Stages[6].Outcomes = old.Stages[6].Outcomes[:2]
 	old, err := storage.SaveNewVersion(old)
 	if err != nil {
@@ -105,7 +105,7 @@ func TestLibraryUpgradesOnceWithoutChangingPinnedRunsOrState(t *testing.T) {
 func TestAStateSavedBeforeWatchOutcomesKeepsPausedAndLastFired(t *testing.T) {
 	t.Parallel()
 	storage := seededNoBelts(t)
-	old := core.DefaultsBelt([]string{"a/b"}, "agent", core.DefaultsBuiltInAgents(), true)
+	old := core.SampleBelt([]string{"a/b"}, "agent", core.SampleAgents(), true)
 	old.Stages[6].Outcomes = old.Stages[6].Outcomes[:2]
 	old, err := storage.SaveNewVersion(old)
 	if err != nil {
@@ -143,11 +143,11 @@ func TestANewBeltKeepsTheWatchOutcomesItWasSavedWith(t *testing.T) {
 	t.Parallel()
 	storage := seededNoBelts(t)
 	library := libraryOver(t, storage)
-	belt := core.DefaultsBelt([]string{"a/b"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"a/b"}, "agent", core.SampleAgents(), true)
 	belt.ID = library.NewBelt().ID
 	belt.Version = 0
 	// Without the fork after the watch, whose routes its outcomes take.
-	belt.Stages = core.DefaultsStages(core.TriggerKindManual, core.DefaultsBuiltInAgents(), true)
+	belt.Stages = core.SampleStages(core.TriggerKindManual, core.SampleAgents(), true)
 	belt.Forks = nil
 	watch := watchIndex(t, belt)
 	belt.Stages[watch].Outcomes = belt.Stages[watch].Outcomes[:2]

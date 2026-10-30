@@ -38,7 +38,7 @@ func TestTheStatusReadsHeldThenWaitingThenRunningThenIdle(t *testing.T) {
 // TestASharedStageIsCaptionedWithItsBeltsAndAnOwnStageWithItsKind
 func TestASharedStageIsCaptionedWithItsBeltsAndAnOwnStageWithItsKind(t *testing.T) {
 	t.Parallel()
-	stage := DefaultsStages(TriggerKindIssues, DefaultsBuiltInAgents(), true)[0]
+	stage := SampleStages(TriggerKindIssues, SampleAgents(), true)[0]
 	if got := OverviewBoxesCaption(stage, 1); got != "Agent" {
 		t.Errorf("caption(1) = %q", got)
 	}
@@ -65,7 +65,7 @@ func floorTestCapitalized(id string) string {
 
 // obBelt is the default belt on acme/<id>, named by id.
 func obBelt(id string) Belt {
-	source := DefaultsBelt([]string{"acme/" + id}, "agent", DefaultsBuiltInAgents(), true)
+	source := SampleBelt([]string{"acme/" + id}, "agent", SampleAgents(), true)
 	source.ID = id
 	source.Name = floorTestCapitalized(id)
 	return source
@@ -180,7 +180,7 @@ func TestAReturnLaneIsLabelledWithTheBeltsThatTakeIt(t *testing.T) {
 	}
 	var tracked []FactoryTrackBelt
 	for _, spec := range specs {
-		base := DefaultsStages(TriggerKindIssues, DefaultsBuiltInAgents(), true)
+		base := SampleStages(TriggerKindIssues, SampleAgents(), true)
 		stages := make([]Stage, 0, len(spec.names))
 		for index, name := range spec.names {
 			stage := base[index]

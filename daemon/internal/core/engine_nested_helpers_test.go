@@ -14,7 +14,7 @@ import (
 // nfStage is a new agent stage of the nested belt, built by the real defaults:
 // DefaultsStageForAgentAt, then named and routed.
 func nfStage(id, agent string, route *string, outcome Outcome) Stage {
-	stage := DefaultsStageForAgentAt(DefaultsAgent(agent), DefaultsPlace{Route: route}, nil, TriggerKindIssues)
+	stage := DefaultsStageForAgentAt(SampleAgent(agent), DefaultsPlace{Route: route}, nil, TriggerKindIssues)
 	stage.ID = id
 	switch id {
 	case "quick-build", "thorough-build", "skip-build":
@@ -231,7 +231,7 @@ func nfRouteSet(legs []Leg) map[string]struct{} {
 // belt checked with its explicit stage keys and the built-in agents.
 func nfWarnings(belt Belt) []string {
 	agents := map[AgentRef]Agent{}
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		agents[agent.Ref()] = agent
 	}
 	converted := StageKeysExplicit(belt, agents)
@@ -256,7 +256,7 @@ func nfForkedBelt(simple []string) Belt {
 	fork := Fork{ID: "size", Routes: []Route{{ID: "complex", Name: "Complex"}, {ID: "simple", Name: "Simple"}}}
 	var stages []Stage
 	add := func(agent string, route *string, id string) {
-		stage := DefaultsStageForAgentAt(DefaultsAgent(agent), DefaultsPlace{Before: stages, Forks: []Fork{fork}, Route: route}, stages, TriggerKindIssues)
+		stage := DefaultsStageForAgentAt(SampleAgent(agent), DefaultsPlace{Before: stages, Forks: []Fork{fork}, Route: route}, stages, TriggerKindIssues)
 		if id != "" {
 			stage.ID = id
 		}
@@ -321,7 +321,7 @@ func nfIssuesBelt(stages []Stage) Belt {
 // nfApprovalBelt is triage, then
 // an approval that keeps its Park it outcome only when park is set.
 func nfApprovalBelt(park bool) Belt {
-	triage := DefaultsStageForAgentAt(DefaultsAgent("triage"), DefaultsPlace{}, nil, TriggerKindIssues)
+	triage := DefaultsStageForAgentAt(SampleAgent("triage"), DefaultsPlace{}, nil, TriggerKindIssues)
 	gate := DefaultsStage(StageTypeApprove, []Stage{triage}, nil, []Stage{triage})
 	if !park {
 		var kept []Outcome

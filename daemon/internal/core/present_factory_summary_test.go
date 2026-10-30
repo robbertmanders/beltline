@@ -16,7 +16,7 @@ func TestCountsSumAndKeepPauseState(t *testing.T) {
 	var inputs []FactorySummaryBeltInput
 	var runs []Run
 	for _, entry := range ids {
-		belt := DefaultsBelt([]string{"a/b"}, "agent", DefaultsBuiltInAgents(), true)
+		belt := SampleBelt([]string{"a/b"}, "agent", SampleAgents(), true)
 		belt.ID = entry.id
 		belt.Name = entry.name
 		inputs = append(inputs, FactorySummaryBeltInput{ID: entry.id, Name: entry.name, Paused: entry.id == "deps"})

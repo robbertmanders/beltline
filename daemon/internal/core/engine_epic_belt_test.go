@@ -97,7 +97,7 @@ func epicTestTicketWatch(outcomes []Outcome) Stage {
 }
 
 // epicTestEpicTrigger is the epic belt's default trigger: the Epic query
-// the same trigger DefaultsEpicBelt uses.
+// the same trigger SampleEpicBelt uses.
 func epicTestEpicTrigger() Trigger {
 	return Trigger{Kind: TriggerKindJira, Jira: &JiraQuery{Jql: "issuetype = Epic AND labels = beltline", Poll: 60}}
 }
@@ -169,9 +169,9 @@ func TestATicketWatchNeedsARunAboutATicket(t *testing.T) {
 // TestTheEpicBeltIsValid
 func TestTheEpicBeltIsValid(t *testing.T) {
 	t.Parallel()
-	belt := DefaultsEpicBelt(epicTestEpicTrigger(), []string{"acme/billing"}, DefaultsBuiltInAgents())
+	belt := SampleEpicBelt(epicTestEpicTrigger(), []string{"acme/billing"}, SampleAgents())
 	agents := map[AgentRef]Agent{}
-	for _, agent := range DefaultsBuiltInAgents() {
+	for _, agent := range SampleAgents() {
 		agents[agent.Ref()] = agent
 	}
 	var keys []string
@@ -240,7 +240,7 @@ func TestTheEpicBeltIsValid(t *testing.T) {
 // epicTestAssessing is the epic belt's run,
 // at Assess with what the watch saw.
 func epicTestAssessing() Run {
-	run := NewRun(RunArgs{Belt: DefaultsEpicBelt(epicTestEpicTrigger(), []string{"acme/billing"}, DefaultsBuiltInAgents()), Subject: epicTestEpic(), Now: engineT0})
+	run := NewRun(RunArgs{Belt: SampleEpicBelt(epicTestEpicTrigger(), []string{"acme/billing"}, SampleAgents()), Subject: epicTestEpic(), Now: engineT0})
 	run.State = RunStateRunning
 	run.StageID = "assess-epic"
 	run.Attempts = []Attempt{NewAttempt(AttemptArgs{StageID: "assess-epic", Number: 1, StartedAt: jsonx.Date{Time: engineT0}, Folder: "06-assess-epic-1"})}

@@ -12,7 +12,7 @@ import (
 
 // endpointCount is the number of endpoints the table names: the registry's cases less its
 // factory and marketplace endpoints, which library repositories replace with seven of their own.
-const endpointCount = 109
+const endpointCount = 108
 
 // TestEndpointRegistryCount checks the registry lists every endpoint of the contract.
 func TestEndpointRegistryCount(t *testing.T) {

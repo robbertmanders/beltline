@@ -42,30 +42,3 @@ func (c *Coordinator) ArchiveAgentCommand(id string, archived bool) (core.AgentR
 	defer c.EndTurn()
 	return c.library.ArchivingAgent(id, archived)
 }
-
-// ResetAgentCommand restores a built-in agent to its shipped content through the
-// normal save checks. A non-built-in id is rejected.
-// Lock: exported entry point; takes c.mu.
-func (c *Coordinator) ResetAgentCommand(id string) (core.AgentRecord, error) {
-	c.Lock()
-	defer c.EndTurn()
-	shipped := core.DefaultsBuiltIn(id, nil)
-	if shipped == nil {
-		return core.AgentRecord{}, core.NewValidationFailure(core.AgentActionsResetNotBuiltIn, nil)
-	}
-	// The same rule the editor's Reset action follows: nothing to reset when the latest saved version already is the shipped one.
-	if latest := c.library.LatestAgent(id); latest != nil && shipped.SameContent(latest.Agent) {
-		return core.AgentRecord{}, core.NewValidationFailure(core.AgentActionsResetUnchanged, nil)
-	}
-	saved, err := c.library.ResetAgent(id)
-	if err != nil {
-		return core.AgentRecord{}, err
-	}
-	for _, record := range c.library.agents {
-		if record.Agent.ID == saved.ID {
-			record.Agent = cloneAgent(record.Agent)
-			return record, nil
-		}
-	}
-	return core.AgentRecord{}, core.NewValidationFailure("The reset agent "+saved.ID+" could not be read back.", nil)
-}

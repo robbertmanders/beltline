@@ -6,12 +6,12 @@ package core
 import "slices"
 import "strings"
 
-// DefaultsBelt is the issues-to-pull-requests belt: Triage, Spec, Approve, Build,
+// SampleBelt is the issues-to-pull-requests belt: Triage, Spec, Approve, Build,
 // Verify, Ship, Merge, then Wrap up once merged, with Resolve conflicts and Fix
 // checks going back to Merge, and the latest of agents where it has them.
 // Callers pass the defaults explicitly: repos nil, label "agent",
-// agents DefaultsBuiltInAgents(), bundled true.
-func DefaultsBelt(repos []string, label string, agents []Agent, bundled bool) Belt {
+// agents SampleAgents(), bundled true.
+func SampleBelt(repos []string, label string, agents []Agent, bundled bool) Belt {
 	filter := DefaultIssueFilter()
 	filter.Label = label
 	return NewBeltFromTrigger(BeltFromTriggerArgs{
@@ -19,36 +19,36 @@ func DefaultsBelt(repos []string, label string, agents []Agent, bundled bool) Be
 		Name:    "Issues to pull requests",
 		Trigger: Trigger{Kind: TriggerKindIssues, Issues: &filter},
 		Repos:   repos,
-		Stages:  DefaultsStages(TriggerKindIssues, agents, bundled),
-		Forks:   DefaultsForks(TriggerKindIssues),
+		Stages:  SampleStages(TriggerKindIssues, agents, bundled),
+		Forks:   SampleForks(TriggerKindIssues),
 	})
 }
 
-// DefaultsAfterMerge is the fork after the watch on a belt that opens its own pull
+// SampleAfterMerge is the fork after the watch on a belt that opens its own pull
 // requests: a merged pull request is wrapped up, one with conflicts or behind its
 // base is brought up to date, and one with failing checks is fixed.
 // Each call returns a fresh value.
-func DefaultsAfterMerge() Fork {
+func SampleAfterMerge() Fork {
 	return Fork{ID: "after-merge", Routes: []Route{{ID: "merged", Name: "Merged"}, {ID: "conflicts", Name: "Conflicts"}, {ID: "checks", Name: "Failing checks"}}}
 }
 
-// DefaultsForks are the forks a new belt of kind starts with.
-func DefaultsForks(kind TriggerKind) []Fork {
+// SampleForks are the forks a new belt of kind starts with.
+func SampleForks(kind TriggerKind) []Fork {
 	switch kind {
 	case TriggerKindIssues, TriggerKindJira:
-		return []Fork{DefaultsAfterMerge()}
+		return []Fork{SampleAfterMerge()}
 	default:
 		return []Fork{}
 	}
 }
 
-// DefaultsStages are the stages a new belt of kind starts with. Issues and
+// SampleStages are the stages a new belt of kind starts with. Issues and
 // tickets get the whole line: once their pull request is merged they are tidied
 // up, and while it waits, conflicts and failing checks are fixed and watched
 // again. A task you wrote yourself skips Triage; a scheduled task goes straight to
 // Build; a review reads the pull request and submits what it found. Without
 // bundled, a step whose agent isn't in agents is left out.
-func DefaultsStages(kind TriggerKind, agents []Agent, bundled bool) []Stage {
+func SampleStages(kind TriggerKind, agents []Agent, bundled bool) []Stage {
 	type step struct {
 		ID    string
 		Route *string
@@ -73,7 +73,7 @@ func DefaultsStages(kind TriggerKind, agents []Agent, bundled bool) []Stage {
 	case TriggerKindReviews:
 		add("review", "post-review")
 	}
-	forks := DefaultsForks(kind)
+	forks := SampleForks(kind)
 	var stages []Stage
 	for _, s := range steps {
 		place := DefaultsPlace{Before: append([]Stage{}, stages...), Forks: forks, Route: s.Route}
@@ -101,13 +101,13 @@ func DefaultsStages(kind TriggerKind, agents []Agent, bundled bool) []Stage {
 			}
 		}
 		if agent == nil && bundled {
-			agent = DefaultsBuiltIn(s.ID, nil)
+			agent = SampleAgentNamed(s.ID, nil)
 		}
 		if agent != nil {
 			stages = append(stages, DefaultsStageForAgentAt(*agent, place, stages, kind))
 		}
 	}
-	return DefaultsTaskBriefs(DefaultsSendingFixes(stages, forks), agents)
+	return SampleTaskBriefs(SampleSendingFixes(stages, forks), agents)
 }
 
 // defaultsShipMerged makes a merged pull request ship the run, on a watch that ends
@@ -130,12 +130,12 @@ func defaultsStageType(id string) (StageType, bool) {
 	return "", false
 }
 
-// DefaultsTaskBriefs adapts the briefs of generated task belts: their bundled
+// SampleTaskBriefs adapts the briefs of generated task belts: their bundled
 // briefs read the task description instead of referring to an output that cannot
 // exist (Triage and Spec may be missing). Only generated stages are adapted; saved
 // belts and custom agents stay intact.
-// Callers pass DefaultsBuiltInAgents() for the default agents.
-func DefaultsTaskBriefs(stages []Stage, agents []Agent) []Stage {
+// Callers pass SampleAgents() for the default agents.
+func SampleTaskBriefs(stages []Stage, agents []Agent) []Stage {
 	ids := map[string]struct{}{}
 	for _, stage := range stages {
 		if stage.Agent != nil {
@@ -149,13 +149,13 @@ func DefaultsTaskBriefs(stages []Stage, agents []Agent) []Stage {
 	return out
 }
 
-// defaultsTaskBrief is one stage of DefaultsTaskBriefs.
+// defaultsTaskBrief is one stage of SampleTaskBriefs.
 func defaultsTaskBrief(stage Stage, agents []Agent, ids map[string]struct{}) Stage {
 	if stage.Kind() != StageKindAgent || stage.Agent == nil {
 		return stage
 	}
 	ref := *stage.Agent
-	bundled := DefaultsBuiltIn(ref.ID, nil)
+	bundled := SampleAgentNamed(ref.ID, nil)
 	if bundled == nil || bundled.Ref() != ref {
 		return stage
 	}
@@ -183,11 +183,11 @@ func defaultsTaskBrief(stage Stage, agents []Agent, ids map[string]struct{}) Sta
 	return adapted
 }
 
-// DefaultsSendingFixes makes the watch before DefaultsAfterMerge send conflicts and
+// SampleSendingFixes makes the watch before SampleAfterMerge send conflicts and
 // a branch behind its base to Resolve conflicts, and failing checks to Fix checks,
 // each at most twice.
-func DefaultsSendingFixes(stages []Stage, forks []Fork) []Stage {
-	afterMerge := DefaultsAfterMerge()
+func SampleSendingFixes(stages []Stage, forks []Fork) []Stage {
+	afterMerge := SampleAfterMerge()
 	hasAfterMerge := slices.ContainsFunc(forks, func(fork Fork) bool { return fork.ID == afterMerge.ID })
 	index := -1
 	for i, stage := range stages {

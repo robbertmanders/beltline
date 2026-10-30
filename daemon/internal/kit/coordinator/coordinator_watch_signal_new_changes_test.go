@@ -211,7 +211,7 @@ func TestAddingNewChangesReachesNewRunsOnly(t *testing.T) {
 	// No issues: a save kicks a tick, and the default issue would start a run on the new belt.
 	h := newHarness(t, harnessOptions{Issues: []core.Subject{}})
 	c := h.Coord()
-	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 	watch := coordWatchIndex(t, belt)
 	var kept []core.Outcome
 	for _, outcome := range belt.Stages[watch].Outcomes {

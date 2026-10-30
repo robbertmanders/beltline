@@ -357,38 +357,18 @@ func (l *Library) ArchivingAgent(id string, archived bool) (core.AgentRecord, er
 	return record, nil
 }
 
-// ResetAgent saves the app's own version of a built-in agent as its newest version.
-// Lock: runs with c.mu held.
-func (l *Library) ResetAgent(id string) (core.Agent, error) {
-	shipped := core.DefaultsBuiltIn(id, nil)
-	if shipped == nil {
-		return core.Agent{}, core.NewFailure(id + " isn't one of the agents the app ships.")
-	}
-	agent := *shipped
-	agent.Version = 0
-	if latest := l.LatestAgent(id); latest != nil {
-		agent.Version = latest.Agent.Version
-	}
-	return l.SaveAgent(agent)
-}
-
-// NewAgent returns a new agent that is not saved yet, starting from the custom agent.
+// NewAgent returns a new agent that is not saved yet, starting from the agent template.
 // Lock: runs with c.mu held.
 func (l *Library) NewAgent() core.Agent {
 	n := 1
 	for {
 		candidate := "agent-" + strconv.Itoa(n)
-		if l.agentIndex(candidate) < 0 && !slices.Contains(core.DefaultsBuiltInIDs, candidate) {
+		if l.agentIndex(candidate) < 0 {
 			break
 		}
 		n++
 	}
-	var agent core.Agent
-	if custom := core.DefaultsBuiltIn("custom", nil); custom != nil {
-		agent = *custom
-	} else {
-		agent = core.NewAgent(core.AgentArgs{ID: "custom", Name: "Custom agent"})
-	}
+	agent := core.AgentTemplate()
 	agent.ID = "agent-" + strconv.Itoa(n)
 	agent.Version = 0
 	agent.Name = "New agent"

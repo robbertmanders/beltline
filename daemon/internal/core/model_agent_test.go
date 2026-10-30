@@ -94,17 +94,6 @@ func TestAgentSnapshotKeepsTheFile(t *testing.T) {
 	}
 }
 
-// TestAgentRecordBuiltInFollowsDefaults checks that only the shipped agents are built in.
-func TestAgentRecordBuiltInFollowsDefaults(t *testing.T) {
-	t.Parallel()
-	if !(AgentRecord{Agent: mustBuiltInAgent(t, "triage")}).BuiltIn() {
-		t.Fatal("triage is a built-in agent")
-	}
-	if (AgentRecord{Agent: NewAgent(AgentArgs{ID: "mine", Name: "Mine"})}).BuiltIn() {
-		t.Fatal("a custom agent is built in")
-	}
-}
-
 // TestAgentDecodesStrictKeys checks the agent's required keys and its enums.
 // TestAgentOutcomeDecodesStrictKeys checks an agent outcome's required keys, which
 // include its to list.
