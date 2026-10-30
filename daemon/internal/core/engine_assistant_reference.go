@@ -68,6 +68,8 @@ func assistantReferenceStages() string {
 				fallbackList + "."
 		case StageTypeApprove:
 			what = "waits for the user to choose. Each outcome is a button, and its §when§ is the button's label."
+		case StageTypePrompt:
+			what = "waits for the user to write the run's task, usually as the first stage. Each outcome is a button, and its §when§ is the button's label; an outcome that moves the run on needs the prompt, which every later brief carries as the run's task, so none of its outcomes takes §withOutput§. §source§ (§shared§ or §withheld§, the default) is what the choice to give agents the work item's details starts as; withheld leaves only its reference in the briefs."
 		case StageTypeWatch:
 			what = "waits on something outside the app and needs no agent: never look for a \"watch\" agent. §watch§ names what it waits on (see Watches), and each outcome's §when§ names one of that target's events."
 		}

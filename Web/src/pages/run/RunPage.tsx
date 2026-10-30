@@ -160,7 +160,8 @@ export function RunPage() {
     onAnswerChange: value => setDraft("answer", value),
     onDecisionNoteChange: (outcomeId, value) => { if (selectedStageId) runDraftStore.setNote(runId, selectedStageId, outcomeId, value); },
     onPendingOutcomeChange: value => setDraft("pendingOutcome", value),
-    onIncludeSubjectChange: value => { if (selectedStageId) runDraftStore.setIncludeSubject(runId, selectedStageId, value); },
+    onPromptChange: value => { if (selectedStageId) runDraftStore.setPrompt(runId, selectedStageId, value); },
+    onSourceChange: value => { if (selectedStageId) runDraftStore.setSource(runId, selectedStageId, value); },
     onSendMessageChange: value => setDraft("sendMessage", value),
     answerVersion: () => selectedStageId ? runDraftStore.version(runId, selectedStageId, "answer") : 0,
     command, submit, canRead: runtime.canRead, connection: runtime.connection, onErased: () => undefined

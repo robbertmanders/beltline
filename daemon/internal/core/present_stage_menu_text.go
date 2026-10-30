@@ -78,6 +78,9 @@ func stageMenuIntro(stage Stage) string {
 		lead = "How this stage can end. The agent picks one and writes it as the last line of its output, so describe when each one applies."
 	case StageKindGate:
 		lead = "The choices you get when a run reaches this stage. Each outcome is a button."
+		if stage.Type == StageTypePrompt {
+			lead = "The choices you get after writing the run's task. Each outcome is a button, and one that moves the run on needs the prompt."
+		}
 	case StageKindWatch:
 		if target := stage.WatchTarget(); target != nil && *target == WatchTargetTicket {
 			lead = "Beltline picks the outcome from what happened to the issue or ticket and the tickets under it. Changes that can wait are gathered for five minutes and reported together."

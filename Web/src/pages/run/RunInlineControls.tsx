@@ -1,11 +1,11 @@
 import { findRunAction } from "../../api/runCommands";
 import type { RunAction } from "../../api/wire.gen";
-import { MarkdownBlocks } from "../../components/MarkdownBlocks";
 import { CommandFailure, isInlineCommand, type RunControlsProps } from "./RunControls";
+import { RunPromptEntry } from "./RunPromptEntry";
 
 export type RunInlineControlsProps = Omit<RunControlsProps, "open" | "onOpenChange" | "adjustOpen" | "onAdjustOpenChange">;
 
-/** The answer box and the approval's decision for the selected stage. They stay in the panel while a command is refused. */
+/** The answer box and the approval's decision, or the prompt stage's editor, for the selected stage. They stay in the panel while a command is refused. */
 export function RunInlineControls(props: RunInlineControlsProps & { part?: "answer" | "decision" }) {
   const { view, stage, panel, draft, command, submit, canRead, connection, part } = props;
   if (part === undefined) return <><RunInlineControls {...props} part="answer" /><RunInlineControls {...props} part="decision" /></>;
@@ -45,6 +45,8 @@ export function RunInlineControls(props: RunInlineControlsProps & { part?: "answ
     </div>;
   }
 
+  const prompt = panel.facts?.approval?.prompt;
+  if (prompt) return <RunPromptEntry {...props} prompt={prompt} failure={failure} />;
   // The daemon lists the outcome buttons and names the good one (the wide button); the others sit under it.
   const outcomes = panel.facts?.approval?.outcomes ?? [];
   if (outcomes.length === 0) return null;
@@ -52,41 +54,6 @@ export function RunInlineControls(props: RunInlineControlsProps & { part?: "answ
   const primary = outcomes.find(outcome => outcome.id === primaryId);
   const deciding = outcomes.find(outcome => outcome.id === draft.pendingOutcome);
   const decideAction = (outcome: (typeof outcomes)[number]) => actionFor("decide", { stage: stage.id, outcome: outcome.name });
-  const prompt = panel.facts?.approval?.prompt;
-  if (prompt) {
-    const text = draft.notes[prompt.noteKey] ?? draft.notes[draft.pendingOutcome ?? prompt.noteKey] ?? "";
-    const includeSubject = draft.includeSubject ?? prompt.include;
-    return <div className="run-prompt">
-      <div className="run-decide run-prompt-editor">
-        <label className="paper-caps" htmlFor="run-prompt-text">{prompt.label}</label>
-        <p id="run-prompt-help" className="run-muted">{prompt.help}</p>
-        <textarea id="run-prompt-text" className="paper-field" rows={16} placeholder={prompt.placeholder}
-          aria-describedby="run-prompt-help" value={text} disabled={!online || pending}
-          onChange={event => props.onDecisionNoteChange(prompt.noteKey, event.currentTarget.value)} />
-        <label className="run-prompt-consent">
-          <input type="checkbox" checked={includeSubject} disabled={!online || pending}
-            onChange={event => props.onIncludeSubjectChange(event.currentTarget.checked)} />
-          {prompt.includeLabel}
-        </label>
-        <div className="run-decide-actions">
-          {outcomes.map(outcome => {
-            const action = decideAction(outcome);
-            return <button key={outcome.id} type="button" className={`action-button${outcome.id === primaryId ? " slate" : outcome.tone === "problem" ? " danger" : ""}`}
-              disabled={!online || pending || !action?.enabled || (action.needsNote === true && text.trim() === "")}
-              title={action?.reason ?? action?.thenHelp ?? undefined}
-              onClick={() => submit("decide", {
-                outcome: outcome.name, note: action?.needsNote ? text : "", stage: stage.id, includeSubject
-              })}>{outcome.label}</button>;
-          })}
-        </div>
-        {failure}
-      </div>
-      <aside className="run-prompt-context" aria-label={prompt.contextLabel}>
-        <span className="paper-caps">{prompt.contextLabel}</span>
-        <MarkdownBlocks blocks={prompt.context} />
-      </aside>
-    </div>;
-  }
   const decideButton = (outcome: (typeof outcomes)[number], kind: string) => {
     const action = decideAction(outcome);
     return <button key={outcome.id} type="button" className={`action-button ${kind}`} disabled={!online || pending || !action?.enabled}

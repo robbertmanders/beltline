@@ -5,6 +5,8 @@
  * written to localStorage, the daemon or another tab.
  */
 
+import type { SourceSharing } from "../api/wire.gen";
+
 export const runDraftsStorageKey = "beltline.web.runDrafts";
 
 export type DraftField = "answer" | "decisionNote" | "sendMessage";
@@ -16,7 +18,10 @@ export interface StageDraft {
   notes: Record<string, string>;
   /** The outcome id whose note box is open, or null after Cancel. */
   pendingOutcome: string | null;
-  includeSubject?: boolean;
+  /** A prompt stage's unsent prompt, or null while it still shows the task the run has. */
+  prompt: string | null;
+  /** A prompt stage's source checkbox, or null while it shows what the daemon starts it as. */
+  source: SourceSharing | null;
   sendMessage: string;
 }
 
@@ -35,7 +40,7 @@ interface PersistedState {
 
 const versionKey = (runId: string, stageId: string, field: DraftField) => `${runId}\u0000${stageId}\u0000${field}`;
 
-export const emptyStageDraft: StageDraft = { answer: "", notes: {}, pendingOutcome: null, sendMessage: "" };
+export const emptyStageDraft: StageDraft = { answer: "", notes: {}, pendingOutcome: null, prompt: null, source: null, sendMessage: "" };
 
 function parse(serialized: string | null): RunDraftState {
   if (!serialized) return {};
@@ -105,8 +110,12 @@ export class RunDraftStore {
     this.write(runId, stageId, { pendingOutcome: outcome });
   }
 
-  setIncludeSubject(runId: string, stageId: string, value: boolean): void {
-    this.write(runId, stageId, { includeSubject: value });
+  setPrompt(runId: string, stageId: string, value: string): void {
+    this.write(runId, stageId, { prompt: value });
+  }
+
+  setSource(runId: string, stageId: string, value: SourceSharing): void {
+    this.write(runId, stageId, { source: value });
   }
 
   setSendMessage(runId: string, stageId: string, value: string): void {
@@ -133,9 +142,9 @@ export class RunDraftStore {
     this.versions.set(versionKey(runId, stageId, "answer"), submittedVersion + 1);
   }
 
-  /** Decide clears that stage's per-outcome notes and its pending selection. */
+  /** Decide clears that stage's per-outcome notes, its pending selection and its prompt. */
   clearDecide(runId: string, stageId: string): void {
-    this.write(runId, stageId, { notes: {}, pendingOutcome: null, includeSubject: undefined });
+    this.write(runId, stageId, { notes: {}, pendingOutcome: null, prompt: null, source: null });
   }
 
   /** Resume, whole-run Drop and Erase clear every draft of the run. */

@@ -7,12 +7,16 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 )
 
-// approvalFacts returns an approval's document and outcome copy.
+// approvalFacts returns an approval's document, or a prompt stage's editor, and outcome copy.
 // Lock: runs with c.mu held.
 func (c *Coordinator) approvalFacts(run core.Run, stage core.Stage) StagePanelFactsApproval {
 	primary := core.ApprovalPrimary(stage.Outcomes)
-	document := c.approvalDocument(run, stage)
-	prompt := core.ApprovalPromptOf(run, stage, document != nil)
+	prompt := core.PromptFactsOf(run, stage)
+	// A prompt stage shows its editor and the work item, not an agent's output.
+	var document *string
+	if prompt == nil {
+		document = c.approvalDocument(run, stage)
+	}
 	var blocks []core.MarkdownBlock
 	if document != nil {
 		text := core.DocumentHoisting(core.OutcomeParserStrip(*document), core.DocumentHoistingDefaultSection)

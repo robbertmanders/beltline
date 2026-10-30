@@ -24,7 +24,7 @@ export const unchangedField = "__unchanged";
 
 /** A stage the editor asks the daemon to build, then to add to the end of the line or feed into a stage. */
 export interface StageRequest {
-  type: "agent" | "approve" | "watch";
+  type: "agent" | "approve" | "prompt" | "watch";
   agent?: { id: string; version: number };
   /** The route a new stage joins; absent for the main line. */
   route?: string;

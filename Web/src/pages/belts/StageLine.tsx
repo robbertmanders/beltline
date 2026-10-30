@@ -13,7 +13,7 @@ export interface AgentOption {
 
 /** The kind a stage block shows before the daemon's structure arrives: its number and type, worded as the daemon words them. */
 export function placeholderStageKind(stage: Belt["stages"][number], number: number): string {
-  return `${String(number).padStart(2, "0")} · ${stage.type === "approve" ? "Approval" : stage.type === "watch" ? "Watch" : "Agent"}`;
+  return `${String(number).padStart(2, "0")} · ${stage.type === "approve" ? "Approval" : stage.type === "prompt" ? "Prompt" : stage.type === "watch" ? "Watch" : "Agent"}`;
 }
 
 export interface StageLineProps {
@@ -186,8 +186,9 @@ function AddMenu({ line, at, route, disabled }: { line: StageLinePresentation; a
     {placement && <div className="add-menu-card" role="menu" style={{ left: placement.left, top: placement.top, bottom: placement.bottom, maxHeight: placement.maxHeight }}>
       <p className="add-menu-section">Agent</p>
       {line.agents.map(agent => <button key={`${agent.id}@${agent.version}`} type="button" role="menuitem" onClick={() => add({ type: "agent", agent: { id: agent.id, version: agent.version } })}>{agent.name}</button>)}
-      <p className="add-menu-section">Approval</p>
+      <p className="add-menu-section">Waits for you</p>
       <button type="button" role="menuitem" onClick={() => add({ type: "approve" })}>Approval</button>
+      <button type="button" role="menuitem" onClick={() => add({ type: "prompt" })}>Prompt</button>
       {line.watchAllowed && <><p className="add-menu-section">Watcher</p>
         <button type="button" role="menuitem" onClick={() => add({ type: "watch" })}>Watch</button></>}
     </div>}

@@ -32,6 +32,12 @@ func defaultsTemplates(typ StageType) []defaultsTemplate {
 			{Name: "sent back", When: "Send back with a note", Tone: ToneProblem, Then: NewThen(ThenArgs{Action: ThenActionGoto, WithOutput: true}), To: []string{"spec", "build"}},
 			{Name: "parked", When: "Park it", Tone: ToneNeutral, Then: NewThen(ThenArgs{Action: ThenActionPark})},
 		}
+	case StageTypePrompt:
+		// Start takes your prompt as the run's task; Park it sets the work aside.
+		return []defaultsTemplate{
+			{Name: "started", When: "Start", Tone: ToneGood, Then: NewThen(ThenArgs{Action: ThenActionNext})},
+			{Name: "parked", When: "Park it", Tone: ToneNeutral, Then: NewThen(ThenArgs{Action: ThenActionPark})},
+		}
 	case StageTypeWatch:
 		// Held, not moved on: the stages after a watch expect a merged pull request.
 		// New changes is held too: a new head is not one.

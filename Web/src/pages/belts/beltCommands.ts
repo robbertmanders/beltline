@@ -85,7 +85,7 @@ export function draftRequest(
  * A stage the daemon builds for a draft, so the browser never makes stage defaults. Read-only: the
  * stage-add or feed-into that uses it is the command that changes the draft.
  */
-export function stageTemplateRequest(draft: Belt, type: "agent" | "approve" | "watch", agent: { id: string; version: number } | undefined, route: string | undefined, index?: number) {
+export function stageTemplateRequest(draft: Belt, type: "agent" | "approve" | "prompt" | "watch", agent: { id: string; version: number } | undefined, route: string | undefined, index?: number) {
   return {
     path: "/api/v1/belts/stage-template",
     body: { draft, type, ...(agent ? { agent } : {}), ...(route ? { route } : {}), ...(index !== undefined ? { index } : {}) }

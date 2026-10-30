@@ -206,7 +206,7 @@ export function RunStagePanel({ runId, panel, stage, selectedAttempt, onSelectAt
             </div>
             <Output runId={runId} attempt={attempt.id} stage={stage} />
           </>}
-          {stage.type === "approve" && <div className="stage-gate-output">
+          {(stage.type === "approve" || stage.type === "prompt") && <div className="stage-gate-output">
             <p className="stage-gate-decision">{attemptFacts?.decision}</p>
             <p>{attemptFacts?.decisionLine}</p>
           </div>}

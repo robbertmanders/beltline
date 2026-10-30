@@ -47,7 +47,8 @@ export interface RunCommandOperands {
   attempt?: string;
   decision?: string;
   note?: string;
-  includeSubject?: boolean;
+  /** At a prompt stage: whether agents get the work item's details. */
+  source?: string;
   answer?: string | null;
   earlier?: boolean;
   model?: string;
@@ -68,10 +69,14 @@ export interface RunCommandSpec {
 export function runCommandSpec(id: RunCommandId, runId: string, operands: RunCommandOperands = {}): RunCommandSpec {
   const base = `/api/v1/runs/${encodeURIComponent(runId)}`;
   switch (id) {
-    case "decide": return { path: `${base}/decide`, body: {
-      outcome: operands.outcome, ...(operands.note === undefined ? {} : { note: operands.note }),
-      ...(operands.includeSubject === undefined ? {} : { includeSubject: operands.includeSubject })
-    } };
+    case "decide": return {
+      path: `${base}/decide`,
+      body: {
+        outcome: operands.outcome,
+        ...(operands.note === undefined ? {} : { note: operands.note }),
+        ...(operands.source === undefined ? {} : { source: operands.source })
+      }
+    };
     case "resume": return {
       path: `${base}/resume`,
       body: {

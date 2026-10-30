@@ -3,7 +3,7 @@
 
 package core
 
-// StageType is the type of a stage: an agent, an approval or a watch.
+// StageType is the type of a stage: an agent, an approval, a prompt or a watch.
 type StageType string
 
 const (
@@ -11,12 +11,14 @@ const (
 	StageTypeAgent StageType = "agent"
 	// StageTypeApprove is an approval stage.
 	StageTypeApprove StageType = "approve"
+	// StageTypePrompt is a prompt stage: you write the run's task before any agent works on it.
+	StageTypePrompt StageType = "prompt"
 	// StageTypeWatch is a watch stage.
 	StageTypeWatch StageType = "watch"
 )
 
 // AllStageType lists every StageType in declaration order (CaseIterable).
-var AllStageType = []StageType{StageTypeAgent, StageTypeApprove, StageTypeWatch}
+var AllStageType = []StageType{StageTypeAgent, StageTypeApprove, StageTypePrompt, StageTypeWatch}
 
 // Known reports whether x is one of the cases of StageType.
 func (x StageType) Known() bool { return enumKnown(x, AllStageType) }
@@ -33,7 +35,7 @@ func (t StageType) Kind() StageKind {
 	switch t {
 	case StageTypeAgent:
 		return StageKindAgent
-	case StageTypeApprove:
+	case StageTypeApprove, StageTypePrompt:
 		return StageKindGate
 	case StageTypeWatch:
 		return StageKindWatch
@@ -48,6 +50,8 @@ func (t StageType) Title() string {
 		return "Agent"
 	case StageTypeApprove:
 		return "Approval"
+	case StageTypePrompt:
+		return "Prompt"
 	case StageTypeWatch:
 		return "Watcher"
 	}
@@ -62,6 +66,8 @@ func (t StageType) Output() string {
 		return "output.md"
 	case StageTypeApprove:
 		return "decision"
+	case StageTypePrompt:
+		return "task"
 	case StageTypeWatch:
 		return "pull request"
 	}
@@ -231,10 +237,32 @@ type Stage struct {
 	// Watch is what a watch stage waits on; nil is the pull request, as before
 	// watches could wait on anything else.
 	Watch *WatchTarget `json:"watch,omitzero"`
+	// Source is what a prompt stage's source checkbox starts as on each run; nil
+	// is withheld. Only prompt stages keep it.
+	Source *SourceSharing `json:"source,omitzero"`
 }
 
 // Kind is the kind of the stage's type.
 func (s Stage) Kind() StageKind { return s.Type.Kind() }
+
+// SourceSharing is what a prompt stage's source checkbox starts as: its Source,
+// or withheld. Nil when the stage is not a prompt stage.
+func (s Stage) SourceSharing() *SourceSharing {
+	if s.Type != StageTypePrompt {
+		return nil
+	}
+	return new(ValueOr(s.Source, SourceSharingWithheld))
+}
+
+// NeedsNote reports whether picking outcome at this gate needs written text: a
+// prompt stage's outcomes that move the run on take the prompt, and any other
+// outcome needs a note when it passes it on (withOutput).
+func (s Stage) NeedsNote(outcome Outcome) bool {
+	if s.Type == StageTypePrompt {
+		return outcome.Then.Action.MovesOn()
+	}
+	return outcome.Then.WithOutput
+}
 
 // WatchesTicket reports whether a watch stage waits on the run's own ticket.
 func (s Stage) WatchesTicket() bool {
@@ -346,6 +374,7 @@ type StageArgs struct {
 	Fallback   *Fallback
 	Route      *string
 	Watch      *WatchTarget
+	Source     *SourceSharing
 }
 
 // NewStage creates a stage with the defaults and derivations of Stage.init(id:type:...):
@@ -388,6 +417,9 @@ func NewStage(a StageArgs) Stage {
 	if a.Type.Kind() == StageKindWatch && a.Watch != nil && *a.Watch != WatchTargetPullRequest {
 		target := *a.Watch
 		s.Watch = &target
+	}
+	if a.Type == StageTypePrompt && a.Source != nil {
+		s.Source = CopyPointer(a.Source)
 	}
 	if a.Writes != nil {
 		s.SetWrites(*a.Writes)

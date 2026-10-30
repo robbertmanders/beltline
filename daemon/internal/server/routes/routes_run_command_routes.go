@@ -38,7 +38,11 @@ func AddRunDecide(mux *http.ServeMux, c *coordinator.Coordinator) {
 		if err != nil {
 			return core.Run{}, err
 		}
-		return c.DecideCommand(id, decoded.Outcome, decoded.Note, decoded.IncludeSubject)
+		var source *core.SourceSharing
+		if decoded.Source != nil {
+			source = new(core.SourceSharing(*decoded.Source))
+		}
+		return c.DecideCommand(id, decoded.Outcome, decoded.Note, source)
 	})
 }
 

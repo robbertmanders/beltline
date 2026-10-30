@@ -54,7 +54,7 @@ The daemon owns every fact and decision: which actions a run allows, whether a b
 - **Belts** and **Agents**: searchable card grids of your library, each opening its editor.
 - **Library**: your library repositories, to back up, restore, install and share. See [Library](library.md).
 - **AFK**: the decisions AFK mode made, to check. See [AFK mode](afk.md).
-- **Insights**: first-try rates, time and cost per stage. It's off until you turn on **Show the Insights page** in Settings → General. See [Insights](insights.md).
+- **Insights** (experimental): first-try rates, time and cost per stage. It's off until you turn on **Show the Insights page** in Settings → General. See [Insights](insights.md).
 - **Settings**: tools, allowed models, AFK, library repositories, appearance and notifications.
 
 ![Work: every run with its stage and status, and the ones that need you on top](images/work.png)

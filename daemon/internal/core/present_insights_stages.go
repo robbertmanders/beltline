@@ -375,10 +375,13 @@ func insightsFiguresOf(attempts []insightsAttempt) (InsightsFigures, *float64) {
 	return figures, mean
 }
 
-// insightsKindLabel names an approval or a watch, and nothing for an agent stage.
-func insightsKindLabel(kind StageKind) string {
-	switch kind {
+// insightsKindLabel names an approval, a prompt or a watch, and nothing for an agent stage.
+func insightsKindLabel(stage Stage) string {
+	switch stage.Kind() {
 	case StageKindGate:
+		if stage.Type == StageTypePrompt {
+			return "PROMPT"
+		}
 		return "APPROVAL"
 	case StageKindWatch:
 		return "WATCH"
@@ -402,7 +405,7 @@ func (s *insightsScope) stages(definition []Stage) []InsightsStage {
 		attempts := byStage[stage.ID]
 		figures, _ := insightsFiguresOf(attempts)
 		row := InsightsStage{
-			Key: stage.ID, Name: stage.Name, KindLabel: insightsKindLabel(stage.Kind()),
+			Key: stage.ID, Name: stage.Name, KindLabel: insightsKindLabel(stage),
 			Figures: figures, Models: insightsModels(attempts),
 		}
 		if names[stage.Name] > 1 {

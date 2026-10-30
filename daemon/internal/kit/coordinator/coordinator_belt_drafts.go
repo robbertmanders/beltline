@@ -164,7 +164,7 @@ func (c *Coordinator) StageTemplate(draft core.Belt, stageType core.StageType, a
 			return core.Stage{}, core.NewValidationFailure("stage-template needs a library agent.", nil)
 		}
 		return core.DefaultsStageForAgentAt(*libraryAgent, place, draft.Stages, kind), nil
-	case core.StageTypeApprove, core.StageTypeWatch:
+	case core.StageTypeApprove, core.StageTypePrompt, core.StageTypeWatch:
 		return core.DefaultsStageAt(stageType, place, draft.Stages), nil
 	}
 	return core.Stage{}, core.NewValidationFailure(fmt.Sprintf("Stage type %s has no template.", stageType), nil)

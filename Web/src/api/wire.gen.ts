@@ -125,6 +125,9 @@ export type ShadowResult = (typeof shadowResultValues)[number];
 export const shadowStageChangeValues = ["added", "changed", "removed"] as const;
 export type ShadowStageChange = (typeof shadowStageChangeValues)[number];
 
+export const sourceSharingValues = ["shared", "withheld"] as const;
+export type SourceSharing = (typeof sourceSharingValues)[number];
+
 export const stageIconValues = ["funnel", "doc", "approve", "wrench", "scope", "ship", "merge", "flag", "eye", "send", "list", "pen", "cycle", "branch", "gauge", "chip", "bolt", "jira", "clock", "hand"] as const;
 export type StageIcon = (typeof stageIconValues)[number];
 
@@ -134,7 +137,7 @@ export type StageKind = (typeof stageKindValues)[number];
 export const stageStatusLookValues = ["done", "running", "waiting", "held", "plain"] as const;
 export type StageStatusLook = (typeof stageStatusLookValues)[number];
 
-export const stageTypeValues = ["agent", "approve", "watch"] as const;
+export const stageTypeValues = ["agent", "approve", "prompt", "watch"] as const;
 export type StageType = (typeof stageTypeValues)[number];
 
 export const subjectKindValues = ["issue", "pullRequest", "jira", "manual", "scheduled"] as const;
@@ -392,17 +395,6 @@ export interface AgentsResponse {
   choices: AgentChoice[];
   actions: AgentAction[];
   browser?: LibraryBrowser;
-}
-
-export interface ApprovalPrompt {
-  noteKey: string;
-  label: string;
-  placeholder: string;
-  help: string;
-  contextLabel: string;
-  context: MarkdownBlock[];
-  includeLabel: string;
-  include: boolean;
 }
 
 export interface ArtifactLinkResponse {
@@ -1575,6 +1567,18 @@ export interface ProblemLocation {
   field?: string;
 }
 
+export interface PromptFacts {
+  label: string;
+  placeholder: string;
+  help: string;
+  task?: string;
+  contextLabel: string;
+  context: MarkdownBlock[];
+  sourceLabel: string;
+  sourceHelp: string;
+  source: SourceSharing;
+}
+
 export interface PullRequest {
   repo: string;
   number: number;
@@ -1649,7 +1653,8 @@ export interface Run {
   repos: string[];
   source?: RunSource;
   issue: Subject;
-  includeSubject?: boolean;
+  task?: string;
+  sourceSharing?: SourceSharing;
   state: RunState;
   stageId: string;
   reason?: string;
@@ -1807,7 +1812,7 @@ export interface RunCounts {
 export interface RunDecideRequest {
   outcome: string;
   note?: string;
-  includeSubject?: boolean;
+  source?: string;
 }
 
 export interface RunEmptyRequest {
@@ -2114,6 +2119,7 @@ export interface Stage {
   fallback: Fallback;
   route?: string;
   watch?: WatchTarget;
+  source?: SourceSharing;
 }
 
 export interface StageLinePresentation {
@@ -2178,6 +2184,7 @@ export interface StageMenu {
   watchTargets: StageMenuOption[];
   watchEvents: StageMenuOption[];
   watchNote?: string;
+  sources: StageMenuOption[];
   actions: StageMenuOption[];
   routesAfter: StageMenuOption[];
   routePaths: StageMenuOption[];
@@ -2293,7 +2300,7 @@ export interface StagePanelFactsApproval {
   primary?: string;
   outcomesHelp: string;
   outcomes: StagePanelFactsOutcome[];
-  prompt?: ApprovalPrompt;
+  prompt?: PromptFacts;
 }
 
 export interface StagePanelFactsOutcome {

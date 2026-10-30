@@ -156,7 +156,7 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
     editor.operate("stage-update", { stageId: stage.id, update: { ...update, ...overrides } }, form.applies());
   };
 
-  const heading = menu ? `${String(menu.number).padStart(2, "0")} · ${menu.kind}` : kind === "approve" ? "Approval" : kind === "watch" ? "Watcher" : "Agent stage";
+  const heading = menu ? `${String(menu.number).padStart(2, "0")} · ${menu.kind}` : kind === "approve" ? "Approval" : kind === "prompt" ? "Prompt" : kind === "watch" ? "Watcher" : "Agent stage";
   const feedAgent = editor.context?.line?.agents.find(agent => agent.id === stage.agent?.id) ?? editor.context?.line?.agents[0];
 
   return <section className="stage-form" aria-label={`Stage ${stage.name} settings`} data-stage-form={stage.id} data-ready={menu ? "true" : undefined}>
@@ -195,6 +195,12 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
           </div>}
           {kind === "approve" && <label className="agent-field"><span className="agent-field-label">Decided by</span>
             <select className="paper-field" aria-label="Decided by" value="you" disabled><option value="you">You</option></select>
+          </label>}
+          {kind === "prompt" && <label className="agent-field"><span className="agent-field-label">Source context</span>
+            <select className="paper-field" aria-label="Source context" value={stage.source ?? "withheld"} disabled={reason !== null || !menu}
+              onChange={event => editor.operate("stage-update", { stageId: stage.id, update: { source: event.target.value } })}>
+              {(menu?.sources ?? []).map(source => <option key={source.id} value={source.id}>{source.label}</option>)}
+            </select>
           </label>}
           {kind === "watch" && <label className="agent-field"><span className="agent-field-label">Waits on</span>
             <select className="paper-field" aria-label="Waits on" value={stage.watch ?? "pullRequest"} disabled={reason !== null || !menu}
