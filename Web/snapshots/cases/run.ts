@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import type { RunViewResponse } from "../../src/api/wire.gen";
 import { sidebarState, type SnapshotCase, type RunSelector } from "../caseTypes";
 
 const sessionsPanel = '[data-column="sessions"]';
@@ -8,6 +11,45 @@ const runRoute = (runId: string) => `/runs/${encodeURIComponent(runId)}`;
 const stageRoute = (runId: string, stage: string, attempt?: string) =>
   `/runs/${encodeURIComponent(runId)}?stage=${encodeURIComponent(stage)}${attempt ? `&attempt=${encodeURIComponent(attempt)}` : ""}`;
 
+function promptEntryResponse(): string {
+  const view = JSON.parse(readFileSync(resolve(process.cwd(), "../daemon/testdata/golden/views-run.json"), "utf8")) as RunViewResponse;
+  const panel = view.stages.find(stage => stage.id === "approve-plan")!;
+  view.run.state = "waiting";
+  view.run.stageId = panel.id;
+  panel.name = "Prompt";
+  panel.step = "waiting";
+  panel.attempts = [{ id: "approve-plan-1", number: 1, caption: "Attempt 1 of 1", content: "decision", isOpen: true }];
+  const facts = panel.facts!;
+  facts.state = { text: "WAITING FOR YOU", tone: "you" };
+  facts.kindChip = "YOUR PROMPT";
+  facts.attempts = [];
+  const approval = facts.approval!;
+  delete approval.blocks;
+  approval.primary = "started";
+  approval.outcomes = [
+    { id: "started", name: "started", label: "Start", tone: "good" },
+    { id: "parked", name: "parked", label: "Park it", tone: "neutral" }
+  ];
+  approval.prompt = {
+    label: "Your prompt",
+    placeholder: "Describe what you want the agents to do, with any constraints and acceptance criteria.",
+    help: "Write the run's task, then choose how to go on. Every stage after this one gets it.",
+    contextLabel: "Source context",
+    context: [
+      { type: "heading", level: 2, text: "The Jira ticket" },
+      { type: "paragraph", text: "PAY-40: Split invoicing into its own service" },
+      { type: "paragraph", text: "Extract invoicing behind a stable API. Preserve existing invoice identifiers and make the migration reversible." }
+    ],
+    sourceLabel: "Include source context for agents",
+    sourceHelp: "Unchecked, agents get your prompt and the work item's reference only, not its title, description, labels, parent or link. Branch names and folders still carry the reference.",
+    source: "withheld"
+  };
+  view.actions = approval.outcomes.map(outcome => ({
+    id: "decide", enabled: true, stage: panel.id, outcome: outcome.name, needsNote: outcome.id === "started"
+  }));
+  return JSON.stringify(view);
+}
+
 /**
  * The Run page draws the daemon-provided belt as stage boxes, its stage panel, output and artifacts, so its cases wait on
  * the Run content itself rather than the old resource scaffold. The default demo run is the seeded
@@ -16,6 +58,17 @@ const stageRoute = (runId: string, stage: string, attempt?: string) =>
  * Markdown when the snapshot daemon starts.
  */
 export const runCases: SnapshotCase[] = [
+  {
+    id: "run-prompt-entry",
+    route: "/runs/epics%3Ajira%3APAY-40?stage=approve-plan",
+    sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
+    readiness: "run",
+    apiResponses: [{ path: "/api/v1/views/run/epics%3Ajira%3APAY-40", status: 200, body: promptEntryResponse() }],
+    readyMarker: ".run-prompt textarea",
+    scrollToTop: ".stage-panel",
+    steps: [{ kind: "fill", target: { role: "textbox", name: "Your prompt", exact: true },
+      value: "Prepare the API boundary for invoicing. Keep existing callers working and add focused contract tests.\n\nDo not perform the data migration yet." }]
+  },
   { id: "run-open", route: runRoute, sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }), readiness: "run" },
   { id: "run-closed", route: runRoute, sidebar: sidebarState({ navigationOpen: false, sessionsOpen: false }), readiness: "run" },
   {

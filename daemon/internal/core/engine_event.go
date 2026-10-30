@@ -67,6 +67,9 @@ type Event struct {
 	Note *string
 	// Outcome is the name of the approval outcome picked (decided).
 	Outcome string
+	// Sharing is the source choice made at a prompt stage (decided); empty takes
+	// the stage's own.
+	Sharing SourceSharing
 	// Watch is the pull request event observed (watched).
 	Watch WatchEvent
 	// Ticket is the ticket event observed (ticketWatched).

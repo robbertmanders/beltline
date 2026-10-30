@@ -31,7 +31,7 @@ func runAvailabilityDecisions(context RunActionContext) []RunAction {
 	var list []RunAction
 	why := RunAvailabilityBaseReason(RunCommandDecide, context)
 	for _, outcome := range stage.Outcomes {
-		needsNote := outcome.Then.WithOutput
+		needsNote := stage.NeedsNote(outcome)
 		noteLabel := StageCopyNoteLabel(StageCopyNoteTarget(outcome, run))
 		thenHelp := StageCopyThenHelp(outcome, run, *stage)
 		list = append(list, NewRunAction(RunActionArgs{ID: string(RunCommandDecide), Enabled: why == nil, Reason: why, Stage: &stage.ID,

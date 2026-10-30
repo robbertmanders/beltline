@@ -104,7 +104,8 @@ func AfkSituationOf(run Run, allowing AfkSettings) *AfkSituation {
 	var kind AfkSituationKind
 	switch {
 	case run.State == RunStateWaiting && stage.Kind() == StageKindGate:
-		if !allowing.Approve {
+		// A prompt stage asks for what only you can write.
+		if !allowing.Approve || stage.Type == StageTypePrompt {
 			return nil
 		}
 		kind = AfkSituationKindApproval
@@ -188,6 +189,9 @@ func afkRerun(stage Stage) AfkOption {
 		label = "Run " + stage.Name + " again in a fresh session, with your message as its note"
 	case StageKindGate:
 		label = "Wait at " + stage.Name + " again for a decision"
+		if stage.Type == StageTypePrompt {
+			label = "Wait at " + stage.Name + " again for a prompt"
+		}
 	case StageKindWatch:
 		label = "Go back to watching the pull request"
 	default:

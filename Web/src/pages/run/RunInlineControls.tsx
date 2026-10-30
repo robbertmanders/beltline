@@ -1,10 +1,11 @@
 import { findRunAction } from "../../api/runCommands";
 import type { RunAction } from "../../api/wire.gen";
 import { CommandFailure, isInlineCommand, type RunControlsProps } from "./RunControls";
+import { RunPromptEntry } from "./RunPromptEntry";
 
 export type RunInlineControlsProps = Omit<RunControlsProps, "open" | "onOpenChange" | "adjustOpen" | "onAdjustOpenChange">;
 
-/** The answer box and the approval's decision for the selected stage. They stay in the panel while a command is refused. */
+/** The answer box and the approval's decision, or the prompt stage's editor, for the selected stage. They stay in the panel while a command is refused. */
 export function RunInlineControls(props: RunInlineControlsProps & { part?: "answer" | "decision" }) {
   const { view, stage, panel, draft, command, submit, canRead, connection, part } = props;
   if (part === undefined) return <><RunInlineControls {...props} part="answer" /><RunInlineControls {...props} part="decision" /></>;
@@ -44,6 +45,8 @@ export function RunInlineControls(props: RunInlineControlsProps & { part?: "answ
     </div>;
   }
 
+  const prompt = panel.facts?.approval?.prompt;
+  if (prompt) return <RunPromptEntry {...props} prompt={prompt} failure={failure} />;
   // The daemon lists the outcome buttons and names the good one (the wide button); the others sit under it.
   const outcomes = panel.facts?.approval?.outcomes ?? [];
   if (outcomes.length === 0) return null;

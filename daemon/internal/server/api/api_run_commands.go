@@ -12,6 +12,9 @@ type RunEmptyRequest struct{}
 type RunDecideRequest struct {
 	Outcome string  `json:"outcome" required:"true"`
 	Note    *string `json:"note,omitzero"`
+	// Source is, at a prompt stage, whether agents get the work item's details:
+	// shared or withheld.
+	Source *string `json:"source,omitzero"`
 }
 
 // RunResumeRequest is the body of POST /api/v1/runs/:id/resume.

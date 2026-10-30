@@ -7,11 +7,16 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 )
 
-// approvalFacts returns an approval's document and outcome copy.
+// approvalFacts returns an approval's document, or a prompt stage's editor, and outcome copy.
 // Lock: runs with c.mu held.
 func (c *Coordinator) approvalFacts(run core.Run, stage core.Stage) StagePanelFactsApproval {
 	primary := core.ApprovalPrimary(stage.Outcomes)
-	document := c.approvalDocument(run, stage)
+	prompt := core.PromptFactsOf(run, stage)
+	// A prompt stage shows its editor and the work item, not an agent's output.
+	var document *string
+	if prompt == nil {
+		document = c.approvalDocument(run, stage)
+	}
 	var blocks []core.MarkdownBlock
 	if document != nil {
 		text := core.DocumentHoisting(core.OutcomeParserStrip(*document), core.DocumentHoistingDefaultSection)
@@ -24,12 +29,12 @@ func (c *Coordinator) approvalFacts(run core.Run, stage core.Stage) StagePanelFa
 
 	if primary == nil {
 		return StagePanelFactsApproval{Document: document, Blocks: blocks, EmptyDocument: core.StageCopyNoAgentWroteYet,
-			Will: [][]core.InlineSpan{}, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons}
+			Will: [][]core.InlineSpan{}, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons, Prompt: prompt}
 	}
 	primaryID := primary.ID
 	will := core.ApprovalWillOf(run, stage, *primary)
 	return StagePanelFactsApproval{Document: document, Blocks: blocks, EmptyDocument: core.StageCopyNoAgentWroteYet, WillHeading: &will.Heading,
-		Will: will.Lines, Primary: &primaryID, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons}
+		Will: will.Lines, Primary: &primaryID, OutcomesHelp: core.StageCopyOutcomeButtonsHelp, Outcomes: buttons, Prompt: prompt}
 }
 
 // approvalDocument reads the latest agent output leading into this approval's

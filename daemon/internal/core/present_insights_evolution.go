@@ -212,7 +212,8 @@ func insightsFactsOf(run *Run, version int) (insightsFacts, bool) {
 				f.agent += seconds
 			case StageKindGate:
 				f.approve += seconds
-				if attempt.AfkDecision == nil && attempt.EndedAt != nil && !insightsStopped(attempt) {
+				// Writing a prompt is time you give, not an approval.
+				if run.Stages[index].Type != StageTypePrompt && attempt.AfkDecision == nil && attempt.EndedAt != nil && !insightsStopped(attempt) {
 					f.approvals++
 				}
 			case StageKindWatch:

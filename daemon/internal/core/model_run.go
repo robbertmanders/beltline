@@ -84,8 +84,15 @@ type Run struct {
 	// then. Nil on a run saved before a belt could have more than one trigger.
 	Source  *RunSource `json:"source,omitzero"`
 	Subject Subject    `json:"issue"`
-	State   RunState   `json:"state"`
-	StageID string     `json:"stageId"`
+	// Task is the prompt you wrote at a prompt stage: what the run is for. Every
+	// brief after it carries it. Nil when the run has had no prompt stage.
+	Task *string `json:"task,omitzero"`
+	// Sharing is whether agents see the details of the work item the run came
+	// from. Only withheld withholds them: empty is a run that never chose, as
+	// every run before prompt stages.
+	Sharing SourceSharing `json:"sourceSharing,omitzero"`
+	State   RunState      `json:"state"`
+	StageID string        `json:"stageId"`
 	// Reason is why the run is held or parked, or why it was dropped.
 	Reason *string `json:"reason,omitzero"`
 	// Shipping is set when an outcome of this trip shipped the work: a Ship outcome
@@ -348,6 +355,10 @@ func (r Run) IsButtonParked() bool {
 // Clone is a deep copy of the run: its stages, forks, legs, attempts, pull
 // requests, observations, pause and every other list or map, and the routes it
 // took, so changing the copy never changes the run.
+// WithholdsSource reports whether the run's agents see only the reference of the
+// work item it came from, not its details.
+func (r Run) WithholdsSource() bool { return r.Sharing == SourceSharingWithheld }
+
 func (r Run) Clone() Run {
 	c := cloneValue(r)
 	c.Taken = r.Taken.Clone()

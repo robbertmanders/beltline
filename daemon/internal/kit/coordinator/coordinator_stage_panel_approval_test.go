@@ -7,6 +7,60 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 )
 
+func TestAPromptStageTakesItsSourceFromTheDecisionOrTheStage(t *testing.T) {
+	t.Parallel()
+	for _, source := range []*core.SourceSharing{nil, new(core.SourceSharingWithheld), new(core.SourceSharingShared)} {
+		t.Run(string(core.ValueOr(source, "stage default")), func(t *testing.T) {
+			t.Parallel()
+			h := newHarness(t, harnessOptions{})
+			c := h.Coord()
+			belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+			prompt := core.DefaultsStage(core.StageTypePrompt, nil, belt.Stages, belt.Stages)
+			belt.Stages = append([]core.Stage{prompt}, belt.Stages...)
+			run := core.NewRun(core.RunArgs{Belt: belt, Subject: core.Subject{Kind: core.SubjectKindIssue, Repo: "acme/billing", Number: 1, Title: "Source title"}, Now: testkitNow()})
+			core.EngineStart(&run, testkitNow())
+			h.putRun(run)
+			facts := c.approvalFacts(run, prompt)
+			if facts.Prompt == nil || facts.Document != nil || facts.Prompt.Source != core.SourceSharingWithheld {
+				t.Fatalf("facts = %+v, want the prompt editor starting withheld", facts)
+			}
+			if _, err := c.DecideCommand(run.ID, "started", new("  "), source); err == nil {
+				t.Fatal("a blank prompt was accepted")
+			}
+			after, err := c.DecideCommand(run.ID, "started", new("Do my task"), source)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := core.ValueOr(source, core.SourceSharingWithheld)
+			saved := h.storage.LoadRuns()
+			if after.Sharing != want || len(saved) != 1 || saved[0].Sharing != want || core.ValueOf(saved[0].Task) != "Do my task" {
+				t.Fatalf("sharing %q, saved %+v, want %q with the task", after.Sharing, saved, want)
+			}
+		})
+	}
+}
+
+func TestOnlyAPromptStageTakesASourceChoice(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t, harnessOptions{})
+	c := h.Coord()
+	belt := core.DefaultsBelt([]string{"acme/billing"}, "agent", core.DefaultsBuiltInAgents(), true)
+	approval := core.DefaultsStage(core.StageTypeApprove, nil, belt.Stages, belt.Stages)
+	belt.Stages = append([]core.Stage{approval}, belt.Stages...)
+	run := core.NewRun(core.RunArgs{Belt: belt, Subject: core.Subject{Kind: core.SubjectKindIssue, Repo: "acme/billing", Number: 1}, Now: testkitNow()})
+	core.EngineStart(&run, testkitNow())
+	h.putRun(run)
+	if c.approvalFacts(run, approval).Prompt != nil {
+		t.Fatal("an approval has a prompt editor")
+	}
+	if _, err := c.DecideCommand(run.ID, "approved", nil, new(core.SourceSharingShared)); err == nil {
+		t.Fatal("an approval took a source choice")
+	}
+	if after, err := c.DecideCommand(run.ID, "approved", nil, nil); err != nil || after.Sharing != "" {
+		t.Fatalf("approve: %v, sharing %q", err, after.Sharing)
+	}
+}
+
 func TestApprovalDocumentFollowsTheGateVisit(t *testing.T) {
 	t.Parallel()
 	h := newHarness(t, harnessOptions{})

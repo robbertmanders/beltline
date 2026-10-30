@@ -49,6 +49,8 @@ type StagePanelFactsApproval struct {
 	OutcomesHelp string `json:"outcomesHelp"`
 	// Outcomes are the stage's outcomes in its order, each with the words its button shows.
 	Outcomes []StagePanelFactsOutcome `json:"outcomes"`
+	// Prompt is a prompt stage's editor, in place of the document; nil on an approval.
+	Prompt *core.PromptFacts `json:"prompt,omitzero"`
 }
 
 // StagePanelFactsOutcome is one outcome button of an approval.

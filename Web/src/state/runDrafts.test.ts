@@ -64,4 +64,17 @@ describe("run draft store", () => {
     expect(reloaded.stage("run", "build").sendMessage).toBe("keep me");
     expect(storage.getItem(runDraftsStorageKey)).toContain("keep me");
   });
+
+  it("keeps a prompt stage's prompt and source choice across a reload until the decision clears them", () => {
+    const storage = memoryStorage();
+    const first = new RunDraftStore(storage);
+    first.setPrompt("run", "prompt", "My unsent prompt");
+    first.setSource("run", "prompt", "shared");
+    const reloaded = new RunDraftStore(storage);
+    expect(reloaded.stage("run", "prompt").prompt).toBe("My unsent prompt");
+    expect(reloaded.stage("run", "prompt").source).toBe("shared");
+    reloaded.clearDecide("run", "prompt");
+    expect(reloaded.stage("run", "prompt").prompt).toBeNull();
+    expect(reloaded.stage("run", "prompt").source).toBeNull();
+  });
 });

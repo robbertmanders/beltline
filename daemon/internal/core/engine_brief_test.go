@@ -15,7 +15,7 @@ func briefTestEpicChild(key string, labels []string) Subject {
 // TestTheBriefNamesTheParentAndTheBase
 func TestTheBriefNamesTheParentAndTheBase(t *testing.T) {
 	t.Parallel()
-	text := briefSubject(briefTestEpicChild("PAY-42", []string{"base:beltline/PAY-40"}), "beltline/PAY-40", nil)
+	text := briefSubject(briefTestEpicChild("PAY-42", []string{"base:beltline/PAY-40"}), "beltline/PAY-40", nil, false)
 	if !strings.Contains(text, "It is part of PAY-40") {
 		t.Fatalf("no parent line:\n%s", text)
 	}
@@ -23,7 +23,7 @@ func TestTheBriefNamesTheParentAndTheBase(t *testing.T) {
 		t.Fatalf("no base line:\n%s", text)
 	}
 	ticket := Subject{Kind: SubjectKindJira, Repo: "acme/billing", Key: "PAY-1", Title: "T", Labels: []string{"agent"}, Blockers: []string{}}
-	if strings.Contains(briefSubject(ticket, "main", nil), "merge into") {
+	if strings.Contains(briefSubject(ticket, "main", nil, false), "merge into") {
 		t.Fatal("a ticket without a base hint names its merge target")
 	}
 }
@@ -127,7 +127,7 @@ func TestArtifactsAreOptInAndUseTheEffectiveBrief(t *testing.T) {
 	}
 	stage.Brief = "Write {output}."
 	plain := BriefRender(run, stage, ctx)
-	want := "Write /runs/r/02-spec-1/triage.md.\n\n" + briefSubject(run.Subject, ctx.Base, run.Repos) + "\n" + BriefFooter(stage, BriefOutputPath(stage, ctx))
+	want := "Write /runs/r/02-spec-1/triage.md.\n\n" + briefSubject(run.Subject, ctx.Base, run.Repos, false) + "\n" + BriefFooter(stage, BriefOutputPath(stage, ctx))
 	if plain != want {
 		t.Fatalf("plain brief = %q, want %q", plain, want)
 	}

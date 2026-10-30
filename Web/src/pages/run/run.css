@@ -27,7 +27,7 @@
 .run-line-header { display: flex; justify-content: space-between; gap: 10px; padding: 0 6px 14px; }
 
 /* The selected stage (StagePanel). */
-.stage-panel { display: flex; flex-direction: column; min-width: 0; border-radius: 12px; background: var(--card); box-shadow: var(--lift); }
+.stage-panel { display: flex; flex-direction: column; min-width: 0; border-radius: 12px; background: var(--card); box-shadow: var(--lift); container-type: inline-size; }
 .stage-panel-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px 12px; border-bottom: 1px solid var(--rule); }
 .stage-panel-spacer { flex: 1; }
 .stage-panel-body { display: flex; flex-direction: column; gap: 12px; min-height: 128px; padding: 14px 18px 18px; min-width: 0; }
@@ -67,6 +67,15 @@
 .run-decide textarea, .run-answer textarea { width: 100%; resize: vertical; font-family: var(--font-body), sans-serif; }
 .run-answer { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; border-bottom: 1px dashed var(--rule); }
 .run-answer-actions, .run-decide-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* A prompt stage: the editor, with the work item beside it until the panel is too narrow. */
+.run-prompt { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 24px; min-width: 0; }
+.run-prompt-editor { min-width: 0; }
+.run-prompt-editor textarea { min-height: 360px; line-height: 1.55; }
+.run-prompt-source { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--ink2); }
+.run-prompt-context { min-width: 0; max-height: 560px; overflow: auto; overflow-wrap: anywhere; padding: 14px 16px; border-radius: 10px; background: var(--slate-wash); }
+@container (max-width: 720px) {
+  .run-prompt { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* The one menu over the run: a round trigger, and a card with the controls, a divider, then the links. */
 .run-menu { position: relative; }

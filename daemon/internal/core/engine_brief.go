@@ -79,7 +79,8 @@ func briefRenderWithEarlier(run Run, stage Stage, context BriefContext, earlierW
 		text = strings.ReplaceAll(text, "{"+key+"}", values[key])
 	}
 
-	text += "\n\n" + briefSubject(run.Subject, context.Base, run.Repos)
+	text += "\n\n" + briefSubject(run.Subject, context.Base, run.Repos, run.WithholdsSource())
+	text += briefTask(run)
 	text += briefRepositories(run, context)
 	for _, pull := range run.PullRequests {
 		if run.Subject.Kind == SubjectKindPullRequest {

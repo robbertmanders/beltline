@@ -313,7 +313,7 @@ func insightsShadowStages(live, shadow *insightsScope, liveStages, shadowStages 
 		shadowFigures, _ := insightsFiguresOf(shadowAt[stage.ID])
 		l, s := insightsStageNumbers(liveAt[stage.ID]), insightsStageNumbers(shadowAt[stage.ID])
 		both = append(both, InsightsShadowStage{
-			Key: stage.ID, Name: other.Name, KindLabel: insightsKindLabel(other.Kind()),
+			Key: stage.ID, Name: other.Name, KindLabel: insightsKindLabel(other),
 			Changed: !shadowSameStage(stage, other), Live: liveFigures, Shadow: shadowFigures,
 			Tones: InsightsShadowTones{
 				MedianTime:   insightsShadowTone(l[0], s[0], true),

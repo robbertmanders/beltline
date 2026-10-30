@@ -125,6 +125,8 @@ type StageEdit struct {
 	Fallback  *Fallback    `json:"fallback,omitzero"`
 	Agent     *AgentRef    `json:"agent,omitzero"`
 	Watch     *WatchTarget `json:"watch,omitzero"`
+	// Source is what a prompt stage's source checkbox starts as; other stages ignore it.
+	Source *SourceSharing `json:"source,omitzero"`
 	// Outcomes replaces the outcomes as a whole when non-nil.
 	Outcomes []Outcome `json:"outcomes,omitzero"`
 	// Alternates replaces the other runner, model and thinking settings the stage

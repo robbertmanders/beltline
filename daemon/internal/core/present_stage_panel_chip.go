@@ -63,11 +63,15 @@ func StagePanelStateChipOf(run Run, stage Stage, step StatusStep, now time.Time,
 	}
 }
 
-// StagePanelKindChipOf is the chip that names what a stage is in a stage panel's head: "YOUR DECISION"
-// for a gate, "WATCH" for a watch, and otherwise ranOn, the runner and model the stage ran on.
+// StagePanelKindChipOf is the chip that names what a stage is in a stage panel's head: "YOUR PROMPT"
+// for a prompt stage, "YOUR DECISION" for an approval, "WATCH" for a watch, and otherwise ranOn, the
+// runner and model the stage ran on.
 func StagePanelKindChipOf(stage Stage, ranOn string) string {
 	switch stage.Kind() {
 	case StageKindGate:
+		if stage.Type == StageTypePrompt {
+			return "YOUR PROMPT"
+		}
 		return "YOUR DECISION"
 	case StageKindWatch:
 		return "WATCH"

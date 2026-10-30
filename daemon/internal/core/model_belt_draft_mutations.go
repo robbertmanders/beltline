@@ -84,6 +84,9 @@ func (b *Belt) apply(update StageEdit, index int) {
 			stage.Outcomes = DefaultsStage(StageTypeWatch, b.Stages[:index], nil, b.Stages).Outcomes
 		}
 	}
+	if update.Source != nil && stage.Type == StageTypePrompt {
+		stage.Source = new(*update.Source)
+	}
 	if update.Name != nil {
 		stage.Name = *update.Name
 	}

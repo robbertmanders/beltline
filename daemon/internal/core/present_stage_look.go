@@ -20,6 +20,9 @@ func StageLookOf(stage Stage, agent *Agent) StageLook {
 		}
 		return look
 	case StageKindGate:
+		if stage.Type == StageTypePrompt {
+			return StageLook{Icon: StageIconPen, Tint: TintGold}
+		}
 		return StageLook{Icon: StageIconApprove, Tint: TintGold}
 	default:
 		icon := StageIconMerge

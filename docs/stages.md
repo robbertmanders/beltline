@@ -10,13 +10,16 @@ nav_order: 2
 1. TOC
 {:toc}
 
-## Three kinds of stage
+## Four kinds of stage
 
 **Agent**
 : Runs a coding agent CLI (Claude Code, Codex CLI, Copilot CLI, Cursor CLI or Pi) in a tmux session with a brief. The agent writes an output file and ends it with an `Outcome:` line. Agents do everything outward themselves, such as pushing, opening the pull request, commenting or moving a ticket.
 
 **Approval**
 : Waits for you. It shows the latest agent output leading into it, such as the spec, and what each of its outcomes will do, for example *Approve means Beltline will: have Build run, have Verify check the change, open the pull request*. You pick the outcome.
+
+**Prompt**
+: Waits for you to write the run's task, usually as the belt's first stage. It shows the work item beside a large editor, and its outcomes (by default **Start** and **Park it**) sit under the editor. An outcome that moves the run on needs your prompt, which becomes the run's task: every brief after it carries it under *Your task*, so its outcomes don't pass text on as a note. Its **Source context** setting is what the run's *Include source context for agents* checkbox starts as, withheld unless you change it. AFK mode never decides a prompt stage. An approval as the first stage is warned about, since nothing has been done yet to approve; a prompt stage is not.
 
 **Watch**
 : Waits on the run's pull request, or on its own issue or ticket, and ends in an outcome when something happens there. See [Watches](watches.md).

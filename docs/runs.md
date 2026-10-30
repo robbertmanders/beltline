@@ -22,7 +22,17 @@ Runs that need you are listed under **Needs you** on the Overview and on Work, a
 
 - **A held agent** asked questions. Type your answer and **Send answer**: the same session picks up where it stopped and writes its output again. If you answered in the session's terminal yourself, choose **I answered in the session**.
 - **An approval** waits for you to pick one of its outcomes. It shows the output leading into it, and what each outcome will make Beltline do.
+- **A prompt stage** waits for you to write the run's task. Write in **Your prompt**, then choose an outcome; the work item's details are beside the editor for you to read. An outcome that moves the run on needs the prompt, and an outcome such as **Park it** doesn't. Your unsent prompt stays in this browser tab across reloads. If the run comes back to the stage, the editor starts from the task it has.
 - **A failed stage** ended without a known outcome. Run it again, send the run elsewhere, or drop it.
+
+### The task and source context
+
+The prompt becomes the run's task, which every agent brief after the prompt stage carries, not only the next one. **Include source context for agents** decides what those briefs say about the work item:
+
+- Unchecked (the prompt stage's default unless its belt says otherwise), agents get the work item's reference, such as `PAY-40` or `acme/billing#142`, and where its work starts and merges, but not its title, description, labels, parent or link, and they are told not to read them. The reference stays so Ship, Wrap up and Post review can still link the pull request, comment or move the ticket; the `{issue}` placeholder is the reference too. AFK decisions for the run see the same.
+- Checked, agents get the work item's details as well, and the task wins where the two disagree.
+
+The choice is saved on the run. It controls the briefs, not what an agent's tools can reach: branch names and folders still carry the reference, and text you copy into the prompt is always sent.
 
 ## Sending a run
 
