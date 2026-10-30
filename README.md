@@ -4,7 +4,7 @@ Beltline turns GitHub issues, pull request reviews and Jira tickets into pull re
 
 It runs on your own machine, macOS or Linux: `beltlined` is a small daemon that runs your belts whether or not a window is open, and you work with it in your browser.
 
-![A run on its belt: you approve the spec, and Build, Verify and Ship run one after another until the Merge watch waits for the pull request](docs/images/run.gif)
+![From the Overview you open a run that needs you, read its spec and approve it; Build, Verify and Ship then run one after another until the Merge watch waits for the pull request](docs/images/run.gif)
 
 > [!WARNING]
 > Beltline runs coding agents (Claude Code, Codex, Copilot, Cursor, Pi) **with their approval prompts turned off**, as your user and with your `gh` and `acli` sign-ins. Agents read issue and ticket text that other people may have written. Read [docs/security.md](docs/security.md) before you point a belt at a repository, and start with a label only you can apply.
