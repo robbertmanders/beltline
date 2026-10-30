@@ -18,8 +18,6 @@ nav_order: 2
 **Approval**
 : Waits for you. It shows the latest agent output leading into it, such as the spec, and what each of its outcomes will do, for example *Approve means Beltline will: have Build run, have Verify check the change, open the pull request*. You pick the outcome.
 
-Put Approval first to ask for permission before any agent runs. Set the belt's [AFK mode](afk.md) to **Never** when only you may approve.
-
 **Watch**
 : Waits on the run's pull request, or on its own issue or ticket, and ends in an outcome when something happens there. See [Watches](watches.md).
 

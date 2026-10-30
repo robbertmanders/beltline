@@ -84,11 +84,8 @@ type Run struct {
 	// then. Nil on a run saved before a belt could have more than one trigger.
 	Source  *RunSource `json:"source,omitzero"`
 	Subject Subject    `json:"issue"`
-	// IncludeSubject is consent to include source details in agent briefs. Nil
-	// preserves legacy behavior; prompt-entry gates explicitly default to false.
-	IncludeSubject *bool    `json:"includeSubject,omitzero"`
-	State          RunState `json:"state"`
-	StageID        string   `json:"stageId"`
+	State   RunState   `json:"state"`
+	StageID string     `json:"stageId"`
 	// Reason is why the run is held or parked, or why it was dropped.
 	Reason *string `json:"reason,omitzero"`
 	// Shipping is set when an outcome of this trip shipped the work: a Ship outcome

@@ -24,10 +24,6 @@ Runs that need you are listed under **Needs you** on the Overview and on Work, a
 - **An approval** waits for you to pick one of its outcomes. It shows the output leading into it, and what each outcome will make Beltline do.
 - **A failed stage** ended without a known outcome. Run it again, send the run elsewhere, or drop it.
 
-An approval before any agent output whose advancing outcomes all require a note opens as a prompt editor. Write in **Your prompt**, then choose an outcome: the same text is used whether you refine it first or send it straight to implementation. Outcomes that skip or drop the work do not require a prompt. Your unsent text stays in this browser tab across reloads.
-
-**Source context** shows the work item's details alongside the editor. **Include source context for agents** is unchecked by default. Leave it unchecked to omit the work item's key, title, description, labels, parent and link from subsequent agent briefs, including the `{issue}` placeholder; agents are instructed not to retrieve that context. Check it to include the source details with your prompt. The choice is saved on the run and survives a restart. Branch names and workspace paths can still contain source identifiers; this is prompt control, not an access restriction on an agent's tools. Text you copy into your prompt is always sent. Existing runs without a saved choice and ordinary approval gates keep their previous context behavior.
-
 ## Sending a run
 
 On a held or parked run, **Send to…**, **Run … again** and **Unpark** open a sheet with an optional message:

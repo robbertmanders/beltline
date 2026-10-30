@@ -24,6 +24,9 @@ func validationStageWarnings(stage Stage, index int, layout BeltLayout, agents m
 	if stage.Kind() == StageKindAgent {
 		warnings = append(warnings, validationAgentStageWarnings(stage, agents)...)
 	}
+	if stage.Kind() == StageKindGate && index == 0 {
+		warnings = append(warnings, stage.Name+" is the first stage, so you would approve issues before any agent has looked at them.")
+	}
 	warnings = append(warnings, validationSlotWarnings(stage)...)
 	return warnings
 }
