@@ -94,7 +94,7 @@ function outputSectionsCases(): SnapshotCase[] {
       sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
       readiness: "run",
       apiResponses,
-      readyMarker: ".output-section-toggle",
+      readyMarker: ".run-output-sections",
       scrollToTop: ".run-output-sections"
     },
     {
