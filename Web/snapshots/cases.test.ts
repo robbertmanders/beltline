@@ -29,7 +29,7 @@ describe("snapshot selection", () => {
     const beltsOwn = beltsCases.map(item => item.id).filter(id => id !== "belts-open" && id !== "belts-closed");
     const overviewOwn = ["overview-floor-open", "overview-floor-closed", "overview-floor-pinned", "overview-paused"];
     const appearance = ids.filter(id => id.startsWith("appearance-"));
-    const extra = [...appearance, ...runCaseIds, ...interactive, ...beltsOwn, ...overviewOwn, "library-shared", "library-compare", "afk-all", "settings-models-expanded", "native-7g-afk", "native-7i-afk-on", "native-7k-afk-decided", "native-7m-overrule-row", "native-7e-settings", "native-7g-settings-paused", "native-7j-settings-continued", "native-7f-settings-factories", "settings-model-error", "settings-inline-422", "library-share-belt", ...workOnly];
+    const extra = [...appearance, ...runCaseIds, ...interactive, ...beltsOwn, ...overviewOwn, "library-shared", "library-belt", "library-belt-stage", "library-agent", "library-compare", "afk-all", "settings-models-expanded", "native-7g-afk", "native-7i-afk-on", "native-7k-afk-decided", "native-7m-overrule-row", "native-7e-settings", "native-7g-settings-paused", "native-7j-settings-continued", "native-7f-settings-factories", "settings-model-error", "settings-inline-422", "library-share-belt", ...workOnly];
     expect(ids.filter(id => !extra.includes(id)).sort()).toEqual([...existing].sort());
     expect(interactive.every(id => ids.includes(id))).toBe(true);
     expect(ids.filter(id => workOnly.includes(id)).sort()).toEqual(workOnly);

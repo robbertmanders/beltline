@@ -34,6 +34,9 @@ const (
 	LibraryCardStatusToneGood LibraryCardStatusTone = "good"
 	LibraryCardStatusToneGrey LibraryCardStatusTone = "grey"
 	LibraryCardStatusToneNeed LibraryCardStatusTone = "need"
+	// LibraryCardStatusToneGold and LibraryCardStatusToneProblem mark a Library item with an update or a conflict.
+	LibraryCardStatusToneGold    LibraryCardStatusTone = "gold"
+	LibraryCardStatusToneProblem LibraryCardStatusTone = "problem"
 )
 
 // LibraryFilter is one filter button of a library browser, with how many cards it matches.

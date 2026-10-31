@@ -40,6 +40,55 @@ func AddLibraryItem(mux *http.ServeMux, c *coordinator.Coordinator) {
 	}))
 }
 
+// AddLibraryBrowser is GET api/v1/library/browser?kind=&search=&filter=: one tab of the Library page,
+// the belts (kind=belt) or agents (kind=agent) the shared repositories hold.
+// Lock: the handler calls LibraryBrowser, which takes the lock.
+func AddLibraryBrowser(mux *http.ServeMux, c *coordinator.Coordinator) {
+	mux.Handle("GET /api/v1/library/browser", JSONRoute(c, func(r *http.Request) (any, error) {
+		query := r.URL.RawQuery
+		kind := libraryQuery(query, "kind")
+		if kind != "agent" {
+			kind = "belt"
+		}
+		return c.LibraryBrowser(kind, libraryQuery(query, "search"), libraryQuery(query, "filter")), nil
+	}))
+}
+
+// AddLibraryBelt is GET api/v1/library/belt?repository=&path=&id=&stage=: a shared belt for the
+// read-only belt editor, with the stage form's context when stage is set.
+// Lock: the handler calls LibraryBelt, which takes the lock.
+func AddLibraryBelt(mux *http.ServeMux, c *coordinator.Coordinator) {
+	mux.Handle("GET /api/v1/library/belt", JSONRoute(c, func(r *http.Request) (any, error) {
+		query := r.URL.RawQuery
+		origin := core.LibraryOrigin{Repository: libraryQuery(query, "repository"), Path: libraryQuery(query, "path")}
+		detail, found, err := c.LibraryBelt(origin, libraryQuery(query, "id"), ReadRouteSupportQuery("stage", query))
+		if err != nil {
+			return nil, err
+		}
+		if !found {
+			return nil, api.MissingResource{}
+		}
+		return detail, nil
+	}))
+}
+
+// AddLibraryAgent is GET api/v1/library/agent?repository=&path=&id=: a shared agent for the
+// read-only agent editor. Lock: the handler calls LibraryAgent, which takes the lock.
+func AddLibraryAgent(mux *http.ServeMux, c *coordinator.Coordinator) {
+	mux.Handle("GET /api/v1/library/agent", JSONRoute(c, func(r *http.Request) (any, error) {
+		query := r.URL.RawQuery
+		origin := core.LibraryOrigin{Repository: libraryQuery(query, "repository"), Path: libraryQuery(query, "path")}
+		detail, found, err := c.LibraryAgent(origin, libraryQuery(query, "id"))
+		if err != nil {
+			return nil, err
+		}
+		if !found {
+			return nil, api.MissingResource{}
+		}
+		return detail, nil
+	}))
+}
+
 // AddLibraryRefresh is POST api/v1/library/refresh: syncs one repository and answers its state.
 // Lock: the handler calls RefreshLibraryRepo, which takes the lock; the fetch runs without it.
 func AddLibraryRefresh(mux *http.ServeMux, c *coordinator.Coordinator) {

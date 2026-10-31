@@ -34,13 +34,15 @@ type StageKind = "agent" | "approve" | "prompt" | "watch";
  * pick adds on every other route of a fork it comes back into, and the routes of the fork after the stage. The
  * browser places the ids the daemon offers and computes none of them.
  */
-export function OutcomesEditor({ stageId, kind, outcomes, context, menu, disabled, onChange }: {
+export function OutcomesEditor({ stageId, kind, outcomes, context, menu, disabled, readOnly = false, onChange }: {
   stageId: string;
   kind: StageKind;
   outcomes: readonly Outcome[];
   context: BeltContext | null;
   menu: StageMenu | null;
   disabled: boolean;
+  /** Leaves out Add outcome and each row's remove button: the outcomes of a library belt are only shown. */
+  readOnly?: boolean;
   onChange: (outcomes: Outcome[]) => void;
 }) {
   const labels = new Map((context?.outcomes ?? []).map(item => [item.outcome, item.label]));
@@ -56,7 +58,7 @@ export function OutcomesEditor({ stageId, kind, outcomes, context, menu, disable
   return <div className="outcomes-editor" aria-label="Outcomes">
     <div className="agent-outcomes-header">
       <div className="form-heading"><span className="paper-tag">Outcomes</span><h3>How it can end</h3>{menu && <p className="agent-lead">{menu.outcomesIntro}</p>}</div>
-      <button type="button" className="action-button small" disabled={disabled} onClick={addOutcome}>+ Add outcome</button>
+      {!readOnly && <button type="button" className="action-button small" disabled={disabled} onClick={addOutcome}>+ Add outcome</button>}
     </div>
     <div className="outcomes-scroll" data-scroll-viewport>
       <table className="outcomes-table">
@@ -68,7 +70,7 @@ export function OutcomesEditor({ stageId, kind, outcomes, context, menu, disable
           {outcomes.map((outcome, index) => <OutcomeRow key={outcome.id} stageId={stageId} kind={kind} outcome={outcome} index={index} menu={menu}
             label={labels.get(outcome.id) ?? ""} disabled={disabled}
             onChange={change => update(index, change)}
-            onRemove={() => onChange(outcomes.filter((_, position) => position !== index))} />)}
+            onRemove={readOnly ? undefined : () => onChange(outcomes.filter((_, position) => position !== index))} />)}
         </tbody>
       </table>
     </div>
@@ -84,7 +86,7 @@ function OutcomeRow({ stageId, kind, outcome, index, menu, label, disabled, onCh
   label: string;
   disabled: boolean;
   onChange: (change: (outcome: Outcome) => Outcome) => void;
-  onRemove: () => void;
+  onRemove?: () => void;
 }) {
   const editor = useDraftEditor();
   const then = outcome.then;
@@ -119,7 +121,7 @@ function OutcomeRow({ stageId, kind, outcome, index, menu, label, disabled, onCh
           : <RouteTargets number={number} then={then} menu={menu} disabled={disabled} onChange={setThen} />} />
     </td>
     <td className="outcome-remove">
-      <button type="button" className="outcome-remove-button" disabled={disabled} aria-label={`Remove outcome ${number}`} title="Remove this outcome" onClick={onRemove}>×</button>
+      {onRemove && <button type="button" className="outcome-remove-button" disabled={disabled} aria-label={`Remove outcome ${number}`} title="Remove this outcome" onClick={onRemove}>×</button>}
     </td>
   </tr>;
 }

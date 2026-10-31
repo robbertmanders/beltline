@@ -64,12 +64,18 @@ export interface AgentEditorProps {
   assistantButton?: ReactNode;
   /** The library repository a saved agent was installed from, if any. */
   origin?: LibraryOrigin | null;
+  /**
+   * Set when the editor shows an agent a library repository holds: nothing can change, the controls that only edit
+   * are left out, and the header shows this tag, notice and actions in place of the editor's own.
+   */
+  library?: { tag: string; actions: ReactNode; notice?: ReactNode };
 }
 
-/** The Agents editor: settings, brief, outcomes and Used by, all on a draft. */
+/** The Agents editor: settings, brief, outcomes and Used by, all on a draft; read-only for a library repository's agent. */
 export function AgentEditor(props: AgentEditorProps) {
-  const { agent, saved, actions, presentation, isNew, dirty, canCommand, commandReason, commandError, onRetry, onChange, onChangeRunner } = props;
-  const breadcrumb = [
+  const { agent, saved, actions, presentation, isNew, dirty, canCommand, commandReason, commandError, onRetry, onChange, onChangeRunner, library } = props;
+  const readOnly = library !== undefined;
+  const breadcrumb = library ? library.tag : [
     agent.origin ? "Installed" : "Your agent",
     isNew ? "new" : `v${agent.version}`,
     presentation?.archived ? "archived" : null
@@ -91,7 +97,7 @@ export function AgentEditor(props: AgentEditorProps) {
         <p className="paper-tag" aria-label="Agent kind">{breadcrumb}</p>
         <h2 className={agent.name.trim() ? "" : "is-unnamed"}>{agent.name.trim() || "Unnamed agent"}</h2>
       </div>
-      <div className="belt-actions">
+      {library ? <div className="belt-actions">{library.actions}</div> : <div className="belt-actions">
         <button type="button" className="action-button slate" disabled={!!shareReason} title={shareReason ?? "Share this saved agent version to a library repository"} onClick={props.onShare}>Share…</button>
         {!isNew && !dirty && archiveAction && <button type="button" className="action-button" disabled={!canCommand || !archiveAction.enabled}
           title={archiveAction.reason ?? commandReason ?? (presentation?.archived ? "Let new stages use this agent again, and put it back in this list" : "Take it out of this list and the + menu. Belts that use it keep working.")}
@@ -103,12 +109,13 @@ export function AgentEditor(props: AgentEditorProps) {
             onClick={() => { if (!props.saving) props.onSave(); }}>{props.saving ? "Saving…" : "Save"}</button>}
         </>}
         {props.assistantButton}
-      </div>
+      </div>}
     </header>
+    {library?.notice}
 
-    {!isNew && props.origin && <p className="agent-origin">Installed from {props.origin.repository}{props.origin.path ? ` / ${props.origin.path}` : ""}</p>}
+    {!isNew && !readOnly && props.origin && <p className="agent-origin">Installed from {props.origin.repository}{props.origin.path ? ` / ${props.origin.path}` : ""}</p>}
 
-    {(dirty || isNew) && presentation && <p className="belt-note agent-status"><span className="belt-note-lamp" aria-hidden="true" />{presentation.status}</p>}
+    {(dirty || isNew) && !readOnly && presentation && <p className="belt-note agent-status"><span className="belt-note-lamp" aria-hidden="true" />{presentation.status}</p>}
 
     {commandError !== null && commandError !== undefined && <div className="agent-command-error" role="alert">
       <ProblemItems problems={describeError(commandError).problems} />
@@ -128,6 +135,7 @@ export function AgentEditor(props: AgentEditorProps) {
             details={[backendLabels[agent.runner]]} style={{ position: "relative", width: 170, height: 56 }} />
         </span>
       </div>
+      <fieldset className="editor-fields" disabled={readOnly}>
       <div className="agent-form">
         <div className="agent-form-row agent-form-row--pair">
           <label className="agent-field"><span className="agent-field-label">Id</span>
@@ -178,21 +186,22 @@ export function AgentEditor(props: AgentEditorProps) {
               onModel={model => change({ alternates: agent.alternates.map((entry, at) => at === index ? { ...entry, model } : entry) })}
               onThinking={thinking => change({ alternates: agent.alternates.map((entry, at) => at === index ? { ...entry, thinking: thinking ?? undefined } : entry) })}
               onChangeRunner={runner => onChangeRunner(runner, index)} />
-            <button type="button" className="quiet-button agent-form-remove" aria-label={`Remove alternate ${index + 1}`}
-              onClick={() => change({ alternates: agent.alternates.filter((_, at) => at !== index) })}>Remove</button>
+            {!readOnly && <button type="button" className="quiet-button agent-form-remove" aria-label={`Remove alternate ${index + 1}`}
+              onClick={() => change({ alternates: agent.alternates.filter((_, at) => at !== index) })}>Remove</button>}
           </div>)}
         </div>
-        <div>
+        {!readOnly && <div>
           <button type="button" className="action-button small" onClick={() => change({ alternates: [...agent.alternates, { model: "", runner: agent.runner }] })}>+ Add a model</button>
-        </div>
+        </div>}
       </div>
+      </fieldset>
     </div>
 
     <div className="agent-card belt-card">
       <div className="form-heading"><span className="paper-tag">Brief</span><h3>What the agent is told</h3></div>
-      <textarea className="paper-field agent-brief" aria-label="Brief" rows={12} value={agent.brief} onChange={event => change({ brief: event.currentTarget.value })} />
+      <textarea className="paper-field agent-brief" aria-label="Brief" rows={12} value={agent.brief} readOnly={readOnly} onChange={event => change({ brief: event.currentTarget.value })} />
       <p className="agent-hint">Write this agent&apos;s current result to {"{output}"}. Name other outputs with the placeholders chosen on the belt&apos;s stages. The issue, any note, and the outcome footer are added automatically.</p>
-      {placeholders && <div className="agent-placeholders">
+      {placeholders && !readOnly && <div className="agent-placeholders">
         <span className="paper-caps">Placeholders</span>
         <ul>{placeholders.entries.map(entry => <li key={entry.name}><code>{`{${entry.name}}`}</code> — {entry.description}</li>)}</ul>
       </div>}
@@ -201,9 +210,10 @@ export function AgentEditor(props: AgentEditorProps) {
     <div className="agent-card belt-card">
       <div className="agent-outcomes-header"><div className="form-heading"><span className="paper-tag">Outcomes</span><h3>How it can end</h3>
         <p className="agent-lead">The agent picks one and writes it as the last line of its output, so describe when each one applies. A new stage starts with these; “Go to a stage” goes to a stage with one of the agents you pick: the nearest earlier one, or else the nearest later one.</p></div>
-        <button type="button" className="action-button small"
-          onClick={() => change({ outcomes: [...agent.outcomes, { name: "", when: "", tone: "neutral", then: { do: "hold" }, to: [] }] })}>+ Add outcome</button>
+        {!readOnly && <button type="button" className="action-button small"
+          onClick={() => change({ outcomes: [...agent.outcomes, { name: "", when: "", tone: "neutral", then: { do: "hold" }, to: [] }] })}>+ Add outcome</button>}
       </div>
+      <fieldset className="editor-fields" disabled={readOnly}>
       <div className="outcomes-scroll" data-scroll-viewport>
         <table className="outcomes-table">
           <caption className="screen-reader-only">Outcomes</caption>
@@ -213,10 +223,11 @@ export function AgentEditor(props: AgentEditorProps) {
           <tbody>
             {agent.outcomes.map((outcome, index) => <AgentOutcomeRow key={index} outcome={outcome} index={index} targets={presentation?.outcomeTargets ?? []}
               onChange={next => change({ outcomes: agent.outcomes.map((entry, at) => at === index ? next : entry) })}
-              onRemove={() => change({ outcomes: agent.outcomes.filter((_, at) => at !== index) })} />)}
+              onRemove={readOnly ? undefined : () => change({ outcomes: agent.outcomes.filter((_, at) => at !== index) })} />)}
           </tbody>
         </table>
       </div>
+      </fieldset>
       {presentation && <div className="agent-footer">
         <span className="paper-tag">Added to the end of the brief</span>
         <pre>{presentation.footer}</pre>
@@ -224,12 +235,13 @@ export function AgentEditor(props: AgentEditorProps) {
     </div>
 
     {!isNew && <div className="agent-card belt-card">
-      <div className="form-heading"><span className="paper-tag">Belts</span><h3>{presentation && presentation.usedBy.length > 0 ? `Used by ${presentation.usedBy.length} ${presentation.usedBy.length === 1 ? "belt" : "belts"}` : "No belt uses it yet"}</h3></div>
+      <div className="form-heading"><span className="paper-tag">Belts</span><h3>{presentation && presentation.usedBy.length > 0 ? `Used by ${presentation.usedBy.length} ${presentation.usedBy.length === 1 ? "belt" : "belts"}${readOnly ? " in this repository" : ""}` : readOnly ? "No belt in this repository uses it" : "No belt uses it yet"}</h3></div>
       {presentation && presentation.usedBy.length > 0 && <ul className="agent-usage">{presentation.usedBy.map(use => <li key={use.beltId}>
         <span className="agent-usage-name">{use.beltName}</span>
         <code>v{use.version}</code>
-        {use.version < agent.version && <span className="agent-hint">Open the belt and pick “Update to v{agent.version}” on its stage to move it.</span>}
-        <a className="action-button small agent-open-belt" href={`/belts?belt=${encodeURIComponent(use.beltId)}`} onClick={event => { event.preventDefault(); props.onOpenBelt(use.beltId); }}>Open belt</a>
+        {!readOnly && use.version < agent.version && <span className="agent-hint">Open the belt and pick “Update to v{agent.version}” on its stage to move it.</span>}
+        {readOnly ? <button type="button" className="action-button small agent-open-belt" onClick={() => props.onOpenBelt(use.beltId)}>Open belt</button>
+          : <a className="action-button small agent-open-belt" href={`/belts?belt=${encodeURIComponent(use.beltId)}`} onClick={event => { event.preventDefault(); props.onOpenBelt(use.beltId); }}>Open belt</a>}
       </li>)}</ul>}
       {saved?.agent.key && <p className="agent-hint">Legacy key <code>{saved.agent.key}</code> still renders older runs.</p>}
     </div>}

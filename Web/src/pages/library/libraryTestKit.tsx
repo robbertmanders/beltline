@@ -24,7 +24,30 @@ export const sharedRepo = {
   actions: [action("refresh")]
 };
 
-/** The library's daemon: the routes given, the version from the golden, and anything else a 404. */
+/** A Library card as the browser answers it, for a shared repository's belt or agent in the state given. */
+const card = (kind: "belt" | "agent", id: string, name: string, state: string, status: string, statusTone: string) => ({
+  id, name, version: 1, summary: "", detail: "acme/team-library", status, statusTone, state, icon: kind === "belt" ? "bolt" : "eye", tint: "grey",
+  stages: kind === "belt" ? [{ icon: "funnel", tint: "blue" }, { icon: "wrench", tint: "green" }] : [], kind, repository: "acme/team-library", path: ""
+});
+
+/** The two tabs of the Library page over sharedRepo: one belt with an update, two agents. */
+export const libraryTabs = [{ id: "belt", label: "Belts", count: 1, attention: true }, { id: "agent", label: "Agents", count: 2, attention: true }];
+
+/** The browser's answer for kind: the cards of that tab, with the state filters and their counts. */
+export function libraryBrowser(kind: "belt" | "agent") {
+  const cards = kind === "belt" ? [card("belt", "issue-flow", "Issue flow", "update", "Update", "gold")]
+    : [card("agent", "review", "Review", "installed", "Installed", "good"), card("agent", "triage", "Triage", "conflict", "Conflict", "problem")];
+  const filters = [["all", "All"], ["available", "Available"], ["installed", "Installed"], ["update", "Updates"], ["conflict", "Conflicts"]]
+    .map(([id, label]) => ({ id: id!, label: label!, count: cards.filter(entry => id === "all" || entry.state === id).length }));
+  const items = cards.map(({ state: _state, ...rest }) => rest);
+  return { tabs: libraryTabs, items, filters, totalCount: items.length, matchCount: items.length };
+}
+
+/** The browser route: each tab's cards by the kind asked for. */
+export const libraryBrowserRoute: Handler = request => new Response(JSON.stringify(libraryBrowser(
+  new URLSearchParams(request.path.split("?")[1]).get("kind") === "agent" ? "agent" : "belt")), { status: 200, headers: { "content-type": "application/json" } });
+
+/** The library's daemon: the routes given, the browser over sharedRepo unless a test gives its own, and anything else a 404. */
 export function mockLibrary(routes: Record<string, Handler | string> = {}) {
-  return stubDaemon(routes);
+  return stubDaemon({ "/api/v1/library/browser": libraryBrowserRoute, ...routes });
 }

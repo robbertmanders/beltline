@@ -76,6 +76,7 @@ func TestRepeatedReadAndErrorMatricesLeaveDiskAndCoordinatorStateUnchanged(t *te
 	t.Parallel()
 	f := Start(t, Options{})
 	f.SeedViews()
+	f.SyncLibrary(t)
 	disk := folderManifest(t, f.Root)
 	c := f.Coordinator
 	runsBefore := c.ReadRuns()

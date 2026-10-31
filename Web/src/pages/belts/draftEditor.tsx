@@ -77,6 +77,11 @@ export interface DraftEditorValue {
   stageById: (id: string) => Stage | undefined;
   /** True while the draft is the belt's shadow: its triggers, name and bases are live's and cannot change here. */
   shadow?: boolean;
+  /**
+   * True when the editor shows a belt from a library repository: nothing can change, and the controls that only edit
+   * (moves, adds, removes, the repositories and placeholder help) are left out.
+   */
+  readOnly?: boolean;
 }
 
 const DraftEditorContext = createContext<DraftEditorValue | null>(null);

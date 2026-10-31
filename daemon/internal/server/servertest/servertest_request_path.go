@@ -57,6 +57,10 @@ func RequestPath(f *Fixture, endpoint routes.Endpoint) string {
 		return strings.ReplaceAll(path, ":runner", "pi")
 	case "libraryItem":
 		return libraryItemPath
+	case "libraryBelt":
+		return libraryBeltPath
+	case "libraryAgent":
+		return libraryAgentPath
 	}
 	return path
 }
