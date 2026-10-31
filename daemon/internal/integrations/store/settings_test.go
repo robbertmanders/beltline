@@ -60,6 +60,37 @@ func TestInsightsIsHiddenUntilTurnedOn(t *testing.T) {
 	}
 }
 
+// TestShadowTestsAreOffUntilTurnedOn checks shadow tests are off by default and in a settings file without
+// the switch, and that both experimental switches round-trip through the store with the other.
+func TestShadowTestsAreOffUntilTurnedOn(t *testing.T) {
+	t.Parallel()
+	if DefaultSettings().EnableShadowTests {
+		t.Fatal("the defaults enable shadow tests")
+	}
+	if settings := mustDecode[Settings](t, `{"login":"me","showInsights":true}`); settings.EnableShadowTests {
+		t.Fatal("a file without enableShadowTests enabled shadow tests")
+	}
+	if settings := mustDecode[Settings](t, `{"enableShadowTests":"yes"}`); settings.EnableShadowTests {
+		t.Fatal("an enableShadowTests of the wrong type enabled shadow tests")
+	}
+	s := newTestStorage(t)
+	saved := DefaultSettings()
+	saved.EnableShadowTests = true
+	if err := s.SaveSettings(saved); err != nil {
+		t.Fatalf("SaveSettings: %v", err)
+	}
+	if loaded := s.LoadSettings(); !loaded.EnableShadowTests || loaded.ShowInsights {
+		t.Fatalf("a saved true came back as %+v", loaded)
+	}
+	saved.ShowInsights, saved.EnableShadowTests = true, false
+	if err := s.SaveSettings(saved); err != nil {
+		t.Fatalf("SaveSettings: %v", err)
+	}
+	if loaded := s.LoadSettings(); loaded.EnableShadowTests || !loaded.ShowInsights {
+		t.Fatalf("a saved false came back as %+v", loaded)
+	}
+}
+
 // TestSavedRunnersRoundTrip
 func TestSavedRunnersRoundTrip(t *testing.T) {
 	t.Parallel()

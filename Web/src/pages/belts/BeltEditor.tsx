@@ -101,7 +101,8 @@ export function BeltEditor({ base, snapshot, allIds, liveIds, onSelect, followSe
   const hasTyped = Object.keys(typedForms).length > 0;
 
   const agentChoices = useBeltAgentChoices(archived);
-  const { context, refreshContext } = useBeltContext(key, belt, selectedStageId, shadowMode ? shadowSummary?.version : snapshot?.revision, shadowMode);
+  // The context is read again when the belt's resource changes, or the shadow's version, so the daemon's gates follow a settings change.
+  const { context, refreshContext } = useBeltContext(key, belt, selectedStageId, `${snapshot?.revision ?? ""}|${shadowSummary?.version ?? ""}`, shadowMode);
 
   const connectionReason = runtime.connection === "connected" ? null
     : runtime.connection === "offline" ? "The daemon is offline, so this cannot be sent. It becomes available when the daemon reconnects."
@@ -123,6 +124,8 @@ export function BeltEditor({ base, snapshot, allIds, liveIds, onSelect, followSe
     : dirty || hasTyped ? { enabled: true, reason: null } : { enabled: false, reason: "No unsaved changes to save." };
   // Structural edits change only the draft, so only the connection and a pending command gate them.
   const structuralGate = gate(undefined);
+  // Starting a shadow test is the daemon's shadow-create command: a new shadow gets its gate, so a refused start shows its reason.
+  const startGate = shadowMode && !shadowSummary ? actionGate("shadow-create") : undefined;
 
   const edit = (change: (current: Belt) => Belt) => drafts.update(key, current => {
     const from = current ?? base;
@@ -322,7 +325,7 @@ export function BeltEditor({ base, snapshot, allIds, liveIds, onSelect, followSe
         {snapshot?.origin && <p className="field-note belt-origin">{`Installed from ${snapshot.origin.repository}${snapshot.origin.path ? ` / ${snapshot.origin.path}` : ""}.`}</p>}
       </div>
       <BeltEditorActions belt={belt} snapshot={snapshot} archived={archived} paused={paused} editing={editing}
-        outdated={context?.outdatedStages ?? 0} saveGate={saveGate} shareGate={shareGate} saving={saves.busy} actionGate={actionGate}
+        outdated={context?.outdatedStages ?? 0} saveGate={saveGate} startGate={startGate} shareGate={shareGate} saving={saves.busy} actionGate={actionGate}
         assistantButton={assistantButton} onShare={() => onShare(key, belt.version, belt.name)} onUpdateAll={updateAll}
         onStartTask={() => setSheetOpen(true)} onPause={setPaused} onAfk={setAfk} onArchive={setArchived} onCopy={copy}
         onDiscard={discard} onSave={requestSave}

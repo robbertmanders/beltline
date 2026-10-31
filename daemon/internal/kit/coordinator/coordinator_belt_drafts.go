@@ -188,15 +188,16 @@ func (c *Coordinator) draftActionsNow(draft core.Belt) []core.BeltAction {
 		archived, paused, shadow = record.Archived, record.Paused, record.ShadowTest() != nil
 	}
 	return core.BeltAvailabilityActions(core.BeltActionContext{
-		Saved:            draft.Version > 0,
-		Archived:         archived,
-		Paused:           paused,
-		Warnings:         c.library.Warnings(draft),
-		OutdatedStages:   c.outdatedStageCount(draft),
-		HasManualTrigger: draft.HasManualTrigger(),
-		Dirty:            true,
-		SharedRepository: c.hasSharedLibraryRepository(),
-		Shadow:           shadow,
+		Saved:              draft.Version > 0,
+		Archived:           archived,
+		Paused:             paused,
+		Warnings:           c.library.Warnings(draft),
+		OutdatedStages:     c.outdatedStageCount(draft),
+		HasManualTrigger:   draft.HasManualTrigger(),
+		Dirty:              true,
+		SharedRepository:   c.hasSharedLibraryRepository(),
+		Shadow:             shadow,
+		ShadowTestsEnabled: c.settings.EnableShadowTests,
 	})
 }
 

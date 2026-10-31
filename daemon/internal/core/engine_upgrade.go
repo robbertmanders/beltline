@@ -14,8 +14,9 @@ import (
 // stage keys, and belt states with a cursor per schedule entry (1); a first
 // approval that asked for a prompt made a prompt stage, on belts and runs (2);
 // and every agent version a belt or run pins saved in agents/, and the examples
-// library repository listed in the settings (3).
-const UpgradeFormatVersion = 3
+// library repository listed in the settings (3); and the shadow test switch in
+// the settings, on when a belt has a test running (4).
+const UpgradeFormatVersion = 4
 
 // UpgradeSampleAgent is the agent an older data folder pinned without saving it:
 // earlier versions of the app read a built-in agent at the version they shipped

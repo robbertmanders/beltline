@@ -53,11 +53,14 @@ type Settings struct {
 	Afk core.AfkSettings `json:"afk"`
 	// ShowInsights is whether the navigation lists the Insights page.
 	ShowInsights bool `json:"showInsights"`
+	// EnableShadowTests is whether a belt may start a shadow test. It is off until you turn
+	// it on; turning it off waits until no test runs.
+	EnableShadowTests bool `json:"enableShadowTests"`
 }
 
 // DefaultSettings is the default settings: an
 // empty login, notifications on, no library repositories, the Pi backend and
-// nothing paused, allowed or cataloged, and the Insights page hidden.
+// nothing paused, allowed or cataloged, and the Insights page and shadow tests off.
 func DefaultSettings() Settings {
 	return Settings{
 		Notifications:        true,
@@ -88,13 +91,14 @@ type settingsFields struct {
 	ModelCatalogs         json.RawMessage `json:"modelCatalogs,omitzero"`
 	Afk                   json.RawMessage `json:"afk,omitzero"`
 	ShowInsights          json.RawMessage `json:"showInsights,omitzero"`
+	EnableShadowTests     json.RawMessage `json:"enableShadowTests,omitzero"`
 }
 
 // UnmarshalJSON reads settings with fallbacks. Login, notifications,
 // paused and pausedAt use decodeIfPresent with their
 // defaults, so a field of the wrong type fails the whole file. The backend,
-// model, thinking, pauses, permissions, catalogs, AFK settings and Insights switch
-// use try?, so a bad one falls back alone. The permissions and the catalogs
+// model, thinking, pauses, permissions, catalogs, AFK settings and the Insights and
+// shadow test switches use try?, so a bad one falls back alone. The permissions and the catalogs
 // are one try? over the whole dictionary: one bad entry drops all of them. The
 // library repositories are decoded entry by entry, so one bad entry drops alone.
 func (s *Settings) UnmarshalJSON(data []byte) error {
@@ -130,6 +134,8 @@ func (s *Settings) UnmarshalJSON(data []byte) error {
 	next.Afk = tryDecode(raw.Afk, core.DefaultAfkSettings())
 	// Insights is off until you turn it on, also in a settings.json written before the switch existed.
 	next.ShowInsights = tryDecode(raw.ShowInsights, false)
+	// Shadow tests are off until you turn them on, also in a settings.json written before the switch existed.
+	next.EnableShadowTests = tryDecode(raw.EnableShadowTests, false)
 	*s = next
 	return nil
 }
@@ -201,6 +207,7 @@ type settingsFile struct {
 	ModelCatalogs         map[string]core.ModelCatalogSnapshot `json:"modelCatalogs"`
 	Afk                   core.AfkSettings                     `json:"afk"`
 	ShowInsights          bool                                 `json:"showInsights"`
+	EnableShadowTests     bool                                 `json:"enableShadowTests"`
 }
 
 // MarshalJSON writes the settings with every set as a sorted array, so the output is stable.
@@ -219,6 +226,7 @@ func (s Settings) MarshalJSON() ([]byte, error) {
 		ModelCatalogs:         nonNilCatalogs(s.ModelCatalogs),
 		Afk:                   s.Afk,
 		ShowInsights:          s.ShowInsights,
+		EnableShadowTests:     s.EnableShadowTests,
 	})
 }
 

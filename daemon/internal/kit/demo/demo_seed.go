@@ -217,8 +217,9 @@ func seedSettings(storage store.Storage, now time.Time, env func(string) string)
 	settings := store.DefaultSettings()
 	settings.Login = "you"
 	settings.Notifications = false
-	// The demo shows every page, Insights included.
+	// The demo shows every page, Insights and shadow tests included.
 	settings.ShowInsights = true
+	settings.EnableShadowTests = true
 	settings.LibraryRepositories = []core.LibraryRepository{
 		{Repository: demoSharedRepository, Role: core.LibraryRoleShared, Publish: core.LibraryPublishPush},
 		{Repository: demoBackupRepository, Role: core.LibraryRoleBackup, Publish: core.LibraryPublishPullRequest},

@@ -51,5 +51,5 @@ func SettingsResponseFor(ctx context.Context, c *coordinator.Coordinator, saved 
 	root := c.Paths().Root
 	parent := demo.DemoRootParent(os.Getenv, os.TempDir())
 	isDemo := strings.HasPrefix(root, parent+"/")
-	return api.NewSettingsResponse(settings, root, isDemo)
+	return api.NewSettingsResponse(settings, c.ShadowTestsToggle(), root, isDemo)
 }

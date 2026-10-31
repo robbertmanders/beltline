@@ -28,7 +28,7 @@ function AppearanceControl() {
   </div>;
 }
 
-/** Notify me and Show Insights are the daemon's confirmed settings; each checkbox shows one and saves each change through the settings patch. */
+/** Notify me is the daemon's confirmed setting; the checkbox shows it and saves each change through the settings patch. */
 function GeneralCard({ settings }: { settings: SettingsResponse }) {
   const command = useCommand();
   return <section className="settings-card" aria-label="General">
@@ -36,8 +36,27 @@ function GeneralCard({ settings }: { settings: SettingsResponse }) {
     <AppearanceControl />
     <label className="afk-toggle"><input type="checkbox" checked={settings.notifications} onChange={event => command.submit(settingsPatchRequest({ notifications: event.currentTarget.checked }))} />Notify me when a run needs me</label>
     <p className="muted-line">Send macOS notifications when a run needs you.</p>
+    {command.error ? <ErrorProblems error={command.error} /> : null}
+  </section>;
+}
+
+/**
+ * The experimental features, each its own switch: Show the Insights page and Enable shadow tests. Both are the
+ * daemon's confirmed settings, saved one at a time through the settings patch. The daemon says whether shadow
+ * tests may be turned off now; while a test runs the switch stays on and disabled, with its reason.
+ */
+function ExperimentalCard({ settings }: { settings: SettingsResponse }) {
+  const command = useCommand();
+  const shadowLocked = settings.enableShadowTests && !settings.shadowTestsToggle.enabled;
+  return <section className="settings-card" aria-label="Experimental">
+    <p className="paper-tag paper-tag--strong">Experimental</p>
+    <p className="muted-line">Both features are experimental: their figures, layout and controls may still change.</p>
     <label className="afk-toggle"><input type="checkbox" checked={settings.showInsights} onChange={event => command.submit(settingsPatchRequest({ showInsights: event.currentTarget.checked }))} />Show the Insights page</label>
-    <p className="muted-line">List Insights in the navigation, with each belt's first-try rate, time and cost. Insights is experimental: its figures and layout may still change.</p>
+    <p className="muted-line">List Insights in the navigation, with each belt's first-try rate, time and cost.</p>
+    <label className="afk-toggle"><input type="checkbox" checked={settings.enableShadowTests} disabled={command.pending || shadowLocked}
+      onChange={event => command.submit(settingsPatchRequest({ enableShadowTests: event.currentTarget.checked }))} />Enable shadow tests</label>
+    <p className="muted-line">Try a changed belt beside its live version. Accept or discard every running shadow test before turning this off.</p>
+    {shadowLocked && settings.shadowTestsToggle.reason ? <p className="muted-line" role="note">{settings.shadowTestsToggle.reason}</p> : null}
     {command.error ? <ErrorProblems error={command.error} /> : null}
   </section>;
 }
@@ -114,6 +133,7 @@ export function SettingsPage() {
     {settings.data && <>
       <AllowedModelsCard />
       <GeneralCard settings={settings.data} />
+      <ExperimentalCard settings={settings.data} />
       <DataCard settings={settings.data} />
       <QuitCard />
       <LibraryRepositoriesCard settings={settings.data} />

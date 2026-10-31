@@ -6,7 +6,7 @@ nav_order: 10
 # Insights
 {: .no_toc }
 
-Insights shows how well your belts work: how often a stage gets it right the first time, how long it takes and what it costs, and how that changes as you change the belt. Turn it on with **Show the Insights page** in **Settings → General**.
+Insights shows how well your belts work: how often a stage gets it right the first time, how long it takes and what it costs, and how that changes as you change the belt. Turn it on with **Show the Insights page** in **Settings → Experimental**.
 {: .lead }
 
 {: .note }

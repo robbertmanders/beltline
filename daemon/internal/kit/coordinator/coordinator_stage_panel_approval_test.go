@@ -12,7 +12,7 @@ func TestAPromptStageTakesItsSourceFromTheDecisionOrTheStage(t *testing.T) {
 	for _, source := range []*core.SourceSharing{nil, new(core.SourceSharingWithheld), new(core.SourceSharingShared)} {
 		t.Run(string(core.ValueOr(source, "stage default")), func(t *testing.T) {
 			t.Parallel()
-			h := newHarness(t, harnessOptions{})
+			h := newHarness(t, harnessOptions{Issues: []core.Subject{}})
 			c := h.Coord()
 			belt := core.SampleBelt([]string{"acme/billing"}, "agent", core.SampleAgents(), true)
 			prompt := core.DefaultsStage(core.StageTypePrompt, nil, belt.Stages, belt.Stages)

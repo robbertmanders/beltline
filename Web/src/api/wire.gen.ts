@@ -2056,6 +2056,11 @@ export interface SessionsViewTerminal {
   continued: boolean;
 }
 
+export interface SettingAvailability {
+  enabled: boolean;
+  reason?: string;
+}
+
 export interface SettingsResponse {
   login: string;
   notifications: boolean;
@@ -2070,6 +2075,8 @@ export interface SettingsResponse {
   modelCatalogs: Record<string, ModelCatalogSnapshot>;
   afk: AfkSettings;
   showInsights: boolean;
+  enableShadowTests: boolean;
+  shadowTestsToggle: SettingAvailability;
   dataLocation: string;
   demo: boolean;
 }

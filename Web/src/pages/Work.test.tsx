@@ -14,10 +14,10 @@ const workPath = "/api/v1/views/work";
 type WorkBody = Record<string, unknown> & { mainGroups: Array<Record<string, unknown>>; watchingGroups: Array<Record<string, unknown>> };
 const workGolden = (): WorkBody => JSON.parse(goldenText("views-work.json")) as WorkBody;
 
-/** The Work daemon: each query is answered by `answer`, which gets the call number; the queries it received are listed. */
-function workDaemon(answer: (call: number) => Response | Promise<Response>) {
+/** The Work daemon: each query is answered by `answer`, which gets the call number; the queries it received are listed. `extra` adds routes. */
+function workDaemon(answer: (call: number) => Response | Promise<Response>, extra: Record<string, Handler> = {}) {
   let calls = 0;
-  const daemon = stubDaemon({ [workPath]: (() => { calls += 1; return answer(calls); }) as Handler });
+  const daemon = stubDaemon({ [workPath]: (() => { calls += 1; return answer(calls); }) as Handler, ...extra });
   return { ...daemon, queries: () => daemon.requests.filter(request => request.path.startsWith(workPath)).map(request => request.path) };
 }
 
@@ -76,6 +76,23 @@ describe("Work page", () => {
     expect(shadow.length).toBeGreaterThan(0);
     for (const row of shadow) {
       expect(document.querySelector(`tr[data-run-id='${row.run.id}'] .work-shadow-chip`)?.textContent).toBe(row.shadow);
+    }
+  });
+
+  it("keeps the shadow section, its chips and each run's link to its run page with shadow tests off", async () => {
+    const body = workGolden();
+    const shadow = (body.shadowGroups as Array<{ rows: Array<{ run: { id: string }; shadow?: string }> }>).flatMap(group => group.rows);
+    workDaemon(() => json(JSON.stringify(body)), {
+      "/api/v1/settings": () => json({ ...JSON.parse(goldenText("settings.json")), enableShadowTests: false })
+    });
+    renderWork();
+    await answered();
+    expect(headingNames().some(name => name?.startsWith("Shadow · "))).toBe(true);
+    expect(shadow.length).toBeGreaterThan(0);
+    for (const row of shadow) {
+      const line = document.querySelector(`tr[data-run-id='${row.run.id}']`);
+      expect(line?.querySelector(".work-shadow-chip")?.textContent).toBe(row.shadow);
+      expect(line?.querySelector("a")?.getAttribute("href")).toBe(`/runs/${encodeURIComponent(row.run.id)}`);
     }
   });
 

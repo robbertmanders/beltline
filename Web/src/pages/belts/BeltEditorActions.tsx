@@ -16,6 +16,8 @@ export interface BeltEditorActionsProps {
   /** The stages whose agent has a newer version; the Update offer reads the count. */
   outdated: number;
   saveGate: Gate;
+  /** A new shadow's start, which the daemon may refuse: a refused start stays on the belt header, with its reason, before any edit. */
+  startGate?: Gate;
   shareGate: Gate;
   saving: boolean;
   /** The gate for a belt action by its daemon id; with no id it gates on the connection and a running command alone. */
@@ -39,7 +41,7 @@ export interface BeltEditorActionsProps {
 }
 
 /** The belt header's action buttons. Their gates and labels come from the daemon; this only decides which are shown. */
-export function BeltEditorActions({ belt, snapshot, archived, paused, editing, outdated, saveGate, shareGate, saving, actionGate, assistantButton, onShare, onUpdateAll, onStartTask, onPause, onAfk, onArchive, onCopy, onDiscard, onSave,
+export function BeltEditorActions({ belt, snapshot, archived, paused, editing, outdated, saveGate, startGate, shareGate, saving, actionGate, assistantButton, onShare, onUpdateAll, onStartTask, onPause, onAfk, onArchive, onCopy, onDiscard, onSave,
   shadowMode = false, saveLabel = "Save", onCreateShadow, onDecideShadow }: BeltEditorActionsProps) {
   const manual = snapshot ? manualEntries(snapshot.belt) : [];
   // The AFK button's on-state, label and next mode come from the daemon's belt resource.
@@ -49,6 +51,8 @@ export function BeltEditorActions({ belt, snapshot, archived, paused, editing, o
 
   const live = !shadowMode;
   const shadowRuns = snapshot?.shadow !== undefined;
+  // The daemon refuses the new shadow's start: its Start button stays, disabled with the reason, in place of Save.
+  const refusedStart = startGate !== undefined && !startGate.enabled;
   return <div className="belt-actions">
     {live && <ActionButton label="Share…" kind="slate" gate={shareGate} help="Preview and propose this saved belt version" onClick={onShare} />}
     {snapshot && !archived && outdated > 0 && <ActionButton label={outdated === 1 ? "Update 1 stage" : `Update all ${outdated} stages`} gate={actionGate("update-all-stages")}
@@ -68,7 +72,8 @@ export function BeltEditorActions({ belt, snapshot, archived, paused, editing, o
       <ActionButton label="Accept shadow…" kind="shadow-primary" gate={actionGate("shadow-accept")} help="Make the shadow the live version and end the test." onClick={() => onDecideShadow("accept")} />
     </>}
     {editing && <ActionButton label="Discard" gate={{ enabled: true, reason: null }} onClick={onDiscard} />}
-    {editing && saveGate.enabled && <ActionButton label={saving ? "Saving…" : saveLabel} kind={shadowMode ? "shadow-primary" : "primary"} gate={saveGate} onClick={onSave} />}
+    {editing && saveGate.enabled && !refusedStart && <ActionButton label={saving ? "Saving…" : saveLabel} kind={shadowMode ? "shadow-primary" : "primary"} gate={saveGate} onClick={onSave} />}
+    {refusedStart && <ActionButton label={saveLabel} kind="shadow-primary" gate={startGate} onClick={onSave} />}
     {assistantButton}
   </div>;
 }

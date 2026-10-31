@@ -118,7 +118,21 @@ describe("route shell and placeholders", () => {
     daemonFor({ "/api/v1/settings": () => json({ ...JSON.parse(goldenText("settings.json")), showInsights: false }) });
     renderPage("/insights");
     expect(await screen.findByRole("heading", { name: "Insights is turned off" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Settings → General" }).getAttribute("href")).toBe("/settings");
+    expect(screen.getByRole("link", { name: "Settings → Experimental" }).getAttribute("href")).toBe("/settings");
+  });
+
+  it.each([[true, false], [false, true]])("gates Insights on its own switch, not shadow tests (Insights %s, shadow tests %s)", async (showInsights, enableShadowTests) => {
+    daemonFor({ "/api/v1/settings": () => json({ ...JSON.parse(goldenText("settings.json")), showInsights, enableShadowTests }) });
+    renderPage("/overview");
+    const nav = await screen.findByRole("navigation", { name: "Primary navigation" });
+    await waitFor(() => expect(within(nav).queryByRole("link", { name: /^Insights/ }) !== null).toBe(showInsights));
+  });
+
+  it("opens Insights by its direct route when its own switch is on, whatever shadow tests are set to", async () => {
+    daemonFor({ "/api/v1/settings": () => json({ ...JSON.parse(goldenText("settings.json")), showInsights: true, enableShadowTests: false }) });
+    renderPage("/insights");
+    expect(await screen.findByRole("heading", { level: 1, name: "Insights" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Insights is turned off" })).toBeNull();
   });
 
   it.each([true, false])("shows the changed-since-backup mark only when the daemon says the library changed (%s)", async changedSinceBackup => {

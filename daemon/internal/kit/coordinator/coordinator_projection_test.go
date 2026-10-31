@@ -7,6 +7,7 @@ package coordinator
 import (
 	"context"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -287,5 +288,52 @@ func TestProjectionOfAStartedCoordinatorMatchesItsBaseline(t *testing.T) {
 	_ = h.coord.Pause()
 	if got := h.Changes(); len(got) != 0 {
 		t.Fatalf("reads reported changes: %v", got)
+	}
+}
+
+// TestShadowTestsAndTheSwitchChangeTheResourcesTheyGate: starting and ending a test changes the library, on
+// which the settings' switch availability depends, and a switch change changes the belt's actions and revision.
+func TestShadowTestsAndTheSwitchChangeTheResourcesTheyGate(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t, harnessOptions{Issues: []core.Subject{}, Belts: []core.Belt{manualBelt("tasks")}})
+	c := h.Coord()
+	c.Hold()
+	defer func() { c.Release(); c.Idle() }()
+
+	h.ClearChanges()
+	if _, err := c.ApplySettingsPatch(SettingsPatch{EnableShadowTests: new(true)}); err != nil {
+		t.Fatal(err)
+	}
+	if got := h.Changes(); !reflect.DeepEqual(got, [][]Resource{sortedResources(ResourceSettings)}) {
+		t.Fatalf("enabling the switch changed %v", got)
+	}
+	record := *c.ReadBelt("tasks")
+	before := c.BeltResourceContext(record, false)
+	startShadowTest(t, c, "tasks")
+	record = *c.ReadBelt("tasks")
+	if got := h.Changes(); !slices.Contains(got[len(got)-1], ResourceLibrary) {
+		t.Fatalf("starting a test changed %v, not the library", got)
+	}
+	started := c.BeltResourceContext(record, false)
+	if started.Revision == before.Revision {
+		t.Fatal("starting a test kept the belt's revision")
+	}
+	if _, err := c.AcceptShadowCommand("tasks"); err != nil {
+		t.Fatal(err)
+	}
+	if got := h.Changes(); !slices.Contains(got[len(got)-1], ResourceLibrary) {
+		t.Fatalf("ending a test changed %v, not the library", got)
+	}
+
+	h.ClearChanges()
+	if _, err := c.ApplySettingsPatch(SettingsPatch{EnableShadowTests: new(false)}); err != nil {
+		t.Fatal(err)
+	}
+	record = *c.ReadBelt("tasks")
+	if got := c.BeltResourceContext(record, false); got.Revision == started.Revision {
+		t.Fatal("turning the switch off kept the belt's revision")
+	}
+	if !reflect.DeepEqual(h.Changes(), [][]Resource{sortedResources(ResourceSettings)}) {
+		t.Fatalf("turning the switch off changed %v", h.Changes())
 	}
 }

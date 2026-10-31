@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
+	"github.com/robbertmanders/beltline/daemon/internal/kit/coordinator"
 	"github.com/robbertmanders/beltline/daemon/internal/server/api"
 )
 
@@ -135,6 +136,11 @@ func beltCommandReplies(t testing.TB) (*Fixture, map[string]Reply) {
 	post("beltArchive", "/api/v1/belts/contract-draft/archive", nil)
 	post("beltUnarchive", "/api/v1/belts/contract-draft/unarchive", nil)
 	post("beltPause", "/api/v1/belts/contract-draft/pause", contractBody(t, api.BeltPauseRequest{Paused: true}))
+	// Shadow tests are off until Settings turns them on.
+	enabled := true
+	if _, err := g.Coordinator.ApplySettingsPatch(coordinator.SettingsPatch{EnableShadowTests: &enabled}); err != nil {
+		t.Fatalf("enable shadow tests: %v", err)
+	}
 	// A newer Build version makes the saved draft's pin outdated.
 	record := g.Coordinator.LatestAgent("build")
 	if record == nil {

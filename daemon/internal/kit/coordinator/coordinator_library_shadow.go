@@ -9,6 +9,18 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
 
+// ShadowTestRunning reports whether any belt has a shadow test that has not ended, whether the
+// belt is live, paused or archived.
+// Lock: runs with c.mu held.
+func (l *Library) ShadowTestRunning() bool {
+	for _, record := range l.belts {
+		if record.ShadowTest() != nil {
+			return true
+		}
+	}
+	return false
+}
+
 // SaveShadow saves draft as the belt's next shadow version, starting a test when
 // none runs. The shadow keeps live's triggers, base and repository bases.
 // Lock: runs with c.mu held.

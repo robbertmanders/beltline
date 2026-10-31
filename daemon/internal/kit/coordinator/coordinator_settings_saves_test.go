@@ -55,6 +55,32 @@ func TestPartialPatchTrimsRepositoriesSavesAndSurvivesRecreation(t *testing.T) {
 	}
 }
 
+// TestExperimentalSwitchesSurviveRecreation: the Insights and shadow test choices are saved apart, and a
+// recreated coordinator reads each one back as the user left it.
+func TestExperimentalSwitchesSurviveRecreation(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t, harnessOptions{})
+	c := h.Coord()
+	if _, err := c.ApplySettingsPatch(SettingsPatch{ShowInsights: new(true)}); err != nil {
+		t.Fatalf("show Insights: %v", err)
+	}
+	saved, err := c.ApplySettingsPatch(SettingsPatch{EnableShadowTests: new(true)})
+	if err != nil || !saved.ShowInsights || !saved.EnableShadowTests {
+		t.Fatalf("enable shadow tests: %+v, %v", saved, err)
+	}
+	recreated := coordinatorOn(t, h.storage)
+	if got := recreated.ReadSettings(); !got.ShowInsights || !got.EnableShadowTests {
+		t.Fatalf("recreated switches: Insights %v, shadow tests %v", got.ShowInsights, got.EnableShadowTests)
+	}
+	if _, err := recreated.ApplySettingsPatch(SettingsPatch{ShowInsights: new(false)}); err != nil {
+		t.Fatal(err)
+	}
+	again := coordinatorOn(t, h.storage)
+	if got := again.ReadSettings(); got.ShowInsights || !got.EnableShadowTests {
+		t.Fatalf("hiding Insights changed shadow tests: Insights %v, shadow tests %v", got.ShowInsights, got.EnableShadowTests)
+	}
+}
+
 // TestInvalidCandidatesNeverPartiallyWriteAndLimitsStopAtOneAndTen: a refused patch writes nothing, even when
 // part of it is valid, and the AFK limit accepts exactly one to ten.
 func TestInvalidCandidatesNeverPartiallyWriteAndLimitsStopAtOneAndTen(t *testing.T) {

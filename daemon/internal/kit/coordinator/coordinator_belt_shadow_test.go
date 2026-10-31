@@ -15,6 +15,9 @@ func TestShadowTestSplitsNewRunsAndEndsOnAcceptOrDiscard(t *testing.T) {
 	t.Parallel()
 	h := newHarness(t, harnessOptions{Issues: []core.Subject{}, Belts: []core.Belt{manualBelt("tasks")}})
 	c := h.coord
+	if _, err := c.ApplySettingsPatch(SettingsPatch{EnableShadowTests: new(true)}); err != nil {
+		t.Fatalf("enable shadow tests: %v", err)
+	}
 	c.Hold()
 	defer func() { c.Release(); c.Idle() }()
 
@@ -96,4 +99,71 @@ func TestShadowTestSplitsNewRunsAndEndsOnAcceptOrDiscard(t *testing.T) {
 	if record.ShadowTest() != nil || record.Belt.Version != live.Version+2 || len(record.ShadowTests) != 2 || record.ShadowTests[1].Result != core.ShadowResultDiscarded {
 		t.Fatalf("after discard v%d %+v", record.Belt.Version, record.ShadowTests)
 	}
+}
+
+// TestShadowTestsStartOnlyWhileSettingsEnableThem checks a shadow test cannot start while Settings keeps
+// shadow tests off, whether asked directly, by a stale read or from an open draft, and that enabling
+// them restores creation. A refused start stores neither a test nor a shadow version.
+func TestShadowTestsStartOnlyWhileSettingsEnableThem(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t, harnessOptions{Issues: []core.Subject{}, Belts: []core.Belt{manualBelt("tasks")}})
+	c := h.coord
+	c.Hold()
+	defer func() { c.Release(); c.Idle() }()
+
+	live := c.ReadBelt("tasks").Belt
+	draft := live.Clone()
+	draft.Stages[0].Name = "Shadow triage"
+	draft.Triggers = nil
+	const reason = core.BeltAvailabilityShadowTestsOff
+	if refusal := c.BeltCommandRefusal(core.BeltCommandShadowCreate, "tasks", false); refusal == nil || *refusal != reason {
+		t.Fatalf("create while off: %v", refusal)
+	}
+	if actions := c.DraftActions(draft); !beltActionDisabled(actions, core.BeltCommandShadowCreate, reason) {
+		t.Fatalf("an open draft may start a test while off: %+v", actions)
+	}
+	if _, err := c.SaveShadowCommand(draft); err == nil || err.Error() != reason {
+		t.Fatalf("save a shadow while off: %v", err)
+	}
+	if record := c.ReadBelt("tasks"); record.ShadowTest() != nil || record.Shadow != nil || len(record.ShadowTests) != 0 {
+		t.Fatalf("a refused start stored a test: %+v", record.ShadowTests)
+	}
+
+	if _, err := c.ApplySettingsPatch(SettingsPatch{EnableShadowTests: new(true)}); err != nil {
+		t.Fatalf("enable shadow tests: %v", err)
+	}
+	if refusal := c.BeltCommandRefusal(core.BeltCommandShadowCreate, "tasks", false); refusal != nil {
+		t.Fatalf("create after enabling: %v", *refusal)
+	}
+	if record, err := c.SaveShadowCommand(draft); err != nil || record.ShadowTest() == nil {
+		t.Fatalf("start after enabling: %v", err)
+	}
+	if _, err := c.DiscardShadowCommand("tasks"); err != nil {
+		t.Fatal(err)
+	}
+
+	// A create read while enabled is refused once the switch is off again, with the same reason.
+	enabled := c.DraftActions(draft)
+	if _, err := c.ApplySettingsPatch(SettingsPatch{EnableShadowTests: new(false)}); err != nil {
+		t.Fatalf("turn shadow tests off with none running: %v", err)
+	}
+	if !beltActionDisabled(c.DraftActions(draft), core.BeltCommandShadowCreate, reason) || beltActionDisabled(enabled, core.BeltCommandShadowCreate, reason) {
+		t.Fatal("the create action did not follow the switch")
+	}
+	if _, err := c.SaveShadowCommand(draft); err == nil || err.Error() != reason {
+		t.Fatalf("a stale start after turning it off: %v", err)
+	}
+	if got := len(c.ReadBelt("tasks").ShadowTests); got != 1 {
+		t.Fatalf("a refused start stored tests: %d", got)
+	}
+}
+
+// beltActionDisabled reports whether actions has command disabled with reason.
+func beltActionDisabled(actions []core.BeltAction, command core.BeltCommand, reason string) bool {
+	for _, action := range actions {
+		if action.ID == string(command) {
+			return !action.Enabled && action.Reason != nil && *action.Reason == reason
+		}
+	}
+	return false
 }
