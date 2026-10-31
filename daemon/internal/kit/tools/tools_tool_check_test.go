@@ -82,6 +82,9 @@ func TestRowsKeepTheSettingsOrderAndOptionalMeanings(t *testing.T) {
 	if !strings.HasPrefix(rowNamed(rows, "Cursor CLI").Detail, "not installed") {
 		t.Errorf("cursor detail = %q", rowNamed(rows, "Cursor CLI").Detail)
 	}
+	if got := rowNamed(rows, "Pi").Detail; got != "not installed: npm install -g --ignore-scripts @earendil-works/pi-coding-agent" {
+		t.Errorf("pi detail = %q", got)
+	}
 	if last := rows[len(rows)-1]; last.Detail != "not installed" {
 		t.Errorf("ghostty detail = %q", last.Detail)
 	}

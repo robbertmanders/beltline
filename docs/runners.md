@@ -19,7 +19,7 @@ An agent stage runs one of these command-line agents (the stage's *harness*) in 
 | Codex CLI | `codex` | `BELTLINE_CODEX` |
 | Copilot CLI | `copilot` | `BELTLINE_COPILOT` |
 | Cursor CLI | `cursor-agent` (from [cursor.com/install](https://cursor.com/install), signed in with `cursor-agent login`) | `BELTLINE_CURSOR` |
-| Pi | `pi` | `BELTLINE_PI` |
+| Pi | `pi` (from the [official installation guide](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/README.md#getting-started)) | `BELTLINE_PI` |
 
 {: .warning }
 Every runner starts with its approval prompts turned off, so a stage never stalls on a prompt. Read the [security model](security.md) before you point a belt at text other people can write.
