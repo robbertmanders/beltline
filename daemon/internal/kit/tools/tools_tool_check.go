@@ -60,6 +60,15 @@ func installHint(goos, tool string) string {
 	return "not installed: install " + tool + " with your package manager"
 }
 
+// acliInstallHint is the advice a missing acli gets on goos: the Homebrew tap on macOS,
+// Atlassian's install page elsewhere.
+func acliInstallHint(goos string) string {
+	if goos == "darwin" {
+		return "not installed: brew tap atlassian/homebrew-acli && brew install acli"
+	}
+	return "not installed: see https://developer.atlassian.com/cloud/acli/guides/install-acli/"
+}
+
 // Fixtures are the fixture rows demo mode reports, without inspecting
 // anything installed: each tool named, ok, detailed as a fixture.
 func Fixtures() []Result {
@@ -141,7 +150,7 @@ func Run(ctx context.Context, sh shell.Runner, ghostty GhosttyProbe) []Result {
 			}
 		}
 	case acli.Status == 127:
-		acliDetail = "not installed: brew tap atlassian/homebrew-acli && brew install acli"
+		acliDetail = acliInstallHint(runtime.GOOS)
 	}
 
 	// Beltline needs one agent CLI, not each: once one is found the others are
