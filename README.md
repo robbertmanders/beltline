@@ -1,0 +1,1 @@
+Snapshots for Beltline pull requests.
