@@ -241,9 +241,10 @@ describe("Experimental settings", () => {
     expect(daemon.posts("/settings/patch")[0]!.body).toEqual({ showInsights: false });
   });
 
-  it("saves each switch as its own exact patch and shows the confirmed value", async () => {
+  it("saves each switch as its own exact patch, and the confirmed values survive a reload", async () => {
     const user = userEvent.setup();
-    const daemon = await renderSettings(switchRoutes({ showInsights: false, enableShadowTests: false, shadowTestsToggle: { enabled: true } }));
+    const routes = switchRoutes({ showInsights: false, enableShadowTests: false, shadowTestsToggle: { enabled: true } });
+    const daemon = await renderSettings(routes);
     expect(insightsCheckbox().checked).toBe(false);
     expect(shadowCheckbox().checked).toBe(false);
     expect(shadowCheckbox().disabled).toBe(false);
@@ -257,16 +258,48 @@ describe("Experimental settings", () => {
     await waitFor(() => expect(shadowCheckbox().checked).toBe(true));
     expect(daemon.posts("/settings/patch")[1]!.body).toEqual({ enableShadowTests: true });
     expect(insightsCheckbox().checked).toBe(true);
+    cleanup();
+
+    const reloaded = await renderSettings(routes);
+    expect(insightsCheckbox().checked).toBe(true);
+    expect(shadowCheckbox().checked).toBe(true);
+    expect(reloaded.posts("/settings/patch")).toHaveLength(0);
   });
 
-  it("shows a refused switch inline and keeps the confirmed value", async () => {
+  it("shows a refused Insights switch inline, leaves Enable shadow tests as it was, and keeps the confirmed value after a reload", async () => {
     const user = userEvent.setup();
-    await renderSettings(switchRoutes({ showInsights: false, enableShadowTests: false, shadowTestsToggle: { enabled: true } },
+    const initial = { showInsights: false, enableShadowTests: false, shadowTestsToggle: { enabled: true } };
+    const daemon = await renderSettings(switchRoutes(initial,
+      () => json({ message: "Insights could not be saved.", problems: ["The daemon refused the Insights switch."] }, 422)));
+    await user.click(insightsCheckbox());
+    expect(await screen.findByText("Insights could not be saved.")).toBeTruthy();
+    expect(screen.getByText("The daemon refused the Insights switch.")).toBeTruthy();
+    expect(daemon.posts("/settings/patch")[0]!.body).toEqual({ showInsights: true });
+    expect(insightsCheckbox().checked).toBe(false);
+    expect(shadowCheckbox().checked).toBe(false);
+    cleanup();
+
+    await renderSettings(switchRoutes(initial));
+    expect(insightsCheckbox().checked).toBe(false);
+    expect(shadowCheckbox().checked).toBe(false);
+  });
+
+  it("shows a refused shadow-switch turn-off inline, keeps the switch on, and keeps it on after a reload", async () => {
+    const user = userEvent.setup();
+    const initial = { showInsights: false, enableShadowTests: true, shadowTestsToggle: { enabled: true } };
+    const daemon = await renderSettings(switchRoutes(initial,
       () => json({ message: "Shadow tests cannot start.", problems: [lockedReason] }, 422)));
     await user.click(shadowCheckbox());
     expect(await screen.findByText("Shadow tests cannot start.")).toBeTruthy();
     expect(screen.getByText(lockedReason)).toBeTruthy();
-    expect(shadowCheckbox().checked).toBe(false);
+    expect(daemon.posts("/settings/patch")[0]!.body).toEqual({ enableShadowTests: false });
+    expect(shadowCheckbox().checked).toBe(true);
+    expect(insightsCheckbox().checked).toBe(false);
+    cleanup();
+
+    await renderSettings(switchRoutes(initial));
+    expect(shadowCheckbox().checked).toBe(true);
+    expect(insightsCheckbox().checked).toBe(false);
   });
 
   it("unlocks Enable shadow tests when the last test ends, leaving it checked", async () => {

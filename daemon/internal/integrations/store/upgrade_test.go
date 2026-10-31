@@ -244,12 +244,17 @@ func TestUpgradeListsTheExamplesRepositoryOnce(t *testing.T) {
 }
 
 // upgradeShadowFolder is a format 3 folder with one belt and its state: the belt's
-// shadow test is recorded as given, and the belt is paused and archived when asked. It returns the belt's id.
+// shadow test is recorded as given, the belt is paused and archived when asked, and the
+// test's shadow version (v2) is saved beside the live one, as the app saves it. It returns the belt's id.
 func upgradeShadowFolder(t *testing.T, test core.ShadowTest, paused, archived bool) (Storage, string) {
 	t.Helper()
 	s := newTestStorage(t)
 	belt := core.SampleBelt([]string{"acme/app"}, "tasks", nil, true)
 	record := shadowRecord(t, s, belt)
+	_, record, err := s.SaveShadowVersion(belt, record)
+	if err != nil {
+		t.Fatal(err)
+	}
 	record.ShadowTests = []core.ShadowTest{test}
 	record.Paused, record.Archived = paused, archived
 	if err := s.SaveState(record); err != nil {
@@ -261,7 +266,7 @@ func upgradeShadowFolder(t *testing.T, test core.ShadowTest, paused, archived bo
 
 // TestUpgradeEnablesShadowTestsOnlyWhileATestRuns checks the switch an upgrade infers: on for a folder with a
 // running test, paused or archived belts included, and off for ended tests alone. It keeps the Insights switch,
-// leaves the belt, test and run records as they were, and does not infer it again.
+// leaves the belt, its live and shadow versions, its test and the run records as they were, and does not infer it again.
 func TestUpgradeEnablesShadowTestsOnlyWhileATestRuns(t *testing.T) {
 	t.Parallel()
 	running := core.ShadowTest{ID: "t1", Live: 1, Shadow: 2, StartedAt: jsonDate(1_700_000_000)}
@@ -293,6 +298,7 @@ func TestUpgradeEnablesShadowTestsOnlyWhileATestRuns(t *testing.T) {
 			}
 			beltState := fileText(t, filepath.Join(s.Paths.Belts(), id, "state.json"))
 			beltVersion := fileText(t, filepath.Join(s.Paths.Belts(), id, "v1.json"))
+			shadowVersion := fileText(t, filepath.Join(s.Paths.Belts(), id, "shadow", "v2.json"))
 
 			report, err := s.Upgrade(time.Date(2026, 10, 31, 9, 0, 0, 0, time.UTC))
 			if err != nil || !report.Ran || !report.Settings {
@@ -310,13 +316,18 @@ func TestUpgradeEnablesShadowTestsOnlyWhileATestRuns(t *testing.T) {
 				t.Fatalf("the run on the test lost its version or its test: %+v, %v", kept.Shadow, err)
 			}
 			if fileText(t, filepath.Join(s.Paths.Belts(), id, "state.json")) != beltState ||
-				fileText(t, filepath.Join(s.Paths.Belts(), id, "v1.json")) != beltVersion {
-				t.Fatal("the belt or its test records changed")
+				fileText(t, filepath.Join(s.Paths.Belts(), id, "v1.json")) != beltVersion ||
+				fileText(t, filepath.Join(s.Paths.Belts(), id, "shadow", "v2.json")) != shadowVersion {
+				t.Fatal("the belt, its live or shadow version, or its test records changed")
 			}
 
 			saved := fileText(t, s.Paths.Settings())
 			if again, err := s.Upgrade(time.Now()); err != nil || again.Ran || fileText(t, s.Paths.Settings()) != saved {
 				t.Fatalf("a second upgrade %+v %v changed the settings", again, err)
+			}
+			if fileText(t, filepath.Join(s.Paths.Belts(), id, "shadow", "v2.json")) != shadowVersion ||
+				fileText(t, filepath.Join(s.Paths.Belts(), id, "state.json")) != beltState {
+				t.Fatal("a second upgrade changed the shadow version or the test records")
 			}
 		})
 	}

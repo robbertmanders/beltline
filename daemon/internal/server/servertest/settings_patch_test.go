@@ -149,8 +149,14 @@ func TestShadowTestSwitchRefusesShadowsWhileOff(t *testing.T) {
 		t.Fatalf("settings with no test: %d %s", reply.Status, reply.Body)
 	}
 
-	if patch := postSettingsPatch(f, `{"enableShadowTests":true}`); patch.Status != 200 {
+	if patch := postSettingsPatch(f, `{"enableShadowTests":true}`); patch.Status != 200 || !strings.Contains(string(patch.Body), `"enableShadowTests":true`) {
 		t.Fatalf("enable: %d %s", patch.Status, patch.Body)
+	}
+	if !store.NewStorage(store.Paths{Root: f.Root}).LoadSettings().EnableShadowTests {
+		t.Fatal("the enabled switch was not saved")
+	}
+	if read := getSettings(f); read.Status != 200 || !strings.Contains(string(read.Body), `"enableShadowTests":true`) {
+		t.Fatalf("settings read after enabling: %d %s", read.Status, read.Body)
 	}
 	if started := f.Do(Request{Method: "POST", Path: "/api/v1/belts/contract-draft/shadow/save", Body: shadowBody, Token: ContractToken}); started.Status != 200 {
 		t.Fatalf("start a test once enabled: %d %s", started.Status, started.Body)
@@ -178,8 +184,50 @@ func TestShadowTestSwitchStaysOnWhileATestRuns(t *testing.T) {
 	if !store.NewStorage(store.Paths{Root: f.Root}).LoadSettings().EnableShadowTests {
 		t.Fatal("the saved switch changed on a refused patch")
 	}
-	if kept := postSettingsPatch(f, `{"enableShadowTests":true,"showInsights":true}`); kept.Status != 200 {
+	if kept := postSettingsPatch(f, `{"enableShadowTests":true,"showInsights":true}`); kept.Status != 200 || !strings.Contains(string(kept.Body), `"showInsights":true`) {
 		t.Fatalf("a true patch with a test running: %d %s", kept.Status, kept.Body)
+	}
+	if saved := store.NewStorage(store.Paths{Root: f.Root}).LoadSettings(); !saved.ShowInsights || !saved.EnableShadowTests {
+		t.Fatalf("the true patch was not saved: showInsights %v, enableShadowTests %v", saved.ShowInsights, saved.EnableShadowTests)
+	}
+}
+
+// TestExperimentalSwitchesPatchIndependently checks over HTTP that each experimental switch is saved on its own:
+// every patch answers with both values, the read agrees, the stored settings hold them, and the other switch
+// keeps its value. No test runs in the empty folder, so turning shadow tests off is allowed.
+func TestExperimentalSwitchesPatchIndependently(t *testing.T) {
+	t.Parallel()
+	f := Start(t, Options{Empty: true})
+	type switches struct {
+		ShowInsights      bool `json:"showInsights"`
+		EnableShadowTests bool `json:"enableShadowTests"`
+	}
+	steps := []struct {
+		body string
+		want switches
+	}{
+		{`{"showInsights":true}`, switches{ShowInsights: true}},
+		{`{"enableShadowTests":true}`, switches{ShowInsights: true, EnableShadowTests: true}},
+		{`{"showInsights":false}`, switches{EnableShadowTests: true}},
+		{`{"enableShadowTests":false}`, switches{}},
+	}
+	for _, step := range steps {
+		reply := postSettingsPatch(f, step.body)
+		if reply.Status != 200 {
+			t.Fatalf("patch %s: status %d %s", step.body, reply.Status, reply.Body)
+		}
+		var answered switches
+		if err := json.Unmarshal(reply.Body, &answered); err != nil || answered != step.want {
+			t.Fatalf("patch %s answered %+v (%v), want %+v", step.body, answered, err, step.want)
+		}
+		var read switches
+		if err := json.Unmarshal(getSettings(f).Body, &read); err != nil || read != step.want {
+			t.Fatalf("after patch %s the read is %+v (%v), want %+v", step.body, read, err, step.want)
+		}
+		saved := store.NewStorage(store.Paths{Root: f.Root}).LoadSettings()
+		if got := (switches{ShowInsights: saved.ShowInsights, EnableShadowTests: saved.EnableShadowTests}); got != step.want {
+			t.Fatalf("after patch %s the stored settings are %+v, want %+v", step.body, got, step.want)
+		}
 	}
 }
 
