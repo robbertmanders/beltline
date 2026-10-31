@@ -62,7 +62,7 @@ export type InsightsKpiID = (typeof insightsKpiIDValues)[number];
 export const insightsPeriodValues = ["7d", "30d", "90d", "all"] as const;
 export type InsightsPeriod = (typeof insightsPeriodValues)[number];
 
-export const libraryCardStatusToneValues = ["good", "grey", "need"] as const;
+export const libraryCardStatusToneValues = ["good", "grey", "need", "gold", "problem"] as const;
 export type LibraryCardStatusTone = (typeof libraryCardStatusToneValues)[number];
 
 export const libraryItemStateValues = ["available", "installed", "update", "conflict"] as const;
@@ -1143,9 +1143,21 @@ export interface LibraryAction {
   reason?: string;
 }
 
+export interface LibraryAgentDetail {
+  item: LibraryItem;
+  agent: Agent;
+  presentation: AgentPresentation;
+}
+
 export interface LibraryBackupResponse {
   commit: string | null;
   changed: boolean;
+}
+
+export interface LibraryBeltDetail {
+  item: LibraryItem;
+  belt: Belt;
+  context: BeltContext;
 }
 
 export interface LibraryBrowser {
@@ -1230,6 +1242,31 @@ export interface LibraryOrigin {
   path: string;
 }
 
+export interface LibraryRepoBrowser {
+  tabs: LibraryRepoTab[];
+  items: LibraryRepoCard[];
+  filters: LibraryFilter[];
+  totalCount: number;
+  matchCount: number;
+}
+
+export interface LibraryRepoCard {
+  id: string;
+  name: string;
+  version: number;
+  summary: string;
+  detail: string;
+  status: string;
+  statusTone: LibraryCardStatusTone;
+  icon?: StageIcon;
+  tint?: Tint;
+  stages: LibraryCardStage[];
+  shadow?: string;
+  kind: string;
+  repository: string;
+  path: string;
+}
+
 export interface LibraryRepoRequest {
   repository: string;
   path: string;
@@ -1247,6 +1284,13 @@ export interface LibraryRepoResponse {
   takesShares: boolean;
   items: LibraryItem[];
   actions: LibraryAction[];
+}
+
+export interface LibraryRepoTab {
+  id: string;
+  label: string;
+  count: number;
+  attention: boolean;
 }
 
 export interface LibraryReposResponse {

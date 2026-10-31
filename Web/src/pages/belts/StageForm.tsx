@@ -97,11 +97,13 @@ function ModelRow({ className, id, labels, menu, runner, model, thinking, staleR
  */
 export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnabled }: {
   stage: Stage;
+  /** Opens the stage's agent: its editor, or, for a library belt, the library's read-only view of it. */
   onEditAgent: (agent: { id: string; version: number }) => void;
   onUpdateStage: (stageId: string) => void;
   updateStageEnabled: boolean;
 }) {
   const editor = useDraftEditor();
+  const readOnly = editor.readOnly === true;
   const kind = stage.type ?? "agent";
   const isAgent = kind === "agent";
   const menu = editor.context?.stage?.stage === stage.id ? editor.context.stage : null;
@@ -163,7 +165,8 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
     <section className="agent-card belt-card" aria-label="Stage settings">
       <div className="agent-card-head stage-form-head">
         <div className="form-heading"><span className="paper-tag">{heading}</span><h3>{name || "Unnamed stage"}</h3></div>
-        <div className="stage-form-moves" role="group" aria-label="Move this stage">
+        {readOnly ? stage.agent && <button type="button" className="action-button small" onClick={() => onEditAgent(stage.agent!)}>Open agent</button>
+          : <div className="stage-form-moves" role="group" aria-label="Move this stage">
           <button type="button" className="action-button small" disabled={reason !== null} aria-label={`Fork at ${stage.name}`}
             onClick={() => editor.operate("fork-add", { stageId: stage.id })}>Fork here</button>
           <button type="button" className="action-button small" disabled={reason !== null || !feedAgent} aria-label={`Feed a new stage into ${stage.name}`}
@@ -174,9 +177,10 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
             onClick={() => editor.operate("stage-move", { stageId: stage.id, step: 1 })}>Later →</button>
           <button type="button" className="action-button small danger" disabled={reason !== null}
             onClick={() => { editor.operate("stage-remove", { stageId: stage.id }); editor.selectStage(null); }}>Remove stage</button>
-        </div>
+        </div>}
       </div>
       {!menu && <p className="loading-state" role="status">Loading this stage's choices…</p>}
+      <fieldset className="editor-fields" disabled={readOnly}>
       <div className="agent-form">
         <div className="agent-form-row agent-form-row--pair">
           <label className="agent-field"><span className="agent-field-label">Name</span>
@@ -188,9 +192,9 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
               <code>v{stage.agent?.version ?? 0}</code>
               {pinned?.archived && <span className="field-note">Archived: kept for this stage, not offered for new ones.</span>}
               {pinned?.missing && <span className="field-note">This version is missing from the library.</span>}
-              {pinned?.latestVersion != null && <button type="button" className="quiet-button" disabled={reason !== null || !updateStageEnabled}
+              {!readOnly && pinned?.latestVersion != null && <button type="button" className="quiet-button" disabled={reason !== null || !updateStageEnabled}
                 onClick={() => onUpdateStage(stage.id)}>Update to v{pinned.latestVersion}</button>}
-              {stage.agent && <button type="button" className="action-button small agent-pin-edit" onClick={() => onEditAgent(stage.agent!)}>Edit</button>}
+              {!readOnly && stage.agent && <button type="button" className="action-button small agent-pin-edit" onClick={() => onEditAgent(stage.agent!)}>Edit</button>}
             </span>
           </div>}
           {kind === "approve" && <label className="agent-field"><span className="agent-field-label">Decided by</span>
@@ -241,22 +245,24 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
             menu={menu} runner={alternate.runner ?? (menu.defaultRunner as Backend)} model={alternate.model} thinking={alternate.thinking ?? ""}
             onRunner={runner => setAlternate(index, { runner: runner as Backend })} onModel={model => setAlternate(index, { model })}
             onThinking={value => setAlternate(index, { thinking: value === "" ? undefined : value as Thinking })}
-            onRemove={() => setAlternates(alternates.filter((_, position) => position !== index))} />)}
+            onRemove={readOnly ? undefined : () => setAlternates(alternates.filter((_, position) => position !== index))} />)}
         </div>}
         {isAgent && menu && <p className="agent-hint">{alternates.length === 0 ? "Only the model above." : menu.alternatesNote}</p>}
-        {isAgent && menu && <div>
+        {isAgent && menu && !readOnly && <div>
           <button type="button" className="action-button small" onClick={() => setAlternates([...alternates, { runner: menu.defaultRunner as Backend, model: "" }])}>Add a model</button>
         </div>}
       </div>
+      </fieldset>
     </section>
 
     {isAgent && <section className="agent-card belt-card stage-brief-card" aria-label="Stage brief">
       <div className="form-heading"><span className="paper-tag">Brief</span><h3>What the agent is told</h3></div>
-      <textarea className="paper-field agent-brief" id={`stage-brief-${stage.id}`} aria-label="Brief" value={shownBrief} rows={12}
+      <textarea className="paper-field agent-brief" id={`stage-brief-${stage.id}`} aria-label="Brief" value={shownBrief} rows={12} readOnly={readOnly}
         onChange={event => { const value = event.target.value; setBrief(value === inherited ? "" : value); }} />
       <p className="agent-hint">{brief === ""
-        ? `The brief of ${pinned?.name ?? "the agent"} v${stage.agent?.version ?? 1}. Edit it to change it for this belt only. `
+        ? `The brief of ${pinned?.name ?? "the agent"} v${stage.agent?.version ?? 1}. ${readOnly ? "" : "Edit it to change it for this belt only. "}`
         : "Changed for this belt. "}The issue, any note, and the outcome footer are added automatically.</p>
+      {!readOnly && <>
       {brief !== "" && <button type="button" className="quiet-button stage-brief-reset" disabled={reason !== null}
         onClick={() => { setBrief(""); apply({ brief: "" }); }}>Use the agent's brief</button>}
       {form.typed && <button type="button" className="quiet-button" onClick={form.clear}>Discard typed changes</button>}
@@ -275,16 +281,19 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
           <p>{prose.syntax}</p>
         </details>
       </div>}
+      </>}
     </section>}
 
     <section className="agent-card belt-card stage-outcomes-card" aria-label="Stage outcomes">
-      <OutcomesEditor stageId={stage.id} kind={kind} outcomes={outcomes} context={editor.context} menu={menu} disabled={reason !== null} onChange={setOutcomes} />
+      <fieldset className="editor-fields" disabled={readOnly}>
+      <OutcomesEditor stageId={stage.id} kind={kind} outcomes={outcomes} context={editor.context} menu={menu} disabled={reason !== null} readOnly={readOnly} onChange={setOutcomes} />
 
       {isAgent && <label className="belt-field fallback-field"><span>If the run fails or ends without one of these</span>
         <select aria-label="When the stage fails" value={fallback} onChange={event => setFallback(event.target.value)}>
           {fallbackValues.map(item => <option key={item} value={item}>{fallbackLabels[item]}</option>)}
         </select>
       </label>}
+      </fieldset>
 
       {menu && <section className="agent-footer outcome-preview" aria-label={menu.preview.title}>
         <span className="paper-tag">{menu.preview.title}</span>

@@ -15,7 +15,8 @@ export function AgentOutcomeRow({ outcome, index, targets, onChange, onRemove }:
   /** The agents the daemon lists as possible targets, already without this agent. */
   targets: readonly AgentOutcomeTarget[];
   onChange: (outcome: AgentOutcome) => void;
-  onRemove: () => void;
+  /** Absent for a read-only agent, which has no remove button. */
+  onRemove?: () => void;
 }) {
   const number = index + 1;
   const toggleTarget = (id: string, on: boolean) => {
@@ -36,7 +37,7 @@ export function AgentOutcomeRow({ outcome, index, targets, onChange, onRemove }:
         target={<ToggleMenu label={`Outcome ${number} agents`} placeholder="Pick agents" options={targets} selected={outcome.to} disabled={false} onToggle={toggleTarget} />} />
     </td>
     <td className="outcome-remove">
-      <button type="button" className="outcome-remove-button" aria-label={`Remove outcome ${number}`} title={`Remove ${outcome.name || "this outcome"}`} onClick={onRemove}>×</button>
+      {onRemove && <button type="button" className="outcome-remove-button" aria-label={`Remove outcome ${number}`} title={`Remove ${outcome.name || "this outcome"}`} onClick={onRemove}>×</button>}
     </td>
   </tr>;
 }

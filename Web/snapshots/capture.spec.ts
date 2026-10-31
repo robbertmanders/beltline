@@ -67,9 +67,9 @@ async function ready(page: Page, runId: string | undefined, readiness: "shell" |
     return;
   }
   if (new URL(page.url()).pathname === "/library") {
-    // The Library page draws one card per repository, with no loaded or empty marker of its own.
-    await expect(page.locator(".library-page .library-repo").first()).toBeAttached();
-    await expect(page.getByRole("status", { name: /Loading library/ })).toHaveCount(0);
+    // The Library page draws its repositories and cards, or the read-only editor a card opens, with no loaded marker of its own.
+    await expect(page.locator(".library-page .library-repo, .library-page .belt-editor-header, .library-page .agent-editor").first()).toBeAttached();
+    await expect(page.getByRole("status", { name: /Loading library|Loading the/ })).toHaveCount(0);
     return;
   }
   await expect(page.locator("main .loaded-state, main .empty-state, main .agent-editor[data-ready='true']").first()).toBeAttached();

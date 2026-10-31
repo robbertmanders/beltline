@@ -275,6 +275,9 @@ func registerGlobal(mux *http.ServeMux, c *coordinator.Coordinator) {
 func registerLibrary(mux *http.ServeMux, c *coordinator.Coordinator) {
 	AddLibraryRepos(mux, c)
 	AddLibraryItem(mux, c)
+	AddLibraryBrowser(mux, c)
+	AddLibraryBelt(mux, c)
+	AddLibraryAgent(mux, c)
 	AddLibraryRefresh(mux, c)
 	AddLibraryBackup(mux, c)
 	AddLibraryRestore(mux, c)

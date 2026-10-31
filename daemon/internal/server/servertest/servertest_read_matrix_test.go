@@ -115,6 +115,7 @@ func TestAllReadsAreAuthenticatedAndCheckHostAndOriginBeforeLookup(t *testing.T)
 	t.Parallel()
 	f := Start(t, Options{})
 	f.SeedViews()
+	f.SyncLibrary(t)
 	exerciseReadMatrix(t, f)
 }
 

@@ -35,6 +35,9 @@ export const getRoutes: readonly GetRouteDescriptor[] = [
   { method: "GET", path: "/api/v1/assistant", resources: ["assistant", "settings", "models"] },
   { method: "GET", path: "/api/v1/library/repos", resources: ["library", "settings"] },
   { method: "GET", path: "/api/v1/library/item", resources: ["library"] },
+  { method: "GET", path: "/api/v1/library/browser", resources: ["library", "settings"] },
+  { method: "GET", path: "/api/v1/library/belt", resources: ["library", "settings"] },
+  { method: "GET", path: "/api/v1/library/agent", resources: ["library", "settings"] },
   { method: "GET", path: "/artifacts/:run/:attempt/:name", exception: "Signed artifact HTML is a document response, not a JSON query." },
   { method: "GET", path: "/api/v1/events", exception: "The single authenticated event WebSocket owns this transport." }
 ];

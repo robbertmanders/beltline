@@ -57,7 +57,7 @@ export function TriggerForm() {
         <div className="form-heading"><span className="paper-tag">{several ? `Triggers · ${count}` : "Trigger"}</span><h3>{presentation?.heading ?? "Trigger"}</h3></div>
         {!disabled && <button type="button" className="action-button small" onClick={() => editor.operate("trigger-add", {})}>Add trigger</button>}
       </div>
-      {reason && <span id="trigger-add-reason" className="action-reason">{reason}</span>}
+      {reason && !editor.readOnly && <span id="trigger-add-reason" className="action-reason">{reason}</span>}
       {count === 0 ? <p className="field-note">{presentation?.empty ?? "Add at least one trigger"}</p> : <>
         <div className="trigger-chips">
           {triggers.map((entry, index) => <button key={entry.id} type="button" title={kindOf(entry)?.heading}
@@ -164,7 +164,7 @@ function TriggerEntryEditor({ entry, position, several, stash, presentation }: {
     {kind === "schedule" && <ScheduleSettings entry={entry} position={position} disabled={disabled} presentation={presentation} />}
     {info?.note && <p className="field-note">{info.note}</p>}
 
-    <div className="belt-field trigger-repositories">
+    {!editor.readOnly && <div className="belt-field trigger-repositories">
       <span>{info?.repositoriesTitle ?? "Repositories"}</span>
       <form className="repo-chips" aria-label={`Repositories for trigger ${position}`} onSubmit={addRepository}>
         {entry.repos.map(name => <span key={name} id={`repository-${entry.id}-${name}`} className="repo-chip">
@@ -176,7 +176,7 @@ function TriggerEntryEditor({ entry, position, several, stash, presentation }: {
           onChange={event => { repo.set("text", event.target.value); repo.set(unchangedField, undefined); }} />}
       </form>
       {notAdded && <p className="field-note" role="status">Not added: this is not owner/repository, or it is already listed.</p>}
-    </div>
+    </div>}
   </section>;
 }
 

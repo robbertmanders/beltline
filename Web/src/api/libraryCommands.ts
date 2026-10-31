@@ -5,6 +5,12 @@ import type { CommandRequest } from "./useCommand";
 export const libraryReposPath = "/api/v1/library/repos";
 /** One item's files: the repository's text beside the local text. */
 export const libraryItemPath = "/api/v1/library/item";
+/** One tab of the Library page: the belts or agents every shared repository holds, as cards. */
+export const libraryBrowserPath = "/api/v1/library/browser";
+/** A shared belt for the read-only belt editor, with the stage form's context for `stage`. */
+export const libraryBeltPath = "/api/v1/library/belt";
+/** A shared agent for the read-only agent editor. */
+export const libraryAgentPath = "/api/v1/library/agent";
 
 /** The key that tells two configured repositories apart: one repository can hold several folders. */
 export const repoKey = (repo: LibraryRepoRef) => `${repo.repository}\n${repo.path}`;

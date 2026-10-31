@@ -95,9 +95,10 @@ type Fixture struct {
 	Jira   *jira.FakeJira
 	Runner *runner.SimulatedRunner
 
-	deps        routes.Dependencies
-	webRoot     string
-	viewsSeeded *sync.Once
+	deps          routes.Dependencies
+	webRoot       string
+	librarySynced *sync.Once
+	viewsSeeded   *sync.Once
 }
 
 // contractPulls is the contract demo's pull requests, read from the first copy: every
@@ -147,7 +148,7 @@ type fixtureScope struct {
 // startFixture builds a contract fixture for opts in scope. See Start.
 func startFixture(t testing.TB, opts Options, scope fixtureScope) *Fixture {
 	t.Helper()
-	f := &Fixture{Clock: NewMutableClock(ContractNow), Commands: &shell.Recorder{}, viewsSeeded: new(sync.Once),
+	f := &Fixture{Clock: NewMutableClock(ContractNow), Commands: &shell.Recorder{}, viewsSeeded: new(sync.Once), librarySynced: new(sync.Once),
 		DesktopApps: NewMutableLookup(true), DesktopSessions: NewMutableLookup(true)}
 	services := demo.Setup{}.Services
 	var libraryURL func(string) string
@@ -347,4 +348,15 @@ func (f *Fixture) WriteAttemptOutput(t testing.TB, text string) {
 // seed would append the AFK decisions again. Later calls do nothing.
 func (f *Fixture) SeedViews() {
 	f.viewsSeeded.Do(func() { f.Coordinator.SeedContractViews(ContractNow) })
+}
+
+// SyncLibrary syncs the contract demo's shared library repository once, so the Library page's
+// belt and agent reads have items to answer with. Later calls do nothing.
+func (f *Fixture) SyncLibrary(t testing.TB) {
+	t.Helper()
+	f.librarySynced.Do(func() {
+		if reply := f.Do(Request{Method: "POST", Path: "/api/v1/library/refresh", Token: ContractToken, Body: []byte(libraryShared)}); reply.Status != 200 {
+			t.Fatalf("library: refresh answered %d: %s", reply.Status, reply.Body)
+		}
+	})
 }

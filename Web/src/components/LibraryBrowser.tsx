@@ -95,15 +95,18 @@ export function LibraryBrowser({ title, lead, browser, search, filter, onSearch,
   </main>;
 }
 
-/** A visual card; it uses the daemon's labels and stage strip without deriving resource state. */
-export function LibraryResourceCard({ card, kind, onOpen }: { card: LibraryCard; kind: "belt" | "agent"; onOpen: () => void }) {
+/**
+ * A visual card; it uses the daemon's labels and stage strip without deriving resource state. `source`, on the Library
+ * page, names the repository the card comes from at its foot.
+ */
+export function LibraryResourceCard({ card, kind, onOpen, source }: { card: LibraryCard; kind: "belt" | "agent"; onOpen: () => void; source?: string }) {
   return <button type="button" className={`library-resource-card library-resource-card--${kind}`} aria-label={`Open ${card.name}`} onClick={onOpen}>
     <span className="library-card-top"><span className={`paper-chip${kind === "agent" ? " paper-chip--grey" : ""}`}>{kind === "belt" ? "Belt" : "Agent"}</span>{card.shadow && <span className="paper-chip paper-chip--shadow library-card-shadow">{card.shadow}</span>}<span className="library-card-version">v{card.version}</span></span>
     <span className="library-card-title">{card.icon && <StageIconTile icon={card.icon} tint={card.tint ?? "grey"} size={24} />}<span>{card.name}</span></span>
     {card.stages.length > 0 && <span className="library-stage-strip" aria-label="Stage preview">{card.stages.map((stage, index) => <Fragment key={index}>
       {index > 0 && <i aria-hidden="true" />}<StageIconTile icon={stage.icon} tint={stage.tint} size={22} />
     </Fragment>)}</span>}
-    <span className="library-card-foot"><span className={`paper-chip paper-chip--${card.statusTone}`}>{card.status}</span></span>
+    <span className={`library-card-foot${source ? " library-card-foot--source" : ""}`}>{source && <span className="library-card-source">{source}</span>}<span className={`paper-chip paper-chip--${card.statusTone}`}>{card.status}</span></span>
   </button>;
 }
 

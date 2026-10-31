@@ -38,10 +38,10 @@ A **backup** repository holds your own library.
 
 ## Installing and sharing
 
-A **shared** repository holds a team's belts and agents.
+A **shared** repository holds a team's belts and agents. The Library page lists what every shared repository holds under two tabs, **Belts** and **Agents**, as cards like the Belts and Agents pages show, each with its repository and its state: *Available*, *Installed*, *Update* (a newer version than yours) or *Conflict* (you changed your copy, so it can't be updated). Search and the state filters narrow the cards. A card opens the belt or agent in its editor, read-only: a belt's stages, trigger and policies, each stage's settings, brief and outcomes, and an agent's settings, brief, outcomes and the repository's belts that use it. What a shared belt doesn't carry, such as its repositories and base branch, isn't shown.
 
 - **Install** writes an item's version, and the agent versions it uses, into your library, with the repository recorded as its origin. A shared belt names no repositories, so a belt new to your library is installed paused: open it, add your repositories (and the label, query or schedule you want), save and resume it.
-- **Update** takes a newer version the same way. **Compare** shows what changed.
+- **Update** takes a newer version the same way. **Compare** shows the repository's files beside yours, and **Open yours** opens your copy in Belts or Agents.
 - **Share…**, on a belt's or agent's page, sends your item to a shared repository as a pull request, or as a direct push when that repository's setting says so.
 
 To move an old factory or marketplace repository to this layout, run `scripts/migrate-library-repo.sh <path-to-a-clone>` in a clone of this repository and commit what it copies.

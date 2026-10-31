@@ -1,16 +1,31 @@
-/* The Library page: one card per repository, its actions, and the items a shared one holds. */
-.library-page .settings-card { margin-bottom: 14px; }
-.library-repo-head, .library-repo-title, .library-repo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
-.library-repo-head { justify-content: space-between; }
+/* The Library page: the repositories, the Belts and Agents tabs with their cards, and the read-only editors a card opens. */
+.library-page > .muted-line { margin: -8px 0 16px; }
+.library-repos { gap: 0; margin-bottom: 18px; padding-block: 6px; }
+.library-repo { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; border-top: 1px solid var(--rule); }
+.library-repo:first-child { border-top: 0; }
+.library-repo-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 14px; }
+.library-repo-title, .library-repo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.library-repo-actions { justify-content: flex-end; }
 .library-repo-title strong { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
 .library-problem { margin: 0; color: var(--red); font-size: 12px; overflow-wrap: anywhere; }
 .library-result { margin: 0; color: var(--green); font-size: 12px; overflow-wrap: anywhere; }
-.library-items { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
-.library-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--rule); }
-.library-item:first-child { border-top: 0; }
-.library-item-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.library-item-name { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
-.library-item-name .paper-caps { margin-right: 4px; }
+
+.library-tabs { display: flex; gap: 22px; margin-bottom: 16px; border-bottom: 1px solid var(--rule); }
+.library-tab { position: relative; display: inline-flex; align-items: baseline; gap: 8px; padding: 0 0 10px; border: 0; background: none; color: var(--ink2); font: 600 17px/1.2 var(--font-display), sans-serif; letter-spacing: -0.2px; cursor: pointer; }
+.library-tab[aria-selected="true"] { color: var(--ink); }
+.library-tab[aria-selected="true"]::after { content: ""; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 2px; background: var(--slate-text); }
+.library-tab[aria-selected="true"] .nav-count { color: var(--slate-text); }
+.library-tab-attention { align-self: center; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.library-page .library-browser-toolbar { margin-bottom: 16px; }
+
+/* The read-only editors: the belt and agent editors' own layout, with the item's state under the header. */
+.library-detail .belt-editor-header { align-items: flex-start; gap: 14px; }
+.library-notice { margin: 0 0 14px; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+.library-notice.library-result { background: var(--green-wash); }
+.library-notice.library-problem { background: var(--red-wash); }
+.library-notice--update { background: var(--gold-wash); color: var(--gold-text-strong); }
+.library-notice .quiet-button { font-size: 13px; }
+
 .library-compare-file { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; min-width: 0; }
 .library-compare-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .library-compare-columns > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
