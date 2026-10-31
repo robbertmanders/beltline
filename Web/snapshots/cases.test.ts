@@ -8,7 +8,7 @@ import { beltsCases } from "./cases/belts";
 
 const runCaseIds = [
   "run-prompt-entry", "run-open", "run-closed", "run-sessions-click", "run-wide", "run-wrapping-closed", "run-wrapping-open",
-  "run-controls-open", "run-reduced-motion", "run-paused", "run-paused-sessions", "run-pause-incomplete",
+  "run-output-sections-collapsed", "run-output-sections-dark-expanded", "run-controls-open", "run-reduced-motion", "run-paused", "run-paused-sessions", "run-pause-incomplete",
   "run-waiting", "run-parked", "run-parked-sessions", "run-held", "run-review", "run-watch", "run-multi-watch",
   "run-nested", "run-afk-approved", "run-open-links", "run-stage-adjust", "run-send-to", "run-route"
 ];

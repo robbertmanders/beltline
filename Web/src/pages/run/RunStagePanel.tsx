@@ -10,6 +10,7 @@ import { ErrorProblems } from "../../components/ProblemList";
 import { useRevealLabel, useRuntime } from "../../app/runtime";
 import type { CommandController } from "../../api/useCommand";
 import type { ConnectionStatus } from "../../api/eventConnection";
+import { OutputSections } from "./OutputSections";
 
 type StageFacts = NonNullable<RunStage["facts"]>;
 type AttemptFacts = StageFacts["attempts"][number];
@@ -94,7 +95,9 @@ function Output({ runId, attempt, stage }: { runId: string; attempt: string; sta
   const data = query.data;
   if (!data) return null;
   if (data.availability !== "available") return <p className="run-muted" role="status">{data.message ?? `This attempt wrote no ${stage.writes ?? "output"}.`}</p>;
-  return <div className="run-output" data-attempt={data.attemptId}><MarkdownBlocks blocks={data.blocks} /></div>;
+  return <div className="run-output" data-attempt={data.attemptId}>
+    <OutputSections key={`${runId}/${attempt}`} runId={runId} attemptId={attempt} title={data.title} sections={data.sections} />
+  </div>;
 }
 
 export interface RunStagePanelProps {

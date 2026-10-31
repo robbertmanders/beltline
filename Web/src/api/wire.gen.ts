@@ -505,7 +505,16 @@ export interface AttemptOutputResponse {
   attemptId: string;
   availability: string;
   blocks: MarkdownBlock[];
+  title?: MarkdownBlock;
+  sections: AttemptOutputSection[];
   message?: string;
+}
+
+export interface AttemptOutputSection {
+  id: string;
+  label: string;
+  level: number;
+  blocks: MarkdownBlock[];
 }
 
 export interface Belt {
