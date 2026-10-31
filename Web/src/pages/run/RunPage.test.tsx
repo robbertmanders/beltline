@@ -431,7 +431,11 @@ describe("Run page agent output sections", () => {
     stubOutput(JSON.stringify(outputOf(sectionsOfSpec(), titleOfSpec)));
     renderRun("?stage=plan-epic&attempt=plan-epic-1");
     const panel = await outputPanel();
+    const result = panel.querySelector<HTMLElement>(".stage-result")!;
+    expect(within(result).getByText("ready")).toBeTruthy();
+    expect(within(result).getByText("→ Next: Approve the plan")).toBeTruthy();
     await user.click(within(panel).getAllByRole("button", { name: "Goal" })[0]!);
+    expect(result.closest("[hidden]")).toBeNull();
     const body = sectionBody(within(panel).getAllByRole("button", { name: "Goal" })[0]!);
     expect(body.querySelector("strong")?.textContent).toBe("invoicing");
     expect(within(body).getByRole("link", { name: "the docs" }).getAttribute("href")).toBe("https://example.com/docs");
@@ -448,6 +452,9 @@ describe("Run page agent output sections", () => {
     expect(within(panel).getByText("contract.html")).toBeTruthy();
     await user.click(within(panel).getByRole("button", { name: "Testing" }));
     expect(within(panel).getByRole("button", { name: "Open in browser" })).toBeTruthy();
+    expect(within(result).getByText("ready")).toBeTruthy();
+    expect(result.closest("[hidden]")).toBeNull();
+    expect(panel.querySelector(".run-artifacts")!.closest("[hidden]")).toBeNull();
   });
 
   it("expands the long-output golden's section with its paragraph, list and code blocks in order, beside the title", async () => {
@@ -496,10 +503,16 @@ describe("Run page agent output sections", () => {
     await user.click(within(panel).getByRole("button", { name: "Details" }));
     first.unmount();
 
-    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const returned = renderRun("?stage=plan-epic&attempt=plan-epic-1");
     panel = await outputPanel();
     expect(within(panel).getByRole("button", { name: "Details" }).getAttribute("aria-expanded")).toBe("true");
     expect(within(panel).getAllByRole("button", { name: "Goal" })[0]!.getAttribute("aria-expanded")).toBe("false");
+    returned.unmount();
+
+    localStorage.clear();
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    panel = await outputPanel();
+    expect(within(panel).getByRole("button", { name: "Details" }).getAttribute("aria-expanded")).toBe("false");
   });
 
   it("reads a choice for another attempt as closed, and reads the choice made for it back", async () => {
@@ -568,8 +581,33 @@ describe("Agent output sections around the output", () => {
     const panel = await screen.findByRole("region", { name: "Stage 2: Approve the plan" });
     await waitFor(() => expect(panel.querySelector(".stage-approval-doc .markdown-blocks")).not.toBeNull());
     expect(panel.querySelectorAll(".stage-approval-doc .markdown-blocks > *").length).toBeGreaterThan(0);
+    expect(within(panel).getByText("Contract stage output").closest("[hidden]")).toBeNull();
     expect(sectionControls(panel)).toEqual([]);
     expect(panel.querySelector(".output-section-toggle")).toBeNull();
+  });
+
+  it("shows a prompt stage's context and source choice in full, with no disclosure controls", async () => {
+    const view = viewOf();
+    const gate = view.stages.find(stage => stage.id === "approve-plan")!;
+    view.run.state = "waiting";
+    view.run.stageId = gate.id;
+    gate.step = "waiting";
+    gate.attempts = [{ id: "approve-plan-1", number: 1, caption: "Attempt 1 of 1", content: "decision", isOpen: true }];
+    gate.facts!.approval!.prompt = {
+      label: "Your prompt", placeholder: "Describe your task.", help: "Write the run's task.",
+      contextLabel: "Source context", context: [{ type: "paragraph", text: "Ticket acceptance criteria" }],
+      sourceLabel: "Include source context for agents", sourceHelp: "Unchecked, agents get the reference only.", source: "withheld"
+    };
+    stubDaemon({ [viewPath]: () => json(view) });
+    renderRun("?stage=approve-plan&attempt=approve-plan-1");
+    const panel = await screen.findByRole("region", { name: "Stage 2: Approve the plan" });
+    await waitFor(() => expect(panel.querySelector(".run-prompt-context")).not.toBeNull());
+    const context = panel.querySelector<HTMLElement>(".run-prompt-context")!;
+    expect(within(context).getByText("Ticket acceptance criteria")).toBeTruthy();
+    expect(context.closest("[hidden]")).toBeNull();
+    expect(within(panel).getByRole("checkbox", { name: "Include source context for agents" })).toBeTruthy();
+    expect(sectionControls(panel)).toEqual([]);
+    expect(panel.querySelector(".run-prompt [aria-expanded], .run-prompt .output-section-toggle")).toBeNull();
   });
 });
 
@@ -621,6 +659,29 @@ describe("Agent output section storage and refreshes", () => {
     expect(testing.getAttribute("aria-expanded")).toBe("false");
     await user.click(testing);
     expect(testing.getAttribute("aria-expanded")).toBe("true");
+    view.unmount();
+    vi.restoreAllMocks();
+  });
+
+  it("keeps the saved choices readable and toggles working on the run page when new choices are refused", async () => {
+    const user = userEvent.setup();
+    const saved = { [runId]: { "plan-epic-1": { "heading:2:1:Testing": true } } };
+    localStorage.setItem(outputFoldsStorageKey, JSON.stringify(saved));
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("quota exceeded"); });
+    stubOutput(JSON.stringify(outputOf(sectionsOfSpec(), titleOfSpec)));
+    const view = renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const panel = await outputPanel();
+    const testing = within(panel).getByRole("button", { name: "Testing" });
+    const details = within(panel).getByRole("button", { name: "Details" });
+    expect(testing.getAttribute("aria-expanded")).toBe("true");
+    await user.click(details);
+    expect(details.getAttribute("aria-expanded")).toBe("true");
+    expect(sectionBody(details).hidden).toBe(false);
+    await user.click(testing);
+    expect(testing.getAttribute("aria-expanded")).toBe("false");
+    expect(sectionBody(testing).hidden).toBe(true);
+    expect(details.getAttribute("aria-expanded")).toBe("true");
+    expect(JSON.parse(localStorage.getItem(outputFoldsStorageKey)!)).toEqual(saved);
     view.unmount();
     vi.restoreAllMocks();
   });
