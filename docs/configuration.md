@@ -17,6 +17,12 @@ While it runs, `daemon.json` (mode 0600) holds the port and a fresh token, and `
 
 The data folder records its format in `format.json`. When a new version of Beltline changes the format, its first start rewrites the folder once. Before rewriting, it copies each file it changes to `upgrade-backups/<time>/`. A version of Beltline that is older than the folder's format refuses to start rather than risk your data. Before 1.0 the format and the API may still change, always with an automatic upgrade.
 
+## Experimental features
+
+**Settings → Experimental** holds the features that may still change, each with its own switch: **Show the Insights page** and **Enable shadow tests**. Turning one on or off leaves the other alone. Neither switch disables the daemon's Insights read API.
+
+Both are off in a new data folder. An upgrade that finds a shadow test running turns **Enable shadow tests** on, so a running test is not stranded. A switch you have set is kept by every later start. Shadow tests can only be turned off once no test is running; see [Shadow tests](shadow-tests.md).
+
 ## Environment variables
 
 | Variable | What it does |

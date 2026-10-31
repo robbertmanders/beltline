@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
+	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
 
 // upgradeOldBelt is a belt version as it was saved with one trigger, the
@@ -240,4 +241,110 @@ func TestUpgradeListsTheExamplesRepositoryOnce(t *testing.T) {
 	if repos := listed.LoadSettings().LibraryRepositories; len(repos) != 1 || repos[0] != own {
 		t.Fatalf("settings that list the examples repository became %+v", repos)
 	}
+}
+
+// upgradeShadowFolder is a format 3 folder with one belt and its state: the belt's
+// shadow test is recorded as given, and the belt is paused and archived when asked. It returns the belt's id.
+func upgradeShadowFolder(t *testing.T, test core.ShadowTest, paused, archived bool) (Storage, string) {
+	t.Helper()
+	s := newTestStorage(t)
+	belt := core.SampleBelt([]string{"acme/app"}, "tasks", nil, true)
+	record := shadowRecord(t, s, belt)
+	record.ShadowTests = []core.ShadowTest{test}
+	record.Paused, record.Archived = paused, archived
+	if err := s.SaveState(record); err != nil {
+		t.Fatal(err)
+	}
+	writeText(t, s.Paths.Format(), `{"version":3}`)
+	return s, record.Belt.ID
+}
+
+// TestUpgradeEnablesShadowTestsOnlyWhileATestRuns checks the switch an upgrade infers: on for a folder with a
+// running test, paused or archived belts included, and off for ended tests alone. It keeps the Insights switch,
+// leaves the belt, test and run records as they were, and does not infer it again.
+func TestUpgradeEnablesShadowTestsOnlyWhileATestRuns(t *testing.T) {
+	t.Parallel()
+	running := core.ShadowTest{ID: "t1", Live: 1, Shadow: 2, StartedAt: jsonDate(1_700_000_000)}
+	ended := running
+	ended.EndedAt, ended.Result = new(jsonDate(1_700_100_000)), core.ShadowResultAccepted
+	cases := []struct {
+		name        string
+		test        core.ShadowTest
+		paused      bool
+		archived    bool
+		wantEnabled bool
+	}{
+		{name: "running", test: running, wantEnabled: true},
+		{name: "running on a paused belt", test: running, paused: true, wantEnabled: true},
+		{name: "running on an archived belt", test: running, archived: true, wantEnabled: true},
+		{name: "ended", test: ended, wantEnabled: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			s, id := upgradeShadowFolder(t, tc.test, tc.paused, tc.archived)
+			writeText(t, s.Paths.Settings(), `{"login":"me","showInsights":true}`)
+			// A run still going on the test's shadow: it does not decide the switch, only the test does.
+			run := goldenRun(t)
+			run.Shadow = &core.RunShadow{Test: "t1", Arm: core.ShadowArmShadow}
+			runPath := filepath.Join(s.Paths.RunFolder(run), "run.json")
+			if err := s.Write(run, runPath); err != nil {
+				t.Fatal(err)
+			}
+			beltState := fileText(t, filepath.Join(s.Paths.Belts(), id, "state.json"))
+			beltVersion := fileText(t, filepath.Join(s.Paths.Belts(), id, "v1.json"))
+
+			report, err := s.Upgrade(time.Date(2026, 10, 31, 9, 0, 0, 0, time.UTC))
+			if err != nil || !report.Ran || !report.Settings {
+				t.Fatalf("report %+v %v", report, err)
+			}
+			settings := s.LoadSettings()
+			if settings.EnableShadowTests != tc.wantEnabled || !settings.ShowInsights || settings.Login != "me" {
+				t.Fatalf("settings %+v, want shadow tests %v with Insights kept", settings, tc.wantEnabled)
+			}
+			if fileText(t, filepath.Join(report.Backup, "settings.json")) != `{"login":"me","showInsights":true}` {
+				t.Fatal("the original settings were not backed up")
+			}
+			var kept core.Run
+			if err := json.Unmarshal([]byte(fileText(t, runPath)), &kept); err != nil || kept.BeltVersion != run.BeltVersion || kept.Shadow == nil || *kept.Shadow != *run.Shadow {
+				t.Fatalf("the run on the test lost its version or its test: %+v, %v", kept.Shadow, err)
+			}
+			if fileText(t, filepath.Join(s.Paths.Belts(), id, "state.json")) != beltState ||
+				fileText(t, filepath.Join(s.Paths.Belts(), id, "v1.json")) != beltVersion {
+				t.Fatal("the belt or its test records changed")
+			}
+
+			saved := fileText(t, s.Paths.Settings())
+			if again, err := s.Upgrade(time.Now()); err != nil || again.Ran || fileText(t, s.Paths.Settings()) != saved {
+				t.Fatalf("a second upgrade %+v %v changed the settings", again, err)
+			}
+		})
+	}
+}
+
+// TestUpgradeKeepsAnExplicitShadowTestChoice checks a settings file that already names the switch is not
+// inferred again, whether or not a test runs, and that a fresh folder starts with shadow tests off.
+func TestUpgradeKeepsAnExplicitShadowTestChoice(t *testing.T) {
+	t.Parallel()
+	s, _ := upgradeShadowFolder(t, core.ShadowTest{ID: "t1", Live: 1, Shadow: 2, StartedAt: jsonDate(1_700_000_000)}, false, false)
+	writeText(t, s.Paths.Settings(), `{"login":"me","enableShadowTests":false}`)
+	if _, err := s.Upgrade(time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if s.LoadSettings().EnableShadowTests {
+		t.Fatal("an explicit false was inferred as true")
+	}
+
+	fresh := newTestStorage(t)
+	if _, err := fresh.Upgrade(time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if fresh.LoadSettings().EnableShadowTests {
+		t.Fatal("a fresh folder starts with shadow tests on")
+	}
+}
+
+// jsonDate is a jsonx.Date at the given Unix second.
+func jsonDate(seconds int64) jsonx.Date {
+	return jsonx.Date{Time: time.Unix(seconds, 0).UTC()}
 }

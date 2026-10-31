@@ -26,6 +26,7 @@ func TestPatchDecodingRejectsUnknownMissingAndInvalidFields(t *testing.T) {
 		`{}`,
 		`{"login":"octocat","notifications":true}`,
 		`{"showInsights":false}`,
+		`{"enableShadowTests":true}`,
 	}
 	for _, text := range accepted {
 		if _, err := decodePatch(text); err != nil {
@@ -46,6 +47,8 @@ func TestPatchDecodingRejectsUnknownMissingAndInvalidFields(t *testing.T) {
 		`{"login":null}`,
 		`{"showInsights":null}`,
 		`{"showInsights":"off"}`,
+		`{"enableShadowTests":null}`,
+		`{"enableShadowTests":"off"}`,
 	}
 	for _, text := range refused {
 		if _, err := decodePatch(text); err == nil {
@@ -67,6 +70,41 @@ func TestShowInsightsPatchSavesAndOmissionKeepsIt(t *testing.T) {
 	}
 	if saved, err = c.ApplySettingsPatch(SettingsPatch{Notifications: new(false)}); err != nil || !saved.ShowInsights {
 		t.Fatalf("a patch without showInsights changed it: %v", err)
+	}
+}
+
+// TestEnableShadowTestsPatchSavesAndOmissionKeepsIt patches each experimental switch alone, omits them,
+// and keeps the confirmed value when a write fails.
+func TestEnableShadowTestsPatchSavesAndOmissionKeepsIt(t *testing.T) {
+	t.Parallel()
+	h := newLibraryHarness(t)
+	c := h.Coord()
+	saved, err := c.ApplySettingsPatch(SettingsPatch{EnableShadowTests: new(true)})
+	if err != nil || !saved.EnableShadowTests || saved.ShowInsights || !h.storage.LoadSettings().EnableShadowTests {
+		t.Fatalf("enable shadow tests: %+v, %v", saved, err)
+	}
+	if saved, err = c.ApplySettingsPatch(SettingsPatch{ShowInsights: new(true)}); err != nil || !saved.EnableShadowTests || !saved.ShowInsights {
+		t.Fatalf("show Insights kept shadow tests: %+v, %v", saved, err)
+	}
+	if saved, err = c.ApplySettingsPatch(SettingsPatch{ShowInsights: new(false)}); err != nil || !saved.EnableShadowTests || saved.ShowInsights {
+		t.Fatalf("hide Insights kept shadow tests: %+v, %v", saved, err)
+	}
+	if saved, err = c.ApplySettingsPatch(SettingsPatch{Notifications: new(false)}); err != nil || !saved.EnableShadowTests {
+		t.Fatalf("a patch without enableShadowTests changed it: %+v, %v", saved, err)
+	}
+
+	settingsPath := c.Paths().Settings()
+	if err := os.Remove(settingsPath); err != nil && !os.IsNotExist(err) {
+		t.Fatalf("remove settings: %v", err)
+	}
+	if err := os.MkdirAll(settingsPath, 0o755); err != nil {
+		t.Fatalf("make a directory in its place: %v", err)
+	}
+	if _, err := c.ApplySettingsPatch(SettingsPatch{EnableShadowTests: new(false)}); err == nil {
+		t.Error("a failed write was reported as saved")
+	}
+	if !c.ReadSettings().EnableShadowTests {
+		t.Error("a failed write changed the published switch")
 	}
 }
 

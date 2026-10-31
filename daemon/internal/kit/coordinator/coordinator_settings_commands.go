@@ -31,6 +31,8 @@ type SettingsPatch struct {
 	LibraryRepositories *[]core.LibraryRepository `json:"libraryRepositories,omitzero"`
 	Afk                 *AfkSettingsPatch         `json:"afk,omitzero"`
 	ShowInsights        *bool                     `json:"showInsights,omitzero"`
+	// EnableShadowTests is the Experimental shadow test switch. Turning it off is refused while a test runs.
+	EnableShadowTests *bool `json:"enableShadowTests,omitzero"`
 }
 
 // UnmarshalJSON decodes a settings patch, refusing undeclared keys and nulls.
@@ -41,7 +43,7 @@ func (p *SettingsPatch) UnmarshalJSON(data []byte) error {
 	if err := decodeStrict(data, &w); err != nil {
 		return err
 	}
-	if err := rejectNulls(data, "login", "notifications", "libraryRepositories", "afk", "showInsights"); err != nil {
+	if err := rejectNulls(data, "login", "notifications", "libraryRepositories", "afk", "showInsights", "enableShadowTests"); err != nil {
 		return err
 	}
 	*p = SettingsPatch(w)
@@ -201,6 +203,13 @@ func (c *Coordinator) applySettingsPatchNow(patch SettingsPatch) (store.Settings
 	if patch.ShowInsights != nil {
 		draft.ShowInsights = *patch.ShowInsights
 	}
+	if patch.EnableShadowTests != nil {
+		// Turning shadow tests off would strand a running test, so it waits until none runs.
+		if !*patch.EnableShadowTests && c.library.ShadowTestRunning() {
+			return store.Settings{}, core.NewFailure(core.SettingShadowTestsRunning)
+		}
+		draft.EnableShadowTests = *patch.EnableShadowTests
+	}
 	if patch.Afk != nil {
 		afk, err := CandidateAfk(c.settings.Afk, *patch.Afk)
 		if err != nil {
@@ -212,6 +221,14 @@ func (c *Coordinator) applySettingsPatchNow(patch SettingsPatch) (store.Settings
 		return store.Settings{}, err
 	}
 	return cloneSettings(draft), nil
+}
+
+// ShadowTestsToggle is whether Enable shadow tests may be turned off now, and why not.
+// Lock: exported entry point; takes c.mu.
+func (c *Coordinator) ShadowTestsToggle() core.SettingAvailability {
+	c.Lock()
+	defer c.EndTurn()
+	return core.ShadowTestsToggleAvailability(c.library.ShadowTestRunning())
 }
 
 // PatchAfk applies the AFK page's partial edits through the same validator as

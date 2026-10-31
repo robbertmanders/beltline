@@ -32,13 +32,18 @@ type SettingsResponse struct {
 	ModelCatalogs map[string]core.ModelCatalogSnapshot `json:"modelCatalogs"`
 	Afk           core.AfkSettings                     `json:"afk"`
 	ShowInsights  bool                                 `json:"showInsights"`
-	DataLocation  string                               `json:"dataLocation"`
-	Demo          bool                                 `json:"demo"`
+	// EnableShadowTests is the Experimental shadow test switch.
+	EnableShadowTests bool `json:"enableShadowTests"`
+	// ShadowTestsToggle is whether the shadow test switch may be turned off now, and why not. It is
+	// computed from the running tests, never stored.
+	ShadowTestsToggle core.SettingAvailability `json:"shadowTestsToggle"`
+	DataLocation      string                   `json:"dataLocation"`
+	Demo              bool                     `json:"demo"`
 }
 
-// NewSettingsResponse builds the settings response from its arguments.
-// Allowed models are sorted per runner, as the initialiser does.
-func NewSettingsResponse(settings store.Settings, dataLocation string, demo bool) SettingsResponse {
+// NewSettingsResponse builds the settings response from its arguments; toggle is the shadow test
+// switch's availability. Allowed models are sorted per runner, as the initialiser does.
+func NewSettingsResponse(settings store.Settings, toggle core.SettingAvailability, dataLocation string, demo bool) SettingsResponse {
 	thinking := core.CopyPointer(settings.ConfigurationThinking)
 	pausedAt := core.CopyPointer(settings.PausedAt)
 	allowed := make(map[string][]string, len(settings.AllowedModels))
@@ -66,6 +71,8 @@ func NewSettingsResponse(settings store.Settings, dataLocation string, demo bool
 		ModelCatalogs:         catalogs,
 		Afk:                   settings.Afk,
 		ShowInsights:          settings.ShowInsights,
+		EnableShadowTests:     settings.EnableShadowTests,
+		ShadowTestsToggle:     toggle,
 		DataLocation:          dataLocation,
 		Demo:                  demo,
 	}

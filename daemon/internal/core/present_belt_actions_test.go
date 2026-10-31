@@ -91,6 +91,52 @@ func TestAvailabilityTableCoversTheEditorStates(t *testing.T) {
 	}
 }
 
+// TestShadowCreateNeedsTheExperimentalSwitch checks Create shadow is refused with the switch off, with the
+// reason the editor shows, and that the running-test and archive reasons come first.
+func TestShadowCreateNeedsTheExperimentalSwitch(t *testing.T) {
+	t.Parallel()
+	off := BeltActionContext{Saved: true, HasManualTrigger: true}
+	if action := BeltAvailabilityAction(BeltCommandShadowCreate, off); action == nil || action.Enabled || action.Reason == nil || *action.Reason != BeltAvailabilityShadowTestsOff {
+		t.Errorf("create shadow with the switch off = %+v, want disabled with the switch reason", action)
+	}
+	if refusal := BeltAvailabilityRefusal(BeltCommandShadowCreate, off); refusal == nil || *refusal != "Enable shadow tests in Settings → Experimental to start a new test." {
+		t.Errorf("refusal with the switch off = %v", refusal)
+	}
+
+	on := off
+	on.ShadowTestsEnabled = true
+	if action := BeltAvailabilityAction(BeltCommandShadowCreate, on); action == nil || !action.Enabled || action.Reason != nil {
+		t.Errorf("create shadow with the switch on = %+v, want enabled", action)
+	}
+	if refusal := BeltAvailabilityRefusal(BeltCommandShadowCreate, on); refusal != nil {
+		t.Errorf("refusal with the switch on = %q, want nil", *refusal)
+	}
+
+	running := on
+	running.Shadow = true
+	if action := BeltAvailabilityAction(BeltCommandShadowCreate, running); action == nil || action.Enabled || *action.Reason != BeltAvailabilityShadowRunning {
+		t.Errorf("create shadow with a test running = %+v", action)
+	}
+	archived := off
+	archived.Archived = true
+	if action := BeltAvailabilityAction(BeltCommandShadowCreate, archived); action == nil || *action.Reason != BeltAvailabilityArchivedNote {
+		t.Errorf("create shadow on an archived belt = %+v", action)
+	}
+	unsaved := BeltActionContext{}
+	if action := BeltAvailabilityAction(BeltCommandShadowCreate, unsaved); action == nil || *action.Reason != BeltAvailabilityUnsavedCopy {
+		t.Errorf("create shadow on an unsaved belt = %+v", action)
+	}
+
+	// The switch gates creation only: a running test keeps its save, accept and discard.
+	running = off
+	running.Shadow = true
+	for _, command := range []BeltCommand{BeltCommandShadowSave, BeltCommandShadowAccept, BeltCommandShadowDiscard} {
+		if action := BeltAvailabilityAction(command, running); action == nil || !action.Enabled {
+			t.Errorf("%s with a running test and the switch off = %+v, want enabled", command, action)
+		}
+	}
+}
+
 // TestResourceRevisionTokenMatchesFixedValues pins ResourceRevision.token: FNV-1a 64 over the
 // UTF-8 bytes of the parts joined by U+001F, as 16 lower-case hex digits. The expected values
 // were computed by an independent script that follows the function, so they

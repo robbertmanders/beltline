@@ -7,6 +7,7 @@ package store
 import (
 	"bytes"
 	"cmp"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -142,8 +143,34 @@ func (u *upgrader) upgradeSettings() error {
 		return nil
 	}
 	settings.LibraryRepositories = core.UpgradeLibraryRepositories(settings.LibraryRepositories)
+	if !settingsHasKey(original, "enableShadowTests") {
+		// Shadow tests were always on, so a folder with a test still running keeps it enabled.
+		settings.EnableShadowTests = u.runningShadowTest()
+	}
 	u.report.Settings, err = u.rewrite(path, original, settings)
 	return err
+}
+
+// settingsHasKey reports whether the settings file original has key at its top level.
+func settingsHasKey(original []byte, key string) bool {
+	var members map[string]json.RawMessage
+	if json.Unmarshal(original, &members) != nil {
+		return false
+	}
+	_, ok := members[key]
+	return ok
+}
+
+// runningShadowTest reports whether any belt's state.json holds a shadow test that has not
+// ended, whether its belt is live, paused or archived. It reads the states before the belts are upgraded.
+func (u *upgrader) runningShadowTest() bool {
+	for _, folder := range subfolders(u.storage.Paths.Belts()) {
+		var state beltState
+		if u.storage.Read(filepath.Join(folder, "state.json"), &state) == nil && core.ShadowRunning(state.ShadowTests) != nil {
+			return true
+		}
+	}
+	return false
 }
 
 // upgradeBelts upgrades every version of every belt, then its state.

@@ -66,6 +66,8 @@ type BeltActionContext struct {
 	SharedRepository bool
 	// Shadow is whether a shadow test of the belt is running.
 	Shadow bool
+	// ShadowTestsEnabled is the Experimental switch: a new shadow test starts only while it is on.
+	ShadowTestsEnabled bool
 }
 
 // Copy used by BeltAvailability. Literal text is exact.
@@ -90,6 +92,8 @@ const (
 	BeltAvailabilityShadowRunning = "This belt already has a shadow. Accept or discard it first."
 	// BeltAvailabilityNoShadow is shown on a shadow command while no test runs.
 	BeltAvailabilityNoShadow = "This belt has no shadow."
+	// BeltAvailabilityShadowTestsOff is shown on Create shadow while Settings keeps shadow tests off.
+	BeltAvailabilityShadowTestsOff = "Enable shadow tests in Settings → Experimental to start a new test."
 )
 
 // BeltAvailabilityActions is the ordered belt commands for context.
@@ -173,6 +177,8 @@ func BeltAvailabilityActions(context BeltActionContext) []BeltAction {
 		createShadowReason = new(BeltAvailabilityArchivedNote)
 	case context.Shadow:
 		createShadowReason = new(BeltAvailabilityShadowRunning)
+	case !context.ShadowTestsEnabled:
+		createShadowReason = new(BeltAvailabilityShadowTestsOff)
 	}
 	if !context.Shadow {
 		shadowReason = new(BeltAvailabilityNoShadow)

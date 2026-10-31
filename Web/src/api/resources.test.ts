@@ -38,6 +38,10 @@ describe("GET resource invalidation coverage", () => {
     expect(apiQueryKey("/api/v1/runs", { limit: 10 })).not.toEqual(apiQueryKey("/api/v1/runs", { limit: 20 }));
   });
 
+  it("refreshes the settings read when the library changes, since the shadow test switch depends on live tests", () => {
+    expect(resourcesForPath("/api/v1/settings")).toEqual(["settings", "library"]);
+  });
+
   it("records explicit exceptions for non-cacheable and unobservable GETs", () => {
     for (const path of ["/api/v1/version", "/api/v1/tools", "/api/v1/terminals", "/api/v1/events", "/artifacts/:run/:attempt/:name", "/auth"]) {
       expect(routeForPath(path)?.exception, path).toBeTruthy();

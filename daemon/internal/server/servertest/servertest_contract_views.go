@@ -42,7 +42,7 @@ func exerciseViewsArea(f *Fixture, t testing.TB, contractCase string) bool {
 	case "settings":
 		reply := f.Do(Request{Method: "GET", Path: "/api/v1/settings", Token: ContractToken})
 		CheckGolden(t, "settings", "settings.json", reply, f.Root)
-		want := mustMarshal(t, api.NewSettingsResponse(f.Coordinator.ReadSettings(), f.Coordinator.Paths().Root, false))
+		want := mustMarshal(t, api.NewSettingsResponse(f.Coordinator.ReadSettings(), f.Coordinator.ShadowTestsToggle(), f.Coordinator.Paths().Root, false))
 		if !bytes.Equal(reply.Body, want) {
 			t.Fatalf("settings: the response is not the coordinator's settings")
 		}

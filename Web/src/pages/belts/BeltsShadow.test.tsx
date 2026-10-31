@@ -2,8 +2,11 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { answer, contextFor, fixture, mockDaemon, renderAt, type DaemonRequest } from "./beltsTestKit";
+import type { Handler } from "../../test/daemon";
 import { json } from "../../test/response";
 import { goldenText } from "../../test/golden";
+import type { BeltAction, BeltsResponse } from "../../api/wire.gen";
+import { libraryChanged } from "../../test/daemon";
 
 /** The belt editor's shadow tests: the switch between live and the shadow, saving a shadow, and ending the test. */
 
@@ -82,4 +85,93 @@ describe("shadow tests in the belt editor", () => {
     await waitFor(() => expect(daemon.posts("/shadow/accept")).toHaveLength(1));
     await waitFor(() => expect(where()).not.toContain("shadow=1"));
   });
+
+  it("disables Create shadow with the Settings explanation while shadow tests are off, and starts none", async () => {
+    const user = userEvent.setup();
+    const daemon = mockDaemon({ "/api/v1/belts": goldenText("belts.json"), "/api/v1/belts/context": contextWithAction({ id: "shadow-create", enabled: false, reason: shadowTestsOff }) });
+    renderAt(`/belts?belt=${docs.belt.id}`);
+    await waitFor(() => expect(tag()).toBe(`Belt · v${docs.belt.version} · running`));
+    const create = await screen.findByRole("button", { name: "Create shadow…" });
+    expect((create as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(shadowTestsOff)).toBeTruthy();
+    await user.click(create);
+    expect(daemon.posts("/shadow/save")).toHaveLength(0);
+    expect(tag()).toBe(`Belt · v${docs.belt.version} · running`);
+  });
+
+  it("refuses a direct shadow address with no test, keeping the draft and its Start disabled", async () => {
+    const daemon = mockDaemon({ "/api/v1/belts": goldenText("belts.json"), "/api/v1/belts/context": contextWithAction({ id: "shadow-create", enabled: false, reason: shadowTestsOff }) });
+    renderAt(`/belts?belt=${docs.belt.id}&shadow=1`);
+    await waitFor(() => expect(tag()).toBe("New shadow"));
+    const start = await screen.findByRole("button", { name: "Start shadow test" });
+    expect((start as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(shadowTestsOff)).toBeTruthy();
+    expect(daemon.posts("/shadow/save")).toHaveLength(0);
+  });
+
+  it("keeps an open unsaved shadow draft when a refreshed answer forbids starting it, and starts it again once allowed", async () => {
+    let refused = false;
+    const list = JSON.parse(goldenText("belts.json")) as BeltsResponse;
+    const daemon = mockDaemon({
+      "/api/v1/belts": () => refused ? json({ ...list, belts: list.belts.map(record => (record.belt ?? record.draft).id === docs.belt.id ? { ...record, revision: "refused" } : record) }) : json(goldenText("belts.json")),
+      "/api/v1/belts/context": request => json({ ...contextFor(request.body.draft), actions: [...contextFor(request.body.draft).actions, ...(refused ? [{ id: "shadow-create", enabled: false, reason: shadowTestsOff }] : [])] }),
+      [`/api/v1/belts/${docs.belt.id}/shadow/save`]: () => json(answer("belt-shadow-save.json"))
+    });
+    renderAt(`/belts?belt=${docs.belt.id}&shadow=1`);
+    await waitFor(() => expect(tag()).toBe("New shadow"));
+    expect((await screen.findByRole("button", { name: "Start shadow test" }) as HTMLButtonElement).disabled).toBe(false);
+
+    refused = true;
+    libraryChanged(2);
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    await waitFor(() => expect((screen.getByRole("button", { name: "Start shadow test" }) as HTMLButtonElement).disabled).toBe(true));
+    expect(screen.getByText(shadowTestsOff)).toBeTruthy();
+    expect(tag()).toBe("New shadow");
+
+    refused = false;
+    libraryChanged(3);
+    await waitFor(() => expect((screen.getByRole("button", { name: "Start shadow test" }) as HTMLButtonElement).disabled).toBe(false));
+    expect(daemon.posts("/shadow/save")).toHaveLength(0);
+  });
+
+  it("drops the Compare link with Insights off, while the accept sheet keeps the test's figures", async () => {
+    const user = userEvent.setup();
+    const figures = [{ id: "firstTry", label: "First try", live: { value: "71%", caption: "34 of 48 visits", bar: 0.71 },
+      shadow: { value: "82%", caption: "37 of 45 visits", bar: 0.82 }, delta: { label: "+11 pts", tone: "better", caption: "Shadow against live" } }];
+    mockDaemon({
+      "/api/v1/belts": goldenText("belts.json"), "/api/v1/belts/context": shadowContext,
+      "/api/v1/settings": () => json({ ...JSON.parse(goldenText("settings.json")), showInsights: false, enableShadowTests: true }),
+      "/api/v1/views/insights": () => json({ ...JSON.parse(goldenText("views-insights-belt.json")), shadow: { figures } })
+    });
+    renderAt(`/belts?belt=${issues.belt.id}&shadow=1`);
+    await user.click(await screen.findByRole("button", { name: "Accept shadow…" }));
+    const sheet = await screen.findByRole("dialog", { name: `Accept ${issues.shadow!.label.toLowerCase()}?` });
+    await waitFor(() => expect(within(sheet).getByText("82%")).toBeTruthy());
+    expect(screen.queryByRole("link", { name: "Compare on Insights →" })).toBeNull();
+  });
+
+  it("keeps Create shadow, its edits and Accept working with Insights off", async () => {
+    const user = userEvent.setup();
+    const daemon = mockDaemon({
+      "/api/v1/belts": goldenText("belts.json"), "/api/v1/belts/context": shadowContext,
+      "/api/v1/settings": () => json({ ...JSON.parse(goldenText("settings.json")), showInsights: false, enableShadowTests: true }),
+      [`/api/v1/belts/${docs.belt.id}/shadow/save`]: () => json(answer("belt-shadow-save.json")),
+      [`/api/v1/belts/${issues.belt.id}/shadow/accept`]: () => json({ resource: { ...issues, shadow: undefined }, warnings: [], problems: [] })
+    });
+    renderAt(`/belts?belt=${docs.belt.id}`);
+    await waitFor(() => expect(tag()).toBe(`Belt · v${docs.belt.version} · running`));
+    await user.click(await screen.findByRole("button", { name: "Create shadow…" }));
+    await waitFor(() => expect(tag()).toBe("New shadow"));
+    await user.click(screen.getByRole("button", { name: "Start shadow test" }));
+    await waitFor(() => expect(daemon.posts("/shadow/save")).toHaveLength(1));
+  });
 });
+
+/** A shadow test's explanation for a command the daemon refuses while Settings keeps shadow tests off. */
+const shadowTestsOff = "Enable shadow tests in Settings → Experimental to start a new test.";
+
+/** The context a draft gets, with one more action from the daemon. */
+function contextWithAction(action: BeltAction): Handler {
+  return request => json({ ...contextFor(request.body.draft), actions: [...contextFor(request.body.draft).actions, action] });
+}

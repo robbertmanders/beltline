@@ -65,15 +65,16 @@ func (c *Coordinator) actionContextNow(record store.BeltRecord, dirty bool) core
 // Lock: runs with c.mu held.
 func (c *Coordinator) actionContextWithWarnings(record store.BeltRecord, dirty bool, warnings []string) core.BeltActionContext {
 	return core.BeltActionContext{
-		Saved:            record.Belt.Version > 0,
-		Archived:         record.Archived,
-		Paused:           record.Paused,
-		Warnings:         warnings,
-		OutdatedStages:   c.outdatedStageCount(record.Belt),
-		HasManualTrigger: record.Belt.HasManualTrigger(),
-		Dirty:            dirty,
-		SharedRepository: c.hasSharedLibraryRepository(),
-		Shadow:           record.ShadowTest() != nil,
+		Saved:              record.Belt.Version > 0,
+		Archived:           record.Archived,
+		Paused:             record.Paused,
+		Warnings:           warnings,
+		OutdatedStages:     c.outdatedStageCount(record.Belt),
+		HasManualTrigger:   record.Belt.HasManualTrigger(),
+		Dirty:              dirty,
+		SharedRepository:   c.hasSharedLibraryRepository(),
+		Shadow:             record.ShadowTest() != nil,
+		ShadowTestsEnabled: c.settings.EnableShadowTests,
 	}
 }
 

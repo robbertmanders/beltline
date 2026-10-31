@@ -269,6 +269,21 @@ describe("Insights page, shadow tests", () => {
     expect(screen.getByText("Runs started since Oct 2")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Accept shadow…" })).toBeTruthy();
   });
+
+  it("shows an ended shadow comparison with its result while shadow tests are off, and no decision", async () => {
+    const ended = shadowView();
+    ended.shadow = { ...ended.shadow!, running: false, result: "accepted" };
+    stubDaemon({
+      [insightsPath]: () => json(ended),
+      "/api/v1/settings": () => json({ ...JSON.parse(goldenText("settings.json")), showInsights: true, enableShadowTests: false })
+    });
+    renderPage(`/insights?belt=${oneBelt().belt}&view=stages&version=shadow%3At1`);
+    const shared = await screen.findByRole("table", { name: "Shared stages" });
+    expect(screen.getByText("Shadow v2")).toBeTruthy();
+    expect(within(shared).getByText("Changed")).toBeTruthy();
+    expect(screen.getByText("accepted")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Accept shadow…" })).toBeNull();
+  });
 });
 
 describe("Insights page, evolution", () => {

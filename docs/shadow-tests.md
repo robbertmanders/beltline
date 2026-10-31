@@ -12,6 +12,12 @@ A shadow test runs a new version of a belt beside the live one on real work, so 
 1. TOC
 {:toc}
 
+## Turning shadow tests on
+
+Shadow tests are experimental and off in a new data folder. Turn on **Enable shadow tests** in **Settings → Experimental**; until then **Create shadow…** is disabled and says where to turn them on. Turning them on does not touch belts, runs or tests that already exist.
+
+The switch stays on while any belt has a test running, whether that belt is live, paused or archived. Accept or discard every running test before you turn it off. Once the last one has ended you can turn it off, and runs still finishing on an ended test do not hold it on. A data folder upgraded while a test was running keeps shadow tests on; otherwise it starts with them off.
+
 ## Starting a test
 
 On a belt's page, choose **Create shadow…** and edit the shadow like any belt: a different model for Build, a stricter Verify, a stage more or less. The shadow takes the live belt's triggers, name, base branch and repositories, so both versions see the same work. A belt has at most one shadow, and the editor's **Live** and **Shadow** tabs switch between them.

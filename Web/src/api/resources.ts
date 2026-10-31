@@ -29,7 +29,7 @@ export const getRoutes: readonly GetRouteDescriptor[] = [
   { method: "GET", path: "/api/v1/placeholders", resources: ["library", "settings", "models"] },
   { method: "GET", path: "/api/v1/agents", resources: ["library", "settings", "models"] },
   { method: "GET", path: "/api/v1/agents/:id", resources: ["library", "settings", "models"] },
-  { method: "GET", path: "/api/v1/settings", resources: ["settings"] },
+  { method: "GET", path: "/api/v1/settings", resources: ["settings", "library"] },
   { method: "GET", path: "/api/v1/tools", exception: "Executable availability has no EventResource; this on-demand read is invalidated on reconnect." },
   { method: "GET", path: "/api/v1/models/:runner", resources: ["models", "settings"] },
   { method: "GET", path: "/api/v1/assistant", resources: ["assistant", "settings", "models"] },

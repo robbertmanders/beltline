@@ -132,6 +132,8 @@ type beltProjectionRow struct {
 	Fired          map[string]jsonx.Date
 	WatchOutcomes  bool
 	ReviewOutcomes bool
+	// ShadowTests are the belt's tests, which the settings' switch availability depends on.
+	ShadowTests []core.ShadowTest
 }
 
 // beltRowOf is the projection row of a belt record.
@@ -139,6 +141,7 @@ func beltRowOf(record store.BeltRecord) beltProjectionRow {
 	row := beltProjectionRow{
 		Belt: record.Belt, Paused: record.Paused, Archived: record.Archived,
 		Created: jsonx.Date{Time: record.Created}, WatchOutcomes: record.WatchOutcomes, ReviewOutcomes: record.ReviewOutcomes,
+		ShadowTests: record.ShadowTests,
 	}
 	if record.Fired != nil {
 		row.Fired = make(map[string]jsonx.Date, len(record.Fired))
