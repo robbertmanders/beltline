@@ -7,15 +7,18 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
 
-// AttemptOutputResponse is an attempt's output as Markdown blocks.
-// Availability is `available`, `missing`, or `notApplicable` for a non-agent
-// attempt. Message is omitted when nil.
+// AttemptOutputResponse is an attempt's output as Markdown blocks, and as the document's title and
+// the sections the run page folds. Blocks is the whole output in order. Availability is `available`,
+// `missing`, or `notApplicable` for a non-agent attempt. Title is omitted when the output has none,
+// and Message when nil.
 type AttemptOutputResponse struct {
-	RunID        string               `json:"runId"`
-	AttemptID    string               `json:"attemptId"`
-	Availability string               `json:"availability"`
-	Blocks       []core.MarkdownBlock `json:"blocks"`
-	Message      *string              `json:"message,omitzero"`
+	RunID        string                      `json:"runId"`
+	AttemptID    string                      `json:"attemptId"`
+	Availability string                      `json:"availability"`
+	Blocks       []core.MarkdownBlock        `json:"blocks"`
+	Title        *core.MarkdownBlock         `json:"title,omitzero"`
+	Sections     []core.AttemptOutputSection `json:"sections"`
+	Message      *string                     `json:"message,omitzero"`
 }
 
 // NewAttemptOutputResponse is the snapshot's output as core.AttemptOutputPresent presents it.
@@ -26,6 +29,8 @@ func NewAttemptOutputResponse(snapshot coordinator.CoordinatorAttemptOutputSnaps
 		AttemptID:    snapshot.Attempt.ID,
 		Availability: string(presented.Availability),
 		Blocks:       presented.Blocks,
+		Title:        presented.Title,
+		Sections:     presented.Sections,
 		Message:      presented.Message,
 	}
 	return out

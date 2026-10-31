@@ -94,6 +94,7 @@ describe("prompt stage", () => {
     const start = screen.getByRole("button", { name: "Start" });
     expect(start.hasAttribute("disabled")).toBe(true);
     expect(screen.getByText("Ticket acceptance criteria")).toBeTruthy();
+    expect(document.querySelector(".run-prompt-context")!.querySelector("[aria-expanded], .output-section-toggle")).toBeNull();
     const source = screen.getByRole("checkbox", { name: "Include source context for agents" }) as HTMLInputElement;
     expect(source.checked).toBe(false);
     await user.click(screen.getByRole("button", { name: "Park it" }));

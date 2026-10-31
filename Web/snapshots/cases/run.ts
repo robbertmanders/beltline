@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { RunViewResponse } from "../../src/api/wire.gen";
+import type { AttemptOutputSection, MarkdownBlock, RunViewResponse } from "../../src/api/wire.gen";
 import { sidebarState, type SnapshotCase, type RunSelector } from "../caseTypes";
 
 const sessionsPanel = '[data-column="sessions"]';
@@ -48,6 +48,68 @@ function promptEntryResponse(): string {
     id: "decide", enabled: true, stage: panel.id, outcome: outcome.name, needsNote: outcome.id === "started"
   }));
   return JSON.stringify(view);
+}
+
+const outputSectionsRun = "epics:jira:PAY-40";
+const outputSectionsAttempt = "plan-epic-1";
+const outputSectionsRoute = `/runs/${encodeURIComponent(outputSectionsRun)}?stage=plan-epic&attempt=${outputSectionsAttempt}`;
+const outputSectionsParagraph = (text: string): MarkdownBlock => ({ type: "paragraph", text });
+
+/** The output's sections, as the daemon presents them: the preamble, then each heading with its body. */
+const outputSectionsSections = (): AttemptOutputSection[] => [
+  { id: "preamble", label: "Output", level: 0, blocks: [outputSectionsParagraph("This plan splits invoicing out behind one stable API, in three waves.")] },
+  { id: "heading:2:1:Goal", label: "Goal", level: 2, blocks: [outputSectionsParagraph("Move **invoice issuing** into its own service and keep existing callers working.")] },
+  { id: "heading:2:1:Approach", label: "Approach", level: 2, blocks: [
+    { type: "item", marker: "•", text: "Extract the API behind a facade, with the current identifiers unchanged." },
+    { type: "item", marker: "•", text: "Add contract tests for every endpoint the callers use." },
+    { type: "item", marker: "1.", text: "Migrate the data after the callers have moved, behind a reversible step." }
+  ] },
+  { id: "heading:3:1:A very long section heading that keeps going so the label has to wrap inside the stage panel at the minimum supported width",
+    label: "A very long section heading that keeps going so the label has to wrap inside the stage panel at the minimum supported width", level: 3,
+    blocks: [outputSectionsParagraph("A long paragraph under the long heading, so the expanded body is checked against the same column as the label above it.")] },
+  { id: "heading:2:1:Testing", label: "Testing", level: 2, blocks: [{ type: "code", text: "$ invoice-service contract --endpoint /v1/invoices --expect-identifiers-unchanged --region eu-west-1 --timeout 30s --report artifacts/contract-report-with-a-long-file-name.json" }] },
+  { id: "heading:2:1:Open questions", label: "Open questions", level: 2, blocks: [{ type: "item", marker: "•", text: "Should the migration run before or after the first wave ships?" }] }
+];
+
+/** The flat block list the daemon sends beside the sections: the title, every heading and every body in order. */
+function outputSectionsBlocks(title: MarkdownBlock, sections: AttemptOutputSection[]): MarkdownBlock[] {
+  return [title, ...sections.flatMap(section => section.level > 0 ? [{ type: "heading" as const, level: section.level, text: section.label }, ...section.blocks] : section.blocks)];
+}
+
+function outputSectionsCases(): SnapshotCase[] {
+  const title: MarkdownBlock = { type: "heading", level: 1, text: "Plan: split invoicing into its own service" };
+  const sections = outputSectionsSections();
+  const output = JSON.stringify({ runId: outputSectionsRun, attemptId: outputSectionsAttempt, availability: "available", blocks: outputSectionsBlocks(title, sections), title, sections });
+  const view = readFileSync(resolve(process.cwd(), "../daemon/testdata/golden/views-run.json"), "utf8");
+  const apiResponses = [
+    { path: `/api/v1/views/run/${encodeURIComponent(outputSectionsRun)}`, status: 200, body: view },
+    { path: `/api/v1/runs/${encodeURIComponent(outputSectionsRun)}/attempts/${outputSectionsAttempt}/output`, status: 200, body: output },
+    { path: `/api/v1/runs/${encodeURIComponent(outputSectionsRun)}/attempts/${outputSectionsAttempt}/artifacts`, status: 200, body: readFileSync(resolve(process.cwd(), "../daemon/testdata/golden/run-attempt-artifacts.json"), "utf8") }
+  ];
+  return [
+    {
+      // Every section collapsed in Light: the title and the section labels, nothing else.
+      id: "run-output-sections-collapsed",
+      route: outputSectionsRoute,
+      sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
+      readiness: "run",
+      apiResponses,
+      readyMarker: ".run-output-sections",
+      scrollToTop: ".run-output-sections"
+    },
+    {
+      // The Testing section open in Dark, through a typed click on its control.
+      id: "run-output-sections-dark-expanded",
+      route: outputSectionsRoute,
+      sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
+      readiness: "run",
+      appearance: "dark",
+      apiResponses,
+      steps: [{ kind: "click", target: { role: "button", name: "Testing", exact: true } }],
+      readyMarker: ".output-section.is-open",
+      scrollToTop: ".run-output-sections"
+    }
+  ];
 }
 
 /**
@@ -107,6 +169,9 @@ export const runCases: SnapshotCase[] = [
     readiness: "run",
     readyMarker: sessionsReady
   },
+  // Agent output as folding sections: several headings, a long heading and long code. The run view and the
+  // attempt's output and artifacts are fixed here, so the captures do not depend on the demo's saved output.
+  ...outputSectionsCases(),
   {
     // The floating run menu (controls, then links), so its bounds are visible next to the page it floats over.
     id: "run-controls-open",

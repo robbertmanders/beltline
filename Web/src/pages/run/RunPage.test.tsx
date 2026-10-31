@@ -3,12 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders, AppRoutes } from "../../app/App";
-import type { RunViewResponse } from "../../api/wire.gen";
+import type { AttemptOutputResponse, AttemptOutputSection, MarkdownBlock, RunViewResponse } from "../../api/wire.gen";
 import { runDraftStore } from "../../state/runDrafts";
 import { defaultPreferences, preferencesStorageKey } from "../../state/preferences";
+import { outputFoldsStorageKey } from "../../state/outputFolds";
 import { json } from "../../test/response";
 import { goldenText } from "../../test/golden";
 import { fixtureRoute, refusal, stubDaemon as daemonRoutes, type Handler } from "../../test/daemon";
+import { OutputSections } from "./OutputSections";
 
 const runId = "epics:jira:PAY-40";
 const viewPath = `/api/v1/views/run/${encodeURIComponent(runId)}`;
@@ -316,5 +318,387 @@ describe("Run page Sessions sidebar", () => {
     fireEvent.doubleClick(divider);
     await waitFor(() => expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).sessionsWidth).toBeNull());
     expect(sidebarWidth()).toBe("600px");
+  });
+});
+
+/** The agent output the daemon sends for a section test: a title, a preamble, and sections of every shape. */
+const para = (text: string): MarkdownBlock => ({ type: "paragraph", text });
+const headingBlock = (level: number, text: string): MarkdownBlock => ({ type: "heading", level, text });
+const sectionsOfSpec = (): AttemptOutputSection[] => [
+  { id: "preamble", label: "Output", level: 0, blocks: [para("Read the goal first.")] },
+  { id: "heading:2:1:Goal", label: "Goal", level: 2, blocks: [para("Split **invoicing** out. See [the docs](https://example.com/docs) and [a bad link](javascript:alert(1)).")] },
+  { id: "heading:3:1:Details", label: "Details", level: 3, blocks: [{ type: "item", marker: "•", text: "first detail" }, { type: "item", marker: "1.", text: "second detail" }] },
+  { id: "heading:2:1:Testing", label: "Testing", level: 2, blocks: [{ type: "code", text: "const ok = true" }] },
+  { id: "heading:2:2:Goal", label: "Goal", level: 2, blocks: [para("A second goal with the same label.")] },
+  { id: "heading:2:1:Empty", label: "Empty", level: 2, blocks: [] }
+];
+const titleOfSpec = headingBlock(1, "Invoicing split");
+function outputOf(sections: AttemptOutputSection[], title?: MarkdownBlock): AttemptOutputResponse {
+  const flat = [...(title ? [title] : []), ...sections.flatMap(section => section.level > 0 ? [headingBlock(section.level, section.label), ...section.blocks] : section.blocks)];
+  return { runId, attemptId: "plan-epic-1", availability: "available", blocks: flat, title, sections };
+}
+
+/** The run page's daemon answering the attempt's output with `body`, and its artifacts as usual. */
+function stubOutput(body: string | Handler) {
+  return stubDaemon({
+    [`${runPath}/attempts*`]: request => request.path.includes("/output")
+      ? (typeof body === "string" ? new Response(body, { status: 200, headers: { "content-type": "application/json" } }) : body(request))
+      : json(goldenText("run-attempt-artifacts.json"))
+  });
+}
+
+/** The output section controls inside a stage panel, in the order the page shows them. */
+function sectionControls(scope: HTMLElement): HTMLButtonElement[] {
+  return within(scope).getAllByRole("button").filter((button): button is HTMLButtonElement => button.classList.contains("output-section-toggle"));
+}
+
+/** The stage panel once the attempt's output has loaded, so its section controls can be queried. */
+async function outputPanel(): Promise<HTMLElement> {
+  const panel = await screen.findByRole("region", { name: "Stage 1: Plan the epic" });
+  await waitFor(() => expect(panel.querySelector(".run-output")).not.toBeNull());
+  return panel;
+}
+const sectionBody = (control: HTMLElement) => document.getElementById(control.getAttribute("aria-controls")!)!;
+
+describe("Run page agent output sections", () => {
+  it("shows the title and every section control in order, with a subsection's control there while its parent is closed", async () => {
+    stubOutput(JSON.stringify(outputOf(sectionsOfSpec(), titleOfSpec)));
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const panel = await outputPanel();
+    expect(await within(panel).findByRole("heading", { level: 1, name: "Invoicing split" })).toBeTruthy();
+    const controls = sectionControls(panel);
+    expect(controls.map(control => control.querySelector(".output-section-label")?.textContent)).toEqual(["Output", "Goal", "Details", "Testing", "Goal", "Empty"]);
+    expect(controls.every(control => control.getAttribute("aria-expanded") === "false")).toBe(true);
+    expect(within(panel).getByRole("heading", { level: 3, name: "Details" })).toBeTruthy();
+    expect(sectionBody(within(panel).getByRole("button", { name: "Details" })).hidden).toBe(true);
+  });
+
+  it("opens and closes each section on its own, and keeps focus on the toggle that was pressed", async () => {
+    const user = userEvent.setup();
+    stubOutput(JSON.stringify(outputOf(sectionsOfSpec(), titleOfSpec)));
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const panel = await outputPanel();
+    const [goal, details] = [within(panel).getAllByRole("button", { name: "Goal" })[0]!, within(panel).getByRole("button", { name: "Details" })];
+    await user.click(goal);
+    expect(goal.getAttribute("aria-expanded")).toBe("true");
+    expect(sectionBody(goal).hidden).toBe(false);
+    expect(within(sectionBody(goal)).getByText(/Split/)).toBeTruthy();
+    expect(details.getAttribute("aria-expanded")).toBe("false");
+    await user.click(details);
+    expect(sectionBody(details).hidden).toBe(false);
+    expect(within(sectionBody(details)).getByText("first detail")).toBeTruthy();
+    await user.click(goal);
+    expect(goal.getAttribute("aria-expanded")).toBe("false");
+    expect(sectionBody(goal).hidden).toBe(true);
+    expect(details.getAttribute("aria-expanded")).toBe("true");
+    expect(document.activeElement).toBe(goal);
+  });
+
+  it("toggles a focused section with Enter and with Space, keeping focus on it", async () => {
+    const user = userEvent.setup();
+    stubOutput(JSON.stringify(outputOf(sectionsOfSpec(), titleOfSpec)));
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const panel = await outputPanel();
+    const testing = within(panel).getByRole("button", { name: "Testing" });
+    testing.focus();
+    await user.keyboard("{Enter}");
+    expect(testing.getAttribute("aria-expanded")).toBe("true");
+    expect(document.activeElement).toBe(testing);
+    await user.keyboard(" ");
+    expect(testing.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(testing);
+  });
+
+  it("skips a link in a collapsed body when tabbing, and reaches it once the section is open", async () => {
+    const user = userEvent.setup();
+    stubOutput(JSON.stringify(outputOf(sectionsOfSpec(), titleOfSpec)));
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const panel = await outputPanel();
+    const goal = within(panel).getAllByRole("button", { name: "Goal" })[0]!;
+    const details = within(panel).getByRole("button", { name: "Details" });
+    goal.focus();
+    await user.tab();
+    expect(document.activeElement).toBe(details);
+    await user.click(goal);
+    expect(goal.getAttribute("aria-expanded")).toBe("true");
+    goal.focus();
+    await user.tab();
+    expect(document.activeElement).toBe(within(panel).getByRole("link", { name: "the docs" }));
+  });
+
+  it("renders the expanded body's paragraphs, lists, code and only safe links, and folds neither the result nor the artifacts", async () => {
+    const user = userEvent.setup();
+    stubOutput(JSON.stringify(outputOf(sectionsOfSpec(), titleOfSpec)));
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const panel = await outputPanel();
+    const result = panel.querySelector<HTMLElement>(".stage-result")!;
+    expect(within(result).getByText("ready")).toBeTruthy();
+    expect(within(result).getByText("→ Next: Approve the plan")).toBeTruthy();
+    await user.click(within(panel).getAllByRole("button", { name: "Goal" })[0]!);
+    expect(result.closest("[hidden]")).toBeNull();
+    const body = sectionBody(within(panel).getAllByRole("button", { name: "Goal" })[0]!);
+    expect(body.querySelector("strong")?.textContent).toBe("invoicing");
+    expect(within(body).getByRole("link", { name: "the docs" }).getAttribute("href")).toBe("https://example.com/docs");
+    expect(within(body).queryByRole("link", { name: "a bad link" })).toBeNull();
+    expect(within(body).getByText("a bad link").tagName).toBe("SPAN");
+    await user.click(within(panel).getByRole("button", { name: "Testing" }));
+    expect(within(sectionBody(within(panel).getByRole("button", { name: "Testing" }))).getByText("const ok = true").tagName).toBe("CODE");
+    await user.click(within(panel).getByRole("button", { name: "Details" }));
+    const details = sectionBody(within(panel).getByRole("button", { name: "Details" }));
+    expect(Array.from(details.querySelectorAll(".markdown-marker")).map(marker => marker.textContent)).toEqual(["•", "1."]);
+    expect(within(details).getByText("second detail")).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "Open in browser" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "Show in Finder" })).toBeTruthy();
+    expect(within(panel).getByText("contract.html")).toBeTruthy();
+    await user.click(within(panel).getByRole("button", { name: "Testing" }));
+    expect(within(panel).getByRole("button", { name: "Open in browser" })).toBeTruthy();
+    expect(within(result).getByText("ready")).toBeTruthy();
+    expect(result.closest("[hidden]")).toBeNull();
+    expect(panel.querySelector(".run-artifacts")!.closest("[hidden]")).toBeNull();
+  });
+
+  it("expands the long-output golden's section with its paragraph, list and code blocks in order, beside the title", async () => {
+    const user = userEvent.setup();
+    stubOutput(goldenText("run-attempt-output-long.json"));
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const panel = await outputPanel();
+    expect(within(panel).getByRole("heading", { level: 1, name: "Release notes" })).toBeTruthy();
+    const control = within(panel).getByRole("button", { name: "Output" });
+    await user.click(control);
+    const body = sectionBody(control);
+    expect(Array.from(body.querySelectorAll(".markdown-blocks > *")).map(node => node.tagName)).toEqual(["P", "DIV", "DIV", "DIV", "PRE", "PRE"]);
+    expect(within(body).getByText(/reflow around the output column/)).toBeTruthy();
+    expect(Array.from(body.querySelectorAll(".markdown-item-text")).map(item => item.textContent)).toEqual(["first item", "second item with a wrapped\ncontinuation that remains part of the same item", "numbered item"]);
+    expect(Array.from(body.querySelectorAll("pre code")).map(code => code.textContent)).toEqual(['let greeting = "hello  "\nprint(greeting)', "unclosed code keeps trailing spaces"]);
+  });
+
+  it("gives an unheaded output one Output section with its content, and no controls for empty or title-only output", async () => {
+    stubOutput(JSON.stringify(outputOf([{ id: "preamble", label: "Output", level: 0, blocks: [para("Plain text only.")] }])));
+    const first = renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const panel = await outputPanel();
+    const control = within(panel).getByRole("button", { name: "Output" });
+    expect(control.getAttribute("aria-expanded")).toBe("false");
+    expect(sectionBody(control).hidden).toBe(true);
+    expect(within(sectionBody(control)).getByText("Plain text only.")).toBeTruthy();
+    first.unmount();
+
+    stubOutput(JSON.stringify(outputOf([], headingBlock(1, "Only a title"))));
+    const second = renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const titled = await outputPanel();
+    expect(await within(titled).findByRole("heading", { level: 1, name: "Only a title" })).toBeTruthy();
+    expect(sectionControls(titled)).toEqual([]);
+    second.unmount();
+
+    stubOutput(JSON.stringify(outputOf([])));
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const empty = await outputPanel();
+    expect(sectionControls(empty)).toEqual([]);
+  });
+
+  it("restores a section's choice after the reader leaves and returns, and keeps other attempts' choices apart", async () => {
+    const user = userEvent.setup();
+    stubOutput(JSON.stringify(outputOf(sectionsOfSpec(), titleOfSpec)));
+    const first = renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    let panel = await outputPanel();
+    await user.click(within(panel).getByRole("button", { name: "Details" }));
+    first.unmount();
+
+    const returned = renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    panel = await outputPanel();
+    expect(within(panel).getByRole("button", { name: "Details" }).getAttribute("aria-expanded")).toBe("true");
+    expect(within(panel).getAllByRole("button", { name: "Goal" })[0]!.getAttribute("aria-expanded")).toBe("false");
+    returned.unmount();
+
+    localStorage.clear();
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    panel = await outputPanel();
+    expect(within(panel).getByRole("button", { name: "Details" }).getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("reads a choice for another attempt as closed, and reads the choice made for it back", async () => {
+    const user = userEvent.setup();
+    const view = viewOf();
+    const panelOf = view.stages.find(stage => stage.id === "plan-epic")!;
+    panelOf.attempts = [
+      { ...panelOf.attempts[0]!, id: "plan-epic-2", number: 2, caption: "Attempt 2 of 2" },
+      { ...panelOf.attempts[0]!, id: "plan-epic-1", number: 1, caption: "Attempt 1 of 2" }
+    ];
+    panelOf.defaultAttempt = "plan-epic-2";
+    stubDaemon({
+      [viewPath]: () => json(view),
+      [`${runPath}/attempts*`]: request => request.path.includes("/output")
+        ? json(JSON.stringify({ ...outputOf(sectionsOfSpec(), titleOfSpec), attemptId: request.path.split("/attempts/")[1]!.split("/")[0] }))
+        : json(goldenText("run-attempt-artifacts.json"))
+    });
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    let panel = await outputPanel();
+    await user.click(within(panel).getByRole("button", { name: "Details" }));
+    expect(within(panel).getByRole("button", { name: "Details" }).getAttribute("aria-expanded")).toBe("true");
+    await user.selectOptions(within(panel).getByLabelText("Select attempt of Plan the epic"), "plan-epic-2");
+    await waitFor(() => expect(within(panel).getByRole("button", { name: "Details" }).getAttribute("aria-expanded")).toBe("false"));
+    await user.click(within(panel).getByRole("button", { name: "Details" }));
+    await user.selectOptions(within(panel).getByLabelText("Select attempt of Plan the epic"), "plan-epic-1");
+    await waitFor(() => expect(within(panel).getByRole("button", { name: "Details" }).getAttribute("aria-expanded")).toBe("true"));
+    panel = await outputPanel();
+    expect(within(panel).getByRole("button", { name: "Details" }).getAttribute("aria-expanded")).toBe("true");
+  });
+});
+
+describe("Agent output sections around the output", () => {
+  it("shows loading, missing and rejected output as before, with no section controls", async () => {
+    stubOutput(() => new Promise<Response>(() => {}));
+    const loading = renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const loadingPanel = await screen.findByRole("region", { name: "Stage 1: Plan the epic" });
+    expect(within(loadingPanel).getByRole("status").textContent).toBe("Loading output…");
+    expect(sectionControls(loadingPanel)).toEqual([]);
+    loading.unmount();
+
+    stubOutput(() => json({ runId, attemptId: "plan-epic-1", availability: "missing", blocks: [], sections: [], message: "This attempt wrote no plan.md." }));
+    const missing = renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const missingPanel = await screen.findByRole("region", { name: "Stage 1: Plan the epic" });
+    expect(await within(missingPanel).findByText("This attempt wrote no plan.md.")).toBeTruthy();
+    expect(sectionControls(missingPanel)).toEqual([]);
+    missing.unmount();
+
+    stubOutput(refusal("Output unavailable", ["the file cannot be read"]));
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const rejectedPanel = await screen.findByRole("region", { name: "Stage 1: Plan the epic" });
+    const alert = await within(rejectedPanel).findByRole("alert");
+    expect(within(alert).getByText("Output unavailable")).toBeTruthy();
+    expect(within(alert).getByText("the file cannot be read")).toBeTruthy();
+    expect(sectionControls(rejectedPanel)).toEqual([]);
+  });
+
+  it("leaves an approval document fully rendered, with no section controls", async () => {
+    const view = viewOf();
+    const gate = view.stages.find(stage => stage.id === "approve-plan")!;
+    view.run.state = "waiting";
+    view.run.stageId = gate.id;
+    gate.step = "waiting";
+    gate.attempts = [{ id: "approve-plan-1", number: 1, caption: "Attempt 1 of 1", content: "decision", isOpen: true }];
+    stubDaemon({ [viewPath]: () => json(view) });
+    renderRun("?stage=approve-plan&attempt=approve-plan-1");
+    const panel = await screen.findByRole("region", { name: "Stage 2: Approve the plan" });
+    await waitFor(() => expect(panel.querySelector(".stage-approval-doc .markdown-blocks")).not.toBeNull());
+    expect(panel.querySelectorAll(".stage-approval-doc .markdown-blocks > *").length).toBeGreaterThan(0);
+    expect(within(panel).getByText("Contract stage output").closest("[hidden]")).toBeNull();
+    expect(sectionControls(panel)).toEqual([]);
+    expect(panel.querySelector(".output-section-toggle")).toBeNull();
+  });
+
+  it("shows a prompt stage's context and source choice in full, with no disclosure controls", async () => {
+    const view = viewOf();
+    const gate = view.stages.find(stage => stage.id === "approve-plan")!;
+    view.run.state = "waiting";
+    view.run.stageId = gate.id;
+    gate.step = "waiting";
+    gate.attempts = [{ id: "approve-plan-1", number: 1, caption: "Attempt 1 of 1", content: "decision", isOpen: true }];
+    gate.facts!.approval!.prompt = {
+      label: "Your prompt", placeholder: "Describe your task.", help: "Write the run's task.",
+      contextLabel: "Source context", context: [{ type: "paragraph", text: "Ticket acceptance criteria" }],
+      sourceLabel: "Include source context for agents", sourceHelp: "Unchecked, agents get the reference only.", source: "withheld"
+    };
+    stubDaemon({ [viewPath]: () => json(view) });
+    renderRun("?stage=approve-plan&attempt=approve-plan-1");
+    const panel = await screen.findByRole("region", { name: "Stage 2: Approve the plan" });
+    await waitFor(() => expect(panel.querySelector(".run-prompt-context")).not.toBeNull());
+    const context = panel.querySelector<HTMLElement>(".run-prompt-context")!;
+    expect(within(context).getByText("Ticket acceptance criteria")).toBeTruthy();
+    expect(context.closest("[hidden]")).toBeNull();
+    expect(within(panel).getByRole("checkbox", { name: "Include source context for agents" })).toBeTruthy();
+    expect(sectionControls(panel)).toEqual([]);
+    expect(panel.querySelector(".run-prompt [aria-expanded], .run-prompt .output-section-toggle")).toBeNull();
+  });
+});
+
+describe("Agent output section storage and refreshes", () => {
+  const renderSections = (props: { runId: string; attemptId: string; sections: AttemptOutputSection[]; title?: MarkdownBlock }) =>
+    render(<OutputSections {...props} />);
+
+  it("keeps the same run and attempt's choices across a body-only refresh, and starts a new or renamed heading closed", async () => {
+    const user = userEvent.setup();
+    const first = renderSections({ runId, attemptId: "a1", sections: sectionsOfSpec() });
+    await user.click(screen.getByRole("button", { name: "Testing" }));
+    const refreshed = sectionsOfSpec().map(section => section.id === "heading:2:1:Testing" ? { ...section, blocks: [{ type: "code" as const, text: "changed" }] } : section);
+    first.rerender(<OutputSections runId={runId} attemptId="a1" sections={refreshed} />);
+    expect(screen.getByRole("button", { name: "Testing" }).getAttribute("aria-expanded")).toBe("true");
+    const renamed = sectionsOfSpec().map(section => section.id === "heading:2:1:Testing" ? { ...section, id: "heading:2:1:Checks", label: "Checks" } : section);
+    first.rerender(<OutputSections runId={runId} attemptId="a1" sections={renamed} />);
+    expect(screen.getByRole("button", { name: "Checks" }).getAttribute("aria-expanded")).toBe("false");
+    first.unmount();
+  });
+
+  it("keeps two runs' choices apart when both have the same attempt ID", async () => {
+    const user = userEvent.setup();
+    const first = renderSections({ runId: "run-a", attemptId: "same", sections: sectionsOfSpec() });
+    await user.click(screen.getByRole("button", { name: "Testing" }));
+    first.unmount();
+    const other = renderSections({ runId: "run-b", attemptId: "same", sections: sectionsOfSpec() });
+    expect(screen.getByRole("button", { name: "Testing" }).getAttribute("aria-expanded")).toBe("false");
+    other.unmount();
+    renderSections({ runId: "run-a", attemptId: "same", sections: sectionsOfSpec() });
+    expect(screen.getByRole("button", { name: "Testing" }).getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("opens each of two repeated labels on its own", async () => {
+    const user = userEvent.setup();
+    renderSections({ runId, attemptId: "a1", sections: sectionsOfSpec() });
+    const [firstGoal, secondGoal] = screen.getAllByRole("button", { name: "Goal" });
+    await user.click(secondGoal!);
+    expect(secondGoal!.getAttribute("aria-expanded")).toBe("true");
+    expect(firstGoal!.getAttribute("aria-expanded")).toBe("false");
+    expect(within(sectionBody(secondGoal!)).getByText("A second goal with the same label.")).toBeTruthy();
+  });
+
+  it("treats a refused or unreadable storage as no saved choices, and keeps toggles working for the mounted view", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("denied"); });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("denied"); });
+    const view = renderSections({ runId, attemptId: "a1", sections: sectionsOfSpec() });
+    const testing = screen.getByRole("button", { name: "Testing" });
+    expect(testing.getAttribute("aria-expanded")).toBe("false");
+    await user.click(testing);
+    expect(testing.getAttribute("aria-expanded")).toBe("true");
+    view.unmount();
+    vi.restoreAllMocks();
+  });
+
+  it("keeps the saved choices readable and toggles working on the run page when new choices are refused", async () => {
+    const user = userEvent.setup();
+    const saved = { [runId]: { "plan-epic-1": { "heading:2:1:Testing": true } } };
+    localStorage.setItem(outputFoldsStorageKey, JSON.stringify(saved));
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("quota exceeded"); });
+    stubOutput(JSON.stringify(outputOf(sectionsOfSpec(), titleOfSpec)));
+    const view = renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const panel = await outputPanel();
+    const testing = within(panel).getByRole("button", { name: "Testing" });
+    const details = within(panel).getByRole("button", { name: "Details" });
+    expect(testing.getAttribute("aria-expanded")).toBe("true");
+    await user.click(details);
+    expect(details.getAttribute("aria-expanded")).toBe("true");
+    expect(sectionBody(details).hidden).toBe(false);
+    await user.click(testing);
+    expect(testing.getAttribute("aria-expanded")).toBe("false");
+    expect(sectionBody(testing).hidden).toBe(true);
+    expect(details.getAttribute("aria-expanded")).toBe("true");
+    expect(JSON.parse(localStorage.getItem(outputFoldsStorageKey)!)).toEqual(saved);
+    view.unmount();
+    vi.restoreAllMocks();
+  });
+
+  it("ignores malformed saved JSON and replaces it with a valid record on the next toggle", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem(outputFoldsStorageKey, "{not json");
+    renderSections({ runId, attemptId: "a1", sections: sectionsOfSpec() });
+    const testing = screen.getByRole("button", { name: "Testing" });
+    expect(testing.getAttribute("aria-expanded")).toBe("false");
+    await user.click(testing);
+    expect(JSON.parse(localStorage.getItem(outputFoldsStorageKey)!)).toEqual({ [runId]: { a1: { "heading:2:1:Testing": true } } });
+  });
+
+  it("drops a stored choice that is not a boolean and never reads one for a heading that is gone", () => {
+    localStorage.setItem(outputFoldsStorageKey, JSON.stringify({ [runId]: { a1: { "heading:2:1:Testing": "yes", "heading:2:1:Gone": true } } }));
+    renderSections({ runId, attemptId: "a1", sections: sectionsOfSpec() });
+    expect(screen.getByRole("button", { name: "Testing" }).getAttribute("aria-expanded")).toBe("false");
   });
 });

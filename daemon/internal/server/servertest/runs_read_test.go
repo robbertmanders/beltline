@@ -168,6 +168,23 @@ func TestAttemptOutputParsesLongMarkdownForTheNamedAttemptOnly(t *testing.T) {
 	if !hasTitle || !hasCode {
 		t.Fatalf("title %v, code %v: want the heading and the code block", hasTitle, hasCode)
 	}
+	// The title is the document's; the rest has no heading, so it is one Output section.
+	var presented struct {
+		Title    *core.MarkdownBlock         `json:"title"`
+		Sections []core.AttemptOutputSection `json:"sections"`
+	}
+	if err := routes.JSONDecode(reply.Body, &presented); err != nil {
+		t.Fatalf("output sections: %v", err)
+	}
+	if presented.Title == nil || presented.Title.Text != "Release notes" || presented.Title.Level != 1 {
+		t.Fatalf("title = %+v, want the Release notes heading", presented.Title)
+	}
+	if len(presented.Sections) != 1 || presented.Sections[0].ID != core.AttemptOutputPreambleID || presented.Sections[0].Label != "Output" {
+		t.Fatalf("sections = %+v, want one Output section", presented.Sections)
+	}
+	if len(presented.Sections[0].Blocks) != len(blocks)-1 {
+		t.Fatalf("the Output section has %d blocks, want the %d after the title", len(presented.Sections[0].Blocks), len(blocks)-1)
+	}
 	if strings.Contains(reply.Text(), "Outcome: complete") {
 		t.Fatal("the outcome footer reached the output")
 	}
@@ -224,6 +241,12 @@ func TestAttemptOutputDistinguishesMissingOpenCompletedAndNonAgentAttempts(t *te
 	if completeResponse.Message == nil || !strings.Contains(*completeResponse.Message, "wrote no report.md") {
 		t.Fatalf("completed attempt message %v, want the no-output note", completeResponse.Message)
 	}
+	if completeResponse.Title != nil || len(completeResponse.Sections) != 0 {
+		t.Fatalf("completed attempt without output: title %+v and %d sections, want none", completeResponse.Title, len(completeResponse.Sections))
+	}
+	if openResponse.Title != nil || len(openResponse.Sections) != 0 {
+		t.Fatalf("open attempt without output: title %+v and %d sections, want none", openResponse.Title, len(openResponse.Sections))
+	}
 
 	gateReply := getCase(f, outputPath(decision))
 	var gateResponse api.AttemptOutputResponse
@@ -232,6 +255,9 @@ func TestAttemptOutputDistinguishesMissingOpenCompletedAndNonAgentAttempts(t *te
 	}
 	if gateResponse.Availability != "notApplicable" || len(gateResponse.Blocks) != 0 || gateResponse.Message != nil {
 		t.Fatalf("gate attempt: %+v, want notApplicable with no message", gateResponse)
+	}
+	if len(gateResponse.Sections) != 0 || gateResponse.Title != nil {
+		t.Fatalf("gate attempt presented sections %+v, want none", gateResponse.Sections)
 	}
 
 	unknown := getCase(f, base+"unknown/output")
