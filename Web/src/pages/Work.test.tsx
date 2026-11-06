@@ -36,7 +36,13 @@ function repoGroupBody(): WorkBody {
   return body;
 }
 
-const headingNames = () => screen.getAllByRole("heading", { level: 2 }).map(heading => heading.textContent);
+/** A heading or fold's words as "label · count": the page draws the count first, as the mockup's large figure. */
+function counted(element: Element): string {
+  const count = element.querySelector(".gn")?.textContent ?? "";
+  const label = (element.textContent ?? "").slice(count.length).replace(/\s+/g, " ").trim();
+  return count ? `${label} · ${count}` : label;
+}
+const headingNames = () => screen.getAllByRole("heading", { level: 2 }).map(counted);
 const fold = (label: string) => screen.getByRole("button", { name: new RegExp(`^.*${label}`) });
 /** Clicks the acme/web group heading, folding it. */
 const clickFold = () => userEvent.setup().click(fold("acme/web"));
@@ -61,8 +67,8 @@ describe("Work page", () => {
     renderWork();
     await answered();
     const names = headingNames();
-    expect(names[0]).toBe("Runs");
-    expect(names[1]).toBe("Waiting to start");
+    expect(names[0]).toMatch(/^Runs · \d+$/);
+    expect(names[1]).toMatch(/^Waiting to start · \d+$/);
     expect(names[2]).toMatch(/^Shadow · \d+$/);
     expect(names[3]).toMatch(/^Watching · \d+$/);
   });
@@ -75,7 +81,7 @@ describe("Work page", () => {
     const shadow = (body.shadowGroups as Array<{ rows: Array<{ run: { id: string }; shadow?: string }> }>).flatMap(group => group.rows);
     expect(shadow.length).toBeGreaterThan(0);
     for (const row of shadow) {
-      expect(document.querySelector(`tr[data-run-id='${row.run.id}'] .work-shadow-chip`)?.textContent).toBe(row.shadow);
+      expect(document.querySelector(`li[data-run-id='${row.run.id}'] .work-shadow-chip`)?.textContent).toBe(row.shadow);
     }
   });
 
@@ -90,7 +96,7 @@ describe("Work page", () => {
     expect(headingNames().some(name => name?.startsWith("Shadow · "))).toBe(true);
     expect(shadow.length).toBeGreaterThan(0);
     for (const row of shadow) {
-      const line = document.querySelector(`tr[data-run-id='${row.run.id}']`);
+      const line = document.querySelector(`li[data-run-id='${row.run.id}']`);
       expect(line?.querySelector(".work-shadow-chip")?.textContent).toBe(row.shadow);
       expect(line?.querySelector("a")?.getAttribute("href")).toBe(`/runs/${encodeURIComponent(row.run.id)}`);
     }
@@ -112,7 +118,7 @@ describe("Work page", () => {
     workDaemon(() => json(goldenText("views-work.json")));
     renderWork("/work");
     await answered();
-    expect((screen.getByLabelText("Belt") as HTMLSelectElement).value).toBe("all");
+    expect(within(screen.getByRole("group", { name: "Belt" })).getByRole("button", { name: "All belts" }).getAttribute("aria-pressed")).toBe("true");
     expect((screen.getByLabelText("Group by") as HTMLSelectElement).value).toBe("none");
     expect(screen.getByRole("button", { name: "Active" }).getAttribute("aria-pressed")).toBe("true");
   });
@@ -152,9 +158,9 @@ describe("Work page", () => {
     workDaemon(() => json(JSON.stringify(body)));
     renderWork("/work?groupBy=repo");
     await answered();
-    const headers = screen.getAllByRole("button", { expanded: true }).map(button => button.textContent?.replace(/\s+/g, " ").trim());
+    const headers = screen.getAllByRole("button", { expanded: true }).map(counted);
     expect(headers).toEqual(["zeta · 1", "alpha · 1"]);
-    expect(document.querySelectorAll("tr.work-row")).toHaveLength(2);
+    expect(document.querySelectorAll("li.work-row")).toHaveLength(2);
   });
 
   it("folds a group in Runs without a request, and keeps the fold after a remount", async () => {
@@ -166,7 +172,7 @@ describe("Work page", () => {
     const before = daemon.queries().length;
     await user.click(header);
     expect(header.getAttribute("aria-expanded")).toBe("false");
-    expect(header.textContent).toMatch(/acme\/web · 15/);
+    expect(counted(header)).toMatch(/acme\/web · 15/);
     expect(daemon.queries()).toHaveLength(before);
     expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).runsFolded.repo).toEqual(["acme/web"]);
     first.unmount();
@@ -200,7 +206,7 @@ describe("Work page", () => {
     workDaemon(() => json(JSON.stringify(body)));
     renderWork("/work?groupBy=status");
     await answered();
-    expect(screen.getAllByRole("button", { expanded: true }).map(button => button.textContent?.replace(/\s+/g, " ").trim())).toContain("Done · 1");
+    expect(screen.getAllByRole("button", { expanded: true }).map(counted)).toContain("Done · 1");
     expect(screen.getByText("Done · #12")).toBeTruthy();
   });
 
@@ -216,7 +222,7 @@ describe("Work page", () => {
     renderWork("/work?groupBy=owner");
     expect(await screen.findByRole("alert")).toBeTruthy();
     expect(screen.getByText("groupBy must be one of none, repo, status, belt, epic")).toBeTruthy();
-    expect(screen.queryByRole("table", { name: "Runs" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Runs" })).toBeNull();
     expect(daemon.queries()).toEqual([`${workPath}?groupBy=owner`]);
   });
 
@@ -232,9 +238,9 @@ describe("Work page", () => {
     renderWork();
     await answered();
     const decisionId = (decision.run as { id: string }).id;
-    const decisionLink = document.querySelector<HTMLAnchorElement>(`tr[data-run-id="${decisionId}"] a`)!;
+    const decisionLink = document.querySelector<HTMLAnchorElement>(`li[data-run-id="${decisionId}"] a`)!;
     expect(decisionLink.getAttribute("href")).toBe(`/runs/${encodeURIComponent(decisionId)}?stage=${encodeURIComponent(decision.openStage as string)}`);
-    const passiveLink = document.querySelector<HTMLAnchorElement>(`tr[data-run-id="nightly:scheduled/2026 #1"] a`)!;
+    const passiveLink = document.querySelector<HTMLAnchorElement>(`li[data-run-id="nightly:scheduled/2026 #1"] a`)!;
     expect(passiveLink.getAttribute("href")).toBe(`/runs/${encodeURIComponent("nightly:scheduled/2026 #1")}`);
   });
 
@@ -242,7 +248,7 @@ describe("Work page", () => {
     workDaemon(() => json(goldenText("error-not-found.json"), 500));
     renderWork();
     expect(await screen.findByRole("alert")).toBeTruthy();
-    expect(screen.queryByRole("table", { name: "Runs" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Runs" })).toBeNull();
   });
 
   it("adds one history entry for a search, replaces it for each further keystroke, and adds one for a filter", async () => {
@@ -271,7 +277,7 @@ describe("Work page", () => {
     render(<AppProviders><BrowserRouter><AppRoutes /></BrowserRouter></AppProviders>);
     await answered();
     await user.click(fold("acme/web"));
-    await user.click(document.querySelector<HTMLAnchorElement>("tr.work-row a")!);
+    await user.click(document.querySelector<HTMLAnchorElement>("li.work-row a")!);
     await waitFor(() => expect(window.location.pathname.startsWith("/runs/")).toBe(true));
     window.history.back();
     await waitFor(() => expect(window.location.pathname).toBe("/work"));
@@ -317,7 +323,7 @@ describe("Work page", () => {
     AppSocket.instances.at(-1)!.send({ type: "changed", resource: "runs", revision: 1 });
     expect(await screen.findByText("Showing the last loaded results; refresh failed.")).toBeTruthy();
     expect(daemon.queries().length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelectorAll("tr.work-row").length).toBeGreaterThan(0);
+    expect(document.querySelectorAll("li.work-row").length).toBeGreaterThan(0);
   });
 
   it("keeps watcher-only matches, and waiting-only results with no run links, with the daemon's empty copy", async () => {
@@ -328,7 +334,7 @@ describe("Work page", () => {
     workDaemon(() => json(JSON.stringify(watcherOnly)));
     const first = renderWork("/work?filter=you");
     expect(await screen.findByText("No regular runs match these filters.")).toBeTruthy();
-    expect(within(screen.getByRole("table", { name: "Watching" })).getAllByRole("row").length).toBeGreaterThan(1);
+    expect(within(screen.getByRole("region", { name: "Watching" })).getAllByRole("listitem").length).toBeGreaterThan(0);
     first.unmount();
 
     const waitingOnly = workGolden();
@@ -354,7 +360,7 @@ describe("Work page", () => {
     workDaemon(() => json(JSON.stringify(body)));
     renderWork("/work?groupBy=repo");
     await answered();
-    const rowOf = (index: number) => document.querySelector(`tr[data-run-id="${(rows[index]!.run as { id: string }).id}"]`)!;
+    const rowOf = (index: number) => document.querySelector(`li[data-run-id="${(rows[index]!.run as { id: string }).id}"]`)!;
     expect(rowOf(0).classList.contains("work-row-held")).toBe(true);
     expect(rowOf(1).classList.contains("work-row-needs")).toBe(true);
     expect(rowOf(2).classList.contains("work-row-passive")).toBe(true);

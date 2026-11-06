@@ -39,8 +39,8 @@ export function ShareSheet({ source, onClose }: { source: ShareSource; onClose: 
   };
   const name = source.name?.trim() || source.id;
   const footer = <>
-    <button type="button" className="paper-button" onClick={onClose}>{shareResult ? "Done" : "Cancel"}</button>
-    <button type="button" className="paper-button paper-button--primary" disabled={!chosen || command.pending || shareResult !== null} onClick={share}>
+    <button type="button" className="btn" onClick={onClose}>{shareResult ? "Done" : "Cancel"}</button>
+    <button type="button" className="btn fill" disabled={!chosen || command.pending || shareResult !== null} onClick={share}>
       {command.pending ? "Sharing…" : "Share"}</button>
   </>;
   return <Sheet title={`Share ${name}`} tag={`Share · ${source.kind}`} subtitle={`${source.id} · v${source.version}`} open onClose={onClose} width={560} footer={footer}>

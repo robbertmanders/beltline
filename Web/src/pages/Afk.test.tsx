@@ -64,9 +64,9 @@ describe("AFK decisions", () => {
 
   it("links only decisions whose run still exists", async () => {
     await renderAfk();
-    const deciding = (await screen.findByText("Deciding at Wrap up…")).closest("article")!;
+    const deciding = (await screen.findByText("Deciding at Wrap up…")).closest("li")!;
     expect(within(deciding).queryByRole("link", { name: "Open run" })).toBeNull();
-    const failed = screen.getByText("Could not decide at Wrap up: The session wrote no decision.").closest("article")!;
+    const failed = screen.getByText("Could not decide at Wrap up: The session wrote no decision.").closest("li")!;
     expect(within(failed).getByRole("link", { name: "Open run" }).getAttribute("href")).toBe("/runs/issues%3Aacme%2Fweb%2361?stage=wrap-up");
   });
 

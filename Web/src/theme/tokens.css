@@ -48,7 +48,7 @@
 
 /* Two Inks: one paper and one ink. Every colour is one of the two, or the ink at a fixed strength over the paper.
    Light is the default in every browser; Dark is the attribute the page root takes from the Appearance setting (state/theme.ts).
-   --A and --B are the pair; --P and --I are the paper and ink the roles below are mixed from. */
+   --A and --B are the pair; --P and --I are the paper and ink the roles below are mixed from, swapped by .inv. */
 :root {
   color-scheme: light;
   font-family: var(--font-body), sans-serif;
@@ -141,8 +141,28 @@
   --B: #EFE2DC;
 }
 
-/* The roles, from the pair. */
-:root {
+/* A part of the page drawn the other way round: the run page, the sheets and the assistant. */
+.inv {
+  color-scheme: dark;
+  --P: var(--B);
+  --I: var(--A);
+  background: var(--bg);
+  color: var(--ink);
+  caret-color: var(--ink);
+  /* On the dark ink the terminal sits a step darker than the page. */
+  --screen: #2B070B;
+  --screen-bar: #22060A;
+}
+:root[data-theme="dark"] .inv { color-scheme: light; --screen: #420C12; --screen-bar: #36090E; }
+
+/* The roles, from the pair. Declared on the root and again on every inverse part, so they follow its swap. */
+:root, .inv {
+  /* The page's own names: the paper, the ink at two thirds for secondary text, at 15% for hairlines, and two washes. */
+  --bg: var(--P);
+  --soft: color-mix(in srgb, var(--I) 66%, var(--P));
+  --faint: color-mix(in srgb, var(--I) 15%, var(--P));
+  --wash: color-mix(in srgb, var(--I) 5%, var(--P));
+  --wash2: color-mix(in srgb, var(--I) 9%, var(--P));
   /* Surfaces: one paper. Cards are the paper itself, set apart by a hairline (--lift). */
   --desk: var(--P);
   --paper: var(--P);

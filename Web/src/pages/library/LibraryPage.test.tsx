@@ -46,13 +46,13 @@ describe("Library page", () => {
     const { requests } = mockLibrary({ "/api/v1/library/repos": repos(sharedRepo) });
     const user = userEvent.setup();
     renderLibrary();
-    const belt = await screen.findByRole("button", { name: "Open Issue flow" });
+    const belt = (await screen.findByRole("button", { name: "Open Issue flow" })).closest("li")!;
     expect(within(belt).getByText("Update")).toBeTruthy();
     expect(within(belt).getByText("acme/team-library")).toBeTruthy();
     expect(screen.getByRole("tab", { name: /Belts/ }).getAttribute("aria-selected")).toBe("true");
     expect(lastQuery(requests, "/api/v1/library/browser").get("kind")).toBe("belt");
     await user.click(screen.getByRole("tab", { name: /Agents/ }));
-    const triage = await screen.findByRole("button", { name: "Open Triage" });
+    const triage = (await screen.findByRole("button", { name: "Open Triage" })).closest("li")!;
     expect(within(triage).getByText("Conflict")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Conflicts 1" })).toBeTruthy();
     expect(lastQuery(requests, "/api/v1/library/browser").get("kind")).toBe("agent");

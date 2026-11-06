@@ -6,9 +6,11 @@ import { describeError } from "../api/errors";
 import { apiQueryKey, resourcesForPath } from "../api/resources";
 import type { WorkGroupPresentation, WorkResponse, WorkRowPresentation } from "../api/wire.gen";
 import { useRuntime } from "../app/runtime";
+import { Icon } from "../components/Icon";
 import { ProblemItems } from "../components/ProblemList";
-import { Caps, Chip, NeedChip, Segmented, Select, Tag } from "../components/Paper";
 import { usePreferences } from "../state/usePreferences";
+import { countWord, plural } from "../words";
+import { useChipIndicator } from "./overview/Floor";
 import "./work.css";
 import { foldedValues, readWorkQuery, toggleFolded, withWorkQuery, workRequestPath, type WorkUrlQuery } from "./workQuery";
 
@@ -21,14 +23,12 @@ const filters = [
 ] as const;
 
 const groupings = [
-  { value: "none", label: "None" },
+  { value: "none", label: "Nothing" },
   { value: "repo", label: "Repository" },
   { value: "status", label: "Status" },
   { value: "belt", label: "Belt" },
   { value: "epic", label: "Epic" }
 ] as const;
-
-const columns = ["Issue", "Repository", "Belt", "Stage", "Updated"] as const;
 
 /** A run's page, opened at the decision stage for a row that needs a person. The run link follows the run otherwise. */
 export function workRunHref(row: WorkRowPresentation): string {
@@ -36,84 +36,61 @@ export function workRunHref(row: WorkRowPresentation): string {
   return row.openStage ? `${run}?stage=${encodeURIComponent(row.openStage)}` : run;
 }
 
+/** One run: its title over its repository, number and belt, where it is, what it waits for, and when it last moved; a hairline under it fills as it goes. */
 function RunRow({ row }: { row: WorkRowPresentation }) {
-  const navigate = useNavigate();
   const held = row.chip === "Answer";
-  const tone = row.needsYou ? (held ? "held" : "needs") : "passive";
   const pauseWord = row.pauseWord && !row.location.text.includes(row.pauseWord) ? row.pauseWord : null;
   const href = workRunHref(row);
-  return <tr className={`work-row work-row-${tone}`} data-run-id={row.run.id} onClick={event => {
-    if ((event.target as HTMLElement).closest("a")) return;
-    navigate(href);
-  }}>
-    <td className="work-issue">
-      <Link to={href} aria-label={`${row.reference} ${row.run.issue.title}, ${row.location.text}`}>
-        <span className="issue-number">{row.reference}</span><span className="work-title">{row.run.issue.title}</span>
-        {row.shadow && <Chip tone="shadow" className="work-shadow-chip">{row.shadow}</Chip>}
-      </Link>
-    </td>
-    <td className="work-repository">{row.repository}</td>
-    <td className="work-belt">{row.run.beltName}</td>
-    <td className="work-stage"><span className="work-stage-line">
-      <span className={`work-progress work-progress-${row.run.state}`} aria-hidden="true"><span style={{ width: `${Math.round(row.progress * 100)}%` }} /></span>
-      <span className={`work-location overview-look-${row.location.look}`}>{row.location.text}{pauseWord && <> {pauseWord}</>}</span>
-      {row.chip && <NeedChip held={held}>{row.chip}</NeedChip>}
-    </span></td>
-    <td className="work-updated"><time dateTime={row.run.updatedAt}>{row.updatedAgo}</time></td>
-  </tr>;
+  const active = row.run.state !== "done" && row.run.state !== "parked";
+  const tone = row.needsYou ? (held ? "held" : "needs") : "passive";
+  return <li className={`row wr work-row work-row-${tone} ${row.needsYou ? "wait" : ""}`} data-run-id={row.run.id}>
+    <Link className="row-hit" to={href} aria-label={`${row.reference} ${row.run.issue.title}, ${row.location.text}`} />
+    <div><div className="t work-title">{row.run.issue.title}</div>
+      <div className="m"><span>{row.repository} {row.reference}</span><span>{row.run.beltName}</span>
+        {row.shadow && <span className="flag f work-shadow-chip">{row.shadow}</span>}</div></div>
+    <div className="c at work-location" style={{ whiteSpace: "normal" }}>{row.location.text}{pauseWord && <> {pauseWord}</>}</div>
+    <div className="c">{row.chip && <span className={`flag ${held ? "o" : ""} work-chip`}>{row.chip}</span>}</div>
+    <div className="c r work-updated"><time dateTime={row.run.updatedAt}>{row.updatedAgo}</time></div>
+    {active && <span className="pr"><i style={{ "--p": row.progress } as React.CSSProperties} /></span>}
+  </li>;
 }
 
-interface RunTableProps {
+interface RunGroupsProps {
   label: string;
   groups: readonly WorkGroupPresentation[];
   groupBy: string;
   folded: ReadonlySet<string>;
   onToggle: (value: string) => void;
-  /** The copy a section with no row shows in its own table, below the column headings. */
+  /** The copy a section with no row shows. */
   empty?: string;
 }
 
-/** One table for a section. Each daemon group keeps its own header and count; folding hides only its rows. */
-function RunTable({ label, groups, groupBy, folded, onToggle, empty }: RunTableProps) {
-  return <table className="work-table" aria-label={label}>
-    <colgroup><col /><col style={{ width: 144 }} /><col style={{ width: 185 }} /><col style={{ width: 380 }} /><col style={{ width: 104 }} /></colgroup>
-    <thead><tr>{columns.map(name => <th key={name} scope="col"><Caps>{name}</Caps></th>)}</tr></thead>
-    {empty !== undefined && <tbody><tr><td className="empty-state" colSpan={columns.length} role="status">{empty}</td></tr></tbody>}
+/** A section's runs. Grouped, each daemon group keeps its heading and count, and folding hides only its rows. */
+function RunGroups({ label, groups, groupBy, folded, onToggle, empty }: RunGroupsProps) {
+  const grouped = groupBy !== "none";
+  return <div className="work-groups" role="region" aria-label={label}>
+    {empty !== undefined && <p className="empty empty-state" role="status">{empty}</p>}
     {groups.map(group => {
-      const grouped = groupBy !== "none";
       const isFolded = grouped && folded.has(group.value);
-      return <tbody key={`${group.dimension}:${group.value}`} data-group={group.value}>
-        {grouped && <tr className="work-group-heading">
-          <th scope="colgroup" colSpan={columns.length}>
-            <button type="button" className="work-fold" aria-expanded={!isFolded} onClick={() => onToggle(group.value)}>
-              <svg className="work-fold-chevron" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d={isFolded ? "M3.5 2L6.5 5L3.5 8" : "M2 3.5L5 6.5L8 3.5"} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg><Caps className="work-fold-label">{group.label}</Caps> <Caps>· {group.count}</Caps>
-            </button>
-          </th>
-        </tr>}
-        {!isFolded && group.rows.map(row => <RunRow key={row.run.id} row={row} />)}
-      </tbody>;
+      return <div key={`${group.dimension}:${group.value}`} className="grp" data-group={group.value}>
+        {grouped && <h3 className="gh work-fold-heading"><button type="button" className="work-fold" aria-expanded={!isFolded} onClick={() => onToggle(group.value)}>
+          <span className="gn">{group.count}</span>{group.label}<Icon name={isFolded ? "open" : "dn"} className="work-fold-chevron" />
+        </button></h3>}
+        {!isFolded && <ol className="rows" aria-label={grouped ? group.label : label}>{group.rows.map(row => <RunRow key={row.run.id} row={row} />)}</ol>}
+      </div>;
     })}
-  </table>;
+  </div>;
 }
 
-function Toolbar({ query, data, onChange }: {
-  query: WorkUrlQuery;
-  data: WorkResponse | undefined;
-  onChange: (changes: Partial<WorkUrlQuery>) => void;
-}) {
-  const filter = (query.filter || "active") as (typeof filters)[number]["value"];
-  const belts = data?.belts ?? [];
-  const beltOptions = [{ value: "all", label: "All belts" }, ...belts.map(belt => ({ value: belt.id, label: belt.label }))];
-  const filterOptions = filters.map(item => ({ value: item.value, label: item.value === "you" && data ? `${item.label} ${data.summary.needsYou}` : item.label }));
-  return <div className="work-toolbar">
-    <h2 className="paper-tag paper-tag--strong work-runs-tag">Runs</h2>
-    <div className="work-toolbar-controls">
-      <Caps>Group by</Caps>
-      <Select pill width={130} label="Group by" options={groupings} value={query.groupBy as (typeof groupings)[number]["value"]} onChange={groupBy => onChange({ groupBy })} />
-      <Caps>Belt</Caps>
-      <Select pill width={165} label="Belt" options={beltOptions} value={query.belt} onChange={belt => onChange({ belt })} />
-      <Segmented label="Show" options={filterOptions} value={filter} onChange={value => onChange({ filter: value })} />
-    </div>
+/** The search over runs. Typing replaces the history entry the previous keystroke made; Escape clears it. */
+function SearchField({ value, onChange }: { value: string; onChange: (value: string, typing: boolean) => void }) {
+  const [text, setText] = useState(value);
+  useEffect(() => { setText(value); }, [value]);
+  return <div className="work-search">
+    <label className="vh" htmlFor="work-search">Search issues, runs and belts</label>
+    <input className="inp" id="work-search" type="search" value={text} placeholder="Search by title, repository or number" autoComplete="off"
+      onChange={event => { setText(event.currentTarget.value); onChange(event.currentTarget.value, true); }}
+      onKeyDown={event => { if (event.key === "Escape") { setText(""); onChange("", false); } }} />
   </div>;
 }
 
@@ -124,9 +101,14 @@ function toggleSet(set: ReadonlySet<string>, value: string): ReadonlySet<string>
   return next;
 }
 
+/**
+ * Work: every run on the belts, as the daemon filters, groups and orders them for the query in the URL. The page
+ * words the headline from the daemon's counts and keeps the folds as a display preference.
+ */
 export function WorkPage() {
   const runtime = useRuntime();
   const location = useLocation();
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const { preferences, update } = usePreferences();
   // The Shadow section's folds last for the visit only; they are not kept as a preference.
@@ -138,8 +120,11 @@ export function WorkPage() {
     queryFn: ({ signal }) => apiRequest<WorkResponse>(path, { signal, onUnauthorized: runtime.requireSignIn }),
     enabled: runtime.canRead,
     retry: false,
+    placeholderData: previous => previous,
     meta: { resourceDeps: resourcesForPath(path) }
   });
+  const shown: WorkUrlQuery = { ...query, filter: query.filter || "active", belt: query.belt || "all", groupBy: query.groupBy || "none" };
+  const { box, line } = useChipIndicator(shown.belt);
 
   useEffect(() => { document.title = "Beltline — Work"; }, []);
 
@@ -152,60 +137,74 @@ export function WorkPage() {
     setParams(withWorkQuery(params, changes), { replace, state: { workSearch: searchEdit } });
   };
 
-  // An omitted parameter is shown at its default; the request still omits it.
-  const shown: WorkUrlQuery = { ...query, filter: query.filter || "active", belt: query.belt || "all", groupBy: query.groupBy || "none" };
   const data = result.data;
   const main = data?.mainGroups ?? [];
   const watching = data?.watchingGroups ?? [];
   const shadow = data?.shadowGroups ?? [];
   const runsFolded = foldedValues(preferences.runsFolded, shown.groupBy);
   const watchingFolded = foldedValues(preferences.watchingFolded, shown.groupBy);
-  const scope = query.search.trim() ? `Search · ${query.search}` : "All belts";
   const { message, problems } = result.error ? describeError(result.error) : { message: "", problems: [] as string[] };
+  const active = data?.summary.active ?? 0;
+  const needs = data?.summary.needsYou ?? 0;
+  const belts = (data?.belts ?? []).filter(belt => !belt.archived || belt.id === shown.belt);
 
-  return <article className="page-content work-page">
-    <header className="page-heading work-heading-row">
-      <div className="work-title-block">
-        <Tag>{scope}</Tag>
-        <h1>{data?.stage?.name ?? "Work"}</h1>
+  return <div className="pin calm work-page">
+    <header className="ph">
+      {data?.stage ? <h1 className="h1" aria-label={data.stage.name}>{data.stage.name}<br /><span className="soft">{countWord(data.shownRows)} {plural(data.shownRows, "run")} at this stage.</span></h1>
+        : <h1 className="h1" aria-label="Work">{countWord(active)} {plural(active, "run")} on the belts.<br /><span className="soft">{needs ? `${countWord(needs)} ${needs === 1 ? "needs" : "need"} you.` : "None need you."}</span></h1>}
+      {data && <p className="help work-caption">{data.caption}</p>}
+      <div className="ph-row" style={{ gap: "18px 28px" }}>
+        <SearchField value={query.search} onChange={(value, typing) => change({ search: value }, typing)} />
+        <div className="seg" role="group" aria-label="Show">
+          {filters.map(item => <button key={item.value} type="button" aria-pressed={shown.filter === item.value} onClick={() => change({ filter: item.value })}>
+            {item.value === "you" && data ? `${item.label} ${data.summary.needsYou}` : item.label}</button>)}
+        </div>
+        <label className="work-group-by"><span className="lab">Group by</span>
+          <select className="sel inline" aria-label="Group by" value={shown.groupBy} onChange={event => change({ groupBy: event.currentTarget.value })}>
+            {groupings.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+        </label>
       </div>
-      {data && <div className="page-heading-actions">
-        {data.stage && <button type="button" className="quiet-button" onClick={() => change({ stage: "" })}>Clear stage</button>}
-        <Caps className="work-caption">{data.caption}</Caps>
-      </div>}
+      <div className="chips" style={{ marginTop: 18 }} ref={box} role="group" aria-label="Belt">
+        <span className="cind" ref={line} aria-hidden="true" />
+        <button type="button" className={`chip ${shown.belt === "all" ? "on" : ""}`} aria-pressed={shown.belt === "all"} onClick={() => change({ belt: "all" })}>All belts</button>
+        {belts.map(belt => <button key={belt.id} type="button" className={`chip ${shown.belt === belt.id ? "on" : ""}`} aria-pressed={shown.belt === belt.id}
+          onClick={() => change({ belt: belt.id })}>{belt.label}</button>)}
+        {data?.stage && <button type="button" className="chip on" data-stage onClick={() => change({ stage: "" })}>Clear stage <Icon name="x" /></button>}
+      </div>
     </header>
-    <section className="work-section" aria-label="Work query">
-      <Toolbar query={shown} data={data} onChange={changes => change(changes)} />
-    </section>
-    {!runtime.canRead && <p className="loading-state" role="status">{runtime.versionLoading ? "Checking API version…" : "Waiting for the daemon connection…"}</p>}
-    {runtime.canRead && result.isPending && <p className="loading-state" role="status">Loading Work…</p>}
-    {runtime.canRead && result.error && !data && <section className="error-panel" role="alert"><h2>Unable to load Work</h2><p>{message}</p><ProblemItems problems={problems} /></section>}
+    {!runtime.canRead && <p className="help" role="status">{runtime.versionLoading ? "Checking API version…" : "Waiting for the daemon connection…"}</p>}
+    {runtime.canRead && result.isPending && <p className="help" role="status">Loading Work…</p>}
+    {runtime.canRead && result.error && !data && <section className="note error-panel" role="alert"><div><h2 className="h3">Unable to load Work</h2><p>{message}</p><ProblemItems problems={problems} /></div></section>}
     {data && <>
-      {result.isError && <div className="stale-error" role="status"><p>Showing the last loaded results; refresh failed.</p><p>{message}</p><ProblemItems problems={problems} /></div>}
+      {result.isError && <div className="note" role="status"><p>Showing the last loaded results; refresh failed.</p><p>{message}</p><ProblemItems problems={problems} /></div>}
       <p className="loaded-state screen-reader-only" role="status">Showing {data.shownRows} runs</p>
-      <section className="work-section" aria-label="Runs">
-        <RunTable label="Runs" groups={main} groupBy={shown.groupBy} folded={runsFolded} empty={data.mainEmptyMessage}
+      <section className="grp work-section" aria-labelledby="work-runs-heading">
+        <h2 id="work-runs-heading" className="gh"><span className="gn">{data.shownRows}</span>Runs</h2>
+        <RunGroups label="Runs" groups={main} groupBy={shown.groupBy} folded={runsFolded} empty={data.mainEmptyMessage}
           onToggle={value => update({ runsFolded: toggleFolded(preferences.runsFolded, shown.groupBy, value) })} />
       </section>
-      {data.waiting.length > 0 && <section className="work-section" aria-labelledby="work-waiting-heading">
-        <h2 id="work-waiting-heading" className="paper-tag paper-tag--strong work-heading">Waiting to start</h2>
-        <ul className="work-waiting" aria-label="Waiting to start">
-          {data.waiting.map(item => <li key={`${item.beltId}:${item.reference}`} className="work-waiting-row">
-            <span className="work-waiting-ref">{item.reference}</span><span className="work-title">{item.subject.title}</span><span className="work-reason">{item.reason}</span>
+      {data.waiting.length > 0 && <section className="grp work-section" aria-labelledby="work-waiting-heading">
+        <h2 id="work-waiting-heading" className="gh"><span className="gn">{data.waiting.length}</span>Waiting to start</h2>
+        <ul className="rows" aria-label="Waiting to start">
+          {data.waiting.map(item => <li key={`${item.beltId}:${item.reference}`} className="row off work-waiting-row" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+            <div><div className="t">{item.subject.title}</div><div className="m"><span>{item.reference}</span></div></div><span className="c r">{item.reason}</span>
           </li>)}
         </ul>
       </section>}
-      {shadow.length > 0 && <section className="work-section" aria-labelledby="work-shadow-heading">
-        <h2 id="work-shadow-heading" className="paper-tag paper-tag--strong work-heading work-shadow-heading">Shadow · {data.shadowRows}</h2>
-        <p className="field-note work-shadow-note">Runs on a shadow version. They are not on the Overview floor; any that need you still count in Needs you.</p>
-        <RunTable label="Shadow" groups={shadow} groupBy={shown.groupBy} folded={shadowFolded}
+      {shadow.length > 0 && <section className="grp work-section" aria-labelledby="work-shadow-heading">
+        <h2 id="work-shadow-heading" className="gh"><span className="gn">{data.shadowRows}</span>Shadow</h2>
+        <p className="help work-shadow-note">Runs on a shadow version. They are not on the Overview floor; any that need you still count in Needs you.</p>
+        <RunGroups label="Shadow" groups={shadow} groupBy={shown.groupBy} folded={shadowFolded}
           onToggle={value => setShadowFolded(current => toggleSet(current, value))} />
       </section>}
-      {watching.length > 0 && <section className="work-section" aria-labelledby="work-watching-heading">
-        <h2 id="work-watching-heading" className="paper-tag paper-tag--strong work-heading">Watching · {data.watchingRows}</h2>
-        <RunTable label="Watching" groups={watching} groupBy={shown.groupBy} folded={watchingFolded}
+      {watching.length > 0 && <section className="grp work-section" aria-labelledby="work-watching-heading">
+        <h2 id="work-watching-heading" className="gh"><span className="gn">{data.watchingRows}</span>Watching</h2>
+        <RunGroups label="Watching" groups={watching} groupBy={shown.groupBy} folded={watchingFolded}
           onToggle={value => update({ watchingFolded: toggleFolded(preferences.watchingFolded, shown.groupBy, value) })} />
       </section>}
+      {data.shownRows === 0 && data.watchingRows === 0 && (query.search || shown.filter !== "active" || shown.belt !== "all") &&
+        <p className="empty">Nothing here{query.search ? ` for “${query.search}”` : ""}.<br /><button type="button" className="btn" onClick={() => navigate("/work")}>Clear the filters</button></p>}
     </>}
-  </article>;
+  </div>;
 }

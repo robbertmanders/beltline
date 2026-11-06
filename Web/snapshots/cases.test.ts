@@ -129,11 +129,9 @@ describe("snapshot case files", () => {
       expect(typeof item.sidebar!.assistantOpen).toBe("boolean");
     }
   });
-  it("starts the Sessions click case closed and expects it open after its steps", () => {
+  it("waits for the Sessions column, which the run page always shows", () => {
     const item = snapshotCases.find(entry => entry.id === "run-sessions-click")!;
-    expect(item.sidebar!.sessionsOpen).toBe(false);
-    expect(item.steps?.[0]).toEqual({ kind: "click", target: { role: "button", name: "Sessions", exact: true } });
-    expect(item.expectedPreferences).toEqual({ sessionsOpen: true });
+    expect(item.steps?.[0]).toEqual({ kind: "wait", target: { selector: '[data-column="sessions"][data-ready="true"]' }, state: "visible" });
     expect(item.visibleColumns).toEqual(['[data-column="sessions"]']);
     expect(item.readyMarker).toBe('[data-column="sessions"][data-ready="true"]');
   });

@@ -33,12 +33,12 @@ Upgrading from a version that shipped built-in agents adds the examples reposito
 
 A **backup** repository holds your own library.
 
-- **Back up** copies every belt and agent version to it and pushes to its default branch. The sidebar shows *Changed since backup* when your library has changes the backup doesn't.
+- **Back up** copies every belt and agent version to it and pushes to its default branch. The navigation marks Library with a dot, *Changed since backup*, when your library has changes the backup doesn't.
 - **Restore…** moves your current belts and agents aside into `library-backups/<time>/` in the data folder and copies the backup into place. Your paused and archived state stays on this machine, and runs keep their own copies of what they use.
 
 ## Installing and sharing
 
-A **shared** repository holds a team's belts and agents. The Library page lists what every shared repository holds under two tabs, **Belts** and **Agents**, as cards like the Belts and Agents pages show, each with its repository and its state: *Available*, *Installed*, *Update* (a newer version than yours) or *Conflict* (you changed your copy, so it can't be updated). Search and the state filters narrow the cards. A card opens the belt or agent in its editor, read-only: a belt's stages, trigger and policies, each stage's settings, brief and outcomes, and an agent's settings, brief, outcomes and the repository's belts that use it. What a shared belt doesn't carry, such as its repositories and base branch, isn't shown.
+A **shared** repository holds a team's belts and agents. The Library page lists what every shared repository holds under two tabs, **Belts** and **Agents**, as rows like the Belts and Agents pages show, each with its repository and its state: *Available*, *Installed*, *Update* (a newer version than yours) or *Conflict* (you changed your copy, so it can't be updated). Search and the state filters narrow the rows. A row opens the belt or agent in its editor, read-only: a belt's stages, trigger and policies, each stage's settings, brief and outcomes, and an agent's settings, brief, outcomes and the repository's belts that use it. What a shared belt doesn't carry, such as its repositories and base branch, isn't shown.
 
 - **Install** writes an item's version, and the agent versions it uses, into your library, with the repository recorded as its origin. A shared belt names no repositories, so a belt new to your library is installed paused: open it, add your repositories (and the label, query or schedule you want), save and resume it.
 - **Update** takes a newer version the same way. **Compare** shows the repository's files beside yours, and **Open yours** opens your copy in Belts or Agents.

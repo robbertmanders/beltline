@@ -21,7 +21,7 @@ export function CompareSheet({ repo, item, onClose }: { repo: LibraryRepoRef; it
     meta: { resourceDeps: resourcesForPath(libraryItemPath) }
   });
   return <Sheet title={`Compare ${item.name}`} tag="Library" subtitle={`${repo.repository} · v${item.version}`} open onClose={onClose} width={920} className="library-compare"
-    footer={<button type="button" className="paper-button" onClick={onClose}>Close</button>}>
+    footer={<button type="button" className="btn" onClick={onClose}>Close</button>}>
     {files.isPending && <p className="loading-state" role="status">Reading the files…</p>}
     {files.error && <ErrorProblems error={files.error} />}
     {files.data?.files.map(file => <section key={file.path} className="library-compare-file">

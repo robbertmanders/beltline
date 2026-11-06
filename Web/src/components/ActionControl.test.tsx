@@ -109,7 +109,7 @@ describe("ActionControl availability", () => {
   it("uses the primary style and the daemon's label when it is given", () => {
     const { button } = renderControl({ primary: true, action: { id: "pause", label: "Continue", enabled: true, reason: null } });
     expect(button.textContent).toBe("Continue");
-    expect(button.className).toContain("primary");
+    expect(button.className).toContain("fill");
   });
 
   it("is reached and activated from the keyboard", async () => {

@@ -17,7 +17,7 @@ The deciding agent runs with the same full permissions as every other agent. The
 
 ## Turning it on
 
-Each run is in AFK mode **always**, **never**, or **global**, which follows the **Global AFK** switch at the bottom of the sidebar. A new run starts with its belt's mode, which you set with the **AFK** button beside **Pause belt**, and you can change it on the run's page.
+Each run is in AFK mode **always**, **never**, or **global**, which follows the **AFK** switch in the top bar. A new run starts with its belt's mode, which you set with the **AFK** button beside **Pause belt**, and you can change it on the run's page.
 
 ## What it may do
 

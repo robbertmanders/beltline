@@ -44,7 +44,9 @@ async function ready(page: Page, runId: string | undefined, readiness: "shell" |
     return;
   }
   try {
-    await expect(page.getByRole("navigation", { name: "Primary navigation" })).toBeVisible();
+    // The top bar is the shell; below 1180px its navigation folds into the Menu button.
+    await expect(page.locator("header.top")).toBeVisible();
+    await expect(page.locator('nav[aria-label="Primary navigation"]')).toBeAttached();
   } catch {
     throw new Error(`Expected the authenticated shell at ${page.url()}, received: ${(await page.locator("body").innerText()).slice(0, 500)}`);
   }
@@ -188,8 +190,7 @@ async function capture(browser: Browser, item: SnapshotCase, size: { width: numb
       const selected = await page.locator('[aria-current="page"]').first().getAttribute("href");
       const expected = route.startsWith("/runs/") ? "/work" : route.split("?")[0];
       expect(selected).toBe(expected);
-      const nav = await page.locator("[data-column=navigation]").evaluate(element => element.getBoundingClientRect().width);
-      expect(nav).toBe(item.sidebar!.navigationOpen ? item.sidebar!.navigationWidth : 40);
+      // The pages sit under one top bar; the navigation's stored width and fold no longer draw a column.
     }
     if (item.steps?.length) {
       for (const step of item.steps) await runStep(page, item.id, step);

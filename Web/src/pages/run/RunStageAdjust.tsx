@@ -40,8 +40,8 @@ export function RunStageAdjust({ runId, stageId, help, action, enabled, command,
   };
 
   return <Sheet title="Adjust stage" className="adjust-sheet" open onClose={onClose} footer={<>
-    <button type="button" className="action-button" onClick={onClose}>Cancel</button>
-    <button type="button" className="action-button primary" disabled={!enabled} title={action?.reason ?? undefined}
+    <button type="button" className="btn" onClick={onClose}>Cancel</button>
+    <button type="button" className="btn fill" disabled={!enabled} title={action?.reason ?? undefined}
       onClick={() => submit("adjust-stage", { stage: stageId, model: adjust.model, thinking: adjust.thinking || undefined, brief: adjust.brief, runner: adjust.runner }, onClose)}>Apply</button>
   </>}>
     <div className="sheet-field">
@@ -67,7 +67,7 @@ export function RunStageAdjust({ runId, stageId, help, action, enabled, command,
     <div className="sheet-field adjust-brief">
       <label htmlFor="adjust-brief">Brief</label>
       <p className="muted-copy">The agent's brief can be changed for this run only. The issue, any note, and the outcome footer are added automatically.</p>
-      {help.agentBrief != null && <button type="button" className="quiet-button" onClick={() => setAdjust(previous => ({ ...previous, brief: help.agentBrief ?? "" }))}>Use the agent's brief</button>}
+      {help.agentBrief != null && <button type="button" className="link" onClick={() => setAdjust(previous => ({ ...previous, brief: help.agentBrief ?? "" }))}>Use the agent's brief</button>}
       <textarea id="adjust-brief" className="paper-field agent-brief" value={adjust.brief} onChange={event => { const brief = event.currentTarget.value; setAdjust(previous => ({ ...previous, brief })); }} />
     </div>
     <section className="adjust-placeholders" aria-label="Placeholders">

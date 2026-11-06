@@ -211,3 +211,107 @@
 .fallback-field { flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; margin-top: -1px; padding: 8px 6px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: var(--row-hover); }
 .fallback-field > span:first-child { color: var(--muted); font: 13px var(--font-body), sans-serif; letter-spacing: 0; text-transform: none; }
 .fallback-field select { width: 200px; }
+
+/* ======================================================================================================
+   The editors in the mockup's language: one column of sections between hairlines, each with its label on
+   the left (the mockup's .ed), underlined fields, outlined stage cards, and the page's own scroll.
+   ====================================================================================================== */
+.belts-page, .agents-page, .library-page.has-detail { display: block; height: auto; padding: 0; }
+.belts-main, .agents-editor-column, .library-detail { max-width: var(--maxw); height: auto; margin: 0 auto; padding: clamp(96px, 14vh, 132px) var(--gut) 160px; overflow: visible; }
+.library-browser-column { display: block; }
+.library-browser.pin { overflow: visible; }
+
+.belt-editor-header { align-items: flex-end; gap: 18px 24px; padding-bottom: clamp(28px, 5vh, 48px); }
+.belt-editor-title { gap: 10px; }
+.belt-editor-title .paper-tag { font-size: 14px; }
+.belt-editor-title h2, .agent-editor .belt-editor-title h2 { font: 600 clamp(34px, 3.6vw, 52px)/1.02 var(--font-display), sans-serif; letter-spacing: -.03em; }
+.belt-editor-title h2.is-unnamed { color: var(--soft); }
+.belt-actions { gap: 10px; }
+.belt-problem { padding: 14px 18px; border-radius: 14px; background: var(--wash2); color: var(--ink); font-weight: 500; }
+.belt-note-lamp { background: var(--ink); }
+.belt-warnings li { border-radius: 14px; background: var(--wash2); color: var(--ink); }
+.belt-forms { gap: 0; padding-top: 0; }
+.belt-card, .belt-triggers, .stage-line-card { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 0 clamp(24px, 4vw, 64px); align-items: start;
+  padding: 28px 0; border-top: 1px solid var(--faint); border-radius: 0; background: none; box-shadow: none; }
+.belt-card > *, .belt-triggers > * { grid-column: 2; min-width: 0; margin-bottom: 18px; }
+.belt-card > :last-child, .belt-triggers > :last-child { margin-bottom: 0; }
+.belt-card > .form-heading, .belt-triggers > .form-heading, .belt-triggers > .belt-triggers-head { grid-column: 1; grid-row: 1 / span 40; }
+.belt-triggers > .belt-triggers-head { flex-direction: column; }
+.stage-line-card { display: block; padding: 28px 0 32px; }
+.form-heading { gap: 6px; }
+.form-heading .paper-tag { font-size: 13px; }
+.form-heading h3 { font: 600 19px/1.25 var(--font-display), sans-serif; letter-spacing: -.02em; }
+.belt-field { gap: 8px; }
+.belt-field > span:first-child, .field-label, .alternate-row .model-label, .belt-policies h3 { font: 600 13px/1.3 var(--font-body), sans-serif; color: var(--ink); }
+.field-note { color: var(--soft); font-size: 13px; }
+.belt-repository-bases legend { font: 600 14px/1.3 var(--font-body), sans-serif; }
+
+.belt-field input:not([type="checkbox"]):not([type="radio"]), .outcomes-table input:not([type="checkbox"]), .route-name input, .agent-field input:not([type="checkbox"]), input.paper-field {
+  padding: 9px 0; border: 0; border-bottom: 1px solid var(--faint); border-radius: 0; background: transparent; color: var(--ink); font: 15px/1.3 var(--font-body), sans-serif; transition: border-color .25s; }
+.belt-field textarea, .outcomes-table textarea, .agent-field textarea, textarea.paper-field {
+  padding: 12px 14px; border: 1px solid var(--faint); border-radius: 14px; background: transparent; color: var(--ink); font: 15px/1.55 var(--font-body), sans-serif; }
+.belt-field textarea { font: 13.5px/1.6 var(--font-mono), monospace; }
+.belt-field input:hover, .belt-field textarea:hover, .agent-field input:hover, .agent-field textarea:hover, .outcomes-table input:hover, .outcomes-table textarea:hover { border-color: var(--soft); }
+.belt-field input:focus, .belt-field textarea:focus, .agent-field input:focus, .agent-field textarea:focus, .outcomes-table input:focus, .outcomes-table textarea:focus, .route-name input:focus { outline: none; border-color: var(--ink); }
+.belt-field select, .outcomes-table select, .alternate-row select, .model-select, .agent-field select, .sheet select, .paper-native-select, select.sel, .toggle-menu-button {
+  appearance: none; -webkit-appearance: none; padding: 9px 26px 9px 0; border: 0; border-bottom: 1px solid var(--faint); border-radius: 0; color: var(--ink); cursor: pointer;
+  font: 15px/1.3 var(--font-body), sans-serif;
+  background: transparent linear-gradient(45deg, transparent 50%, var(--ink) 50%) no-repeat calc(100% - 10px) 50% / 5px 5px,
+              transparent linear-gradient(135deg, var(--ink) 50%, transparent 50%) no-repeat calc(100% - 5px) 50% / 5px 5px; }
+.outcomes-table select, .outcomes-table input:not([type="checkbox"]), .toggle-menu-button { padding-top: 6px; padding-bottom: 6px; font-size: 14px; }
+.belt-field select:disabled, .agent-field select:disabled, .toggle-menu-button:disabled { background: transparent; cursor: default; }
+.sheet select option, select option { background: var(--bg); color: var(--ink); }
+[aria-invalid="true"] { border-color: var(--ink) !important; border-bottom-width: 2px !important; box-shadow: none; }
+.outcomes-table tbody tr td:nth-child(3) select { border-left: 0; padding-left: 14px; background-image: radial-gradient(circle, var(--soft) 3px, transparent 3.5px), linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position: 0 50%, calc(100% - 10px) 50%, calc(100% - 5px) 50%; background-size: 8px 8px, 5px 5px, 5px 5px; background-repeat: no-repeat; }
+.outcomes-table tbody tr[data-tone="good"] td:nth-child(3) select { background-image: radial-gradient(circle, var(--faint) 3px, transparent 3.5px), linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); }
+.outcomes-table tbody tr[data-tone="you"] td:nth-child(3) select, .outcomes-table tbody tr[data-tone="problem"] td:nth-child(3) select { background-image: radial-gradient(circle, var(--ink) 3px, transparent 3.5px), linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); }
+.outcomes-table th, .outcomes-table caption { font: 500 12.5px var(--font-body), sans-serif; color: var(--soft); }
+.outcomes-table td { border-top: 1px solid var(--faint); }
+.outcome-preview { padding: 14px 16px; border-radius: 14px; background: var(--wash2); }
+.outcome-preview pre { color: var(--ink); }
+.placeholder-chips li { padding: 4px 9px; border-radius: 7px; background: var(--wash2); color: var(--ink); font: 12px var(--font-mono), monospace; }
+.repo-chips { gap: 8px; padding: 0 0 6px; border: 0; border-bottom: 1px solid var(--faint); border-radius: 0; background: none; }
+.repo-chip { height: 30px; padding: 0 6px 0 12px; background: var(--wash2); color: var(--ink); font: 13px var(--font-mono), monospace; }
+.repo-chip button:hover { background: var(--ink); color: var(--bg); }
+.agent-pin-row { padding: 8px 0; border: 0; border-bottom: 1px solid var(--faint); border-radius: 0; background: none; font-size: 15px; }
+.then-controls { color: var(--soft); }
+.fallback-field { background: none; border-color: var(--faint); }
+.toggle-menu-card, .add-menu-card { border: 0; border-radius: 14px; background: var(--bg); box-shadow: var(--raise), 0 0 0 1px var(--faint); }
+.toggle-menu-item:hover, .add-menu-card button:hover { background: var(--wash2); }
+.add-menu-section { color: var(--soft); }
+
+/* The stage line: outlined cards on a dashed hairline, the trigger on a wash, forks in a dashed frame. */
+.stage-block { height: 100px; border: 1px solid var(--faint); border-radius: 14px; background: var(--bg); transition: border-color .3s; }
+.stage-block:hover { border-color: var(--soft); }
+.stage-block.is-selected { border-color: var(--ink); background: var(--bg); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--ink); }
+.stage-block-trigger { border-color: transparent; background: var(--wash2); color: var(--ink); }
+.stage-block-trigger:hover { border-color: var(--soft); }
+.stage-block-trigger.is-selected { border-color: var(--ink); background: var(--wash2); }
+.stage-block-kind, .stage-block-trigger .stage-block-kind { color: var(--soft); }
+.stage-block-title { font: 600 16px/1.2 var(--font-display), sans-serif; letter-spacing: -.015em; }
+.stage-block-lines, .stage-block-trigger .stage-block-lines { color: var(--soft); }
+.stage-block-remove { border: 1px solid var(--faint); background: var(--bg); color: var(--ink); }
+.stage-block-update { background: var(--ink); color: var(--bg); }
+.add-menu-track { border-top: 1px dashed var(--faint); }
+.add-menu-plus { border: 1px solid var(--faint); background: var(--bg); color: var(--soft); transition: border-color .2s, color .2s; }
+.add-menu-plus:hover { border-color: var(--ink); color: var(--ink); }
+.fork-box { border: 1px dashed var(--soft); border-radius: 18px; background: none; }
+.fork-box-heading, .fork-route-caption { font: 500 12px/1 var(--font-body), sans-serif; letter-spacing: 0; color: var(--soft); }
+.fork-box-actions button { color: var(--ink); text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
+.fork-route-remove { color: var(--soft); }
+
+@media (max-width: 900px) {
+  .belt-card, .belt-triggers { grid-template-columns: minmax(0, 1fr); }
+  .belt-card > .form-heading, .belt-triggers > .belt-triggers-head, .belt-card > *, .belt-triggers > * { grid-column: 1; grid-row: auto; }
+}
+.belt-editor-header { flex-direction: column; align-items: flex-start; }
+.belt-actions { justify-content: flex-start; }
+.belt-card > .editor-fields > *, .belt-triggers > .editor-fields > * { grid-column: 2; min-width: 0; margin-bottom: 18px; }
+.belt-card > .editor-fields > .form-heading, .belt-card > .agent-card-head, .belt-card > .editor-fields > .agent-card-head { grid-column: 1; grid-row: 1 / span 40; flex-direction: column; gap: 18px; }
+.agent-stage-preview .stage-box { position: relative; }
+.agent-readonly { padding: 9px 0 !important; background: none !important; border: 0 !important; border-bottom: 1px solid var(--faint) !important; color: var(--soft) !important; }
+.agent-brief { padding: 14px 16px !important; border-radius: 14px; font-size: 13.5px !important; }
+.agent-placeholders, .adjust-placeholders, .agent-footer { border-radius: 14px; background: var(--wash2); }
+.agent-command-error { border-radius: 14px; background: var(--wash2); color: var(--ink); }
+.agent-tint select { box-shadow: none; }

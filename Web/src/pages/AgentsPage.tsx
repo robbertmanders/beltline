@@ -237,7 +237,7 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
     onSaveAndOpen={afterSave => submitSave(afterSave)} />;
   const back = () => patchParams({ agent: null });
   const body = <div className={`library-page agents-page${agentKey ? " agents-page-detail" : ""}`} ref={columnsRef}>
-    {!agentKey ? <LibraryBrowser title="Agents" lead="Your agent library" browser={browser} search={search} filter={filter}
+    {!agentKey ? <LibraryBrowser title="Agents" lead="An agent is a brief, a runner and model, and the outcomes it can end with. A run copies the versions its stages pin when it starts, so a save never changes a run already going." browser={browser} search={search} filter={filter}
       onSearch={value => patchParams({ search: value || null })} onFilter={value => patchParams({ filter: value === "all" ? null : value })}
       onOpen={selectAgent} onNew={openNew} onRetry={() => void listQuery.refetch()}
       loading={listQuery.isPending && !listQuery.data} error={listQuery.isError ? listQuery.error : undefined}
@@ -253,11 +253,11 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
         {missingSelectedAgent
           ? <section className="error-panel agent-missing" role="alert"><h2>Agent no longer available</h2><p>This agent is no longer in the library. Choose another agent or refresh the list.</p></section>
           : detailQuery.isError && !detailQuery.data && !draft
-          ? <section className="error-panel" role="alert"><h2>Unable to load agent</h2><p>{describeError(detailQuery.error).message}</p><button type="button" className="action-button" onClick={() => void detailQuery.refetch()}>Retry</button></section>
+          ? <section className="error-panel" role="alert"><h2>Unable to load agent</h2><p>{describeError(detailQuery.error).message}</p><button type="button" className="btn" onClick={() => void detailQuery.refetch()}>Retry</button></section>
           : current
           ? <>
             {detailQuery.isError && !missingSaved && <p className="stale-error" role="status">{detailQuery.data ? "Showing the last loaded agent; refresh failed." : "The saved agent could not be loaded; your unsent changes are kept."}</p>}
-            {missingSaved && draft && <section className="error-panel agent-missing" role="alert"><h2>Agent no longer in the library</h2><p>Your unsent changes are kept below. This agent cannot be saved while it is missing, so discard the changes to finish.</p><button type="button" className="action-button" onClick={() => { if (agentKey) discardDraft(agentKey); }}>Discard changes</button></section>}
+            {missingSaved && draft && <section className="error-panel agent-missing" role="alert"><h2>Agent no longer in the library</h2><p>Your unsent changes are kept below. This agent cannot be saved while it is missing, so discard the changes to finish.</p><button type="button" className="btn" onClick={() => { if (agentKey) discardDraft(agentKey); }}>Discard changes</button></section>}
             <AgentEditor agent={current} saved={savedInfo} actions={editorActions}
               presentation={presentation} folder={draft ? undefined : detailQuery.data?.folder} isNew={isNew} dirty={dirty} canCommand={canCommand} commandReason={commandReason} commandError={commandError} onRetry={retry}
               onChange={agent => agentKey && putDraft(agentKey, agent, savedAgent ?? undefined)} onChangeRunner={changeRunner} onNew={openNew} onSave={requestSave} actionsLoading={actionsLoading} saving={saveRequested || saveCommand.pending}
@@ -268,7 +268,7 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
               origin={detailQuery.data?.origin}
               assistantButton={assistantButton} />
             </>
-          : !listQuery.isPending && <section className="error-panel agent-missing"><h2>Agent unavailable</h2><p>Choose an agent from the library or return to the browser.</p><button className="action-button" onClick={back}>Back to Agents</button></section>}
+          : !listQuery.isPending && <section className="error-panel agent-missing"><h2>Agent unavailable</h2><p>Choose an agent from the library or return to the browser.</p><button className="btn" onClick={back}>Back to Agents</button></section>}
     </div>}
     {preferences.assistantOpen && <AssistantSidebar available={availableWidth || 1080} reserved={agentKey ? 74 + 440 : 460} stored={preferences.assistantWidth}
       onWidthChange={assistantWidth => updatePreferences({ assistantWidth })} onHide={() => updatePreferences({ assistantOpen: false })}

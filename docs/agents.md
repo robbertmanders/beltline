@@ -14,7 +14,7 @@ An agent is a reusable stage definition: which runner and model it uses, where i
 
 ## The Agents page
 
-**Agents** lists your library as cards, filtered to used, unused or archived. Open one to edit it, or choose **New agent**. Every save is a new version, and a saved version never changes: a belt's stage pins the version it was saved with, and a run keeps a copy of each agent version it uses. **Update stage** on a belt takes a newer version.
+**Agents** lists your library as rows, filtered to used, unused or archived. Open one to edit it, or choose **New agent**. Every save is a new version, and a saved version never changes: a belt's stage pins the version it was saved with, and a run keeps a copy of each agent version it uses. **Update stage** on a belt takes a newer version.
 
 ![The Agents page: the example agents in a library](images/agents.png)
 

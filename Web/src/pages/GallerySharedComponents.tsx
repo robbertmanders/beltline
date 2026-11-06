@@ -72,7 +72,7 @@ export function GallerySharedComponents() {
     <div className="gallery-sheet-sample" data-column="gallery-sheet">
       <Caption>Sheet · New · white titled panel on the dark screen surface</Caption>
       <SheetPanel title="Edit model" titleId="gallery-sheet-title"
-        footer={<><button type="button" className="paper-button">Cancel</button><button type="button" className="paper-button paper-button--primary">Save</button></>}>
+        footer={<><button type="button" className="btn">Cancel</button><button type="button" className="btn fill">Save</button></>}>
         <ModelPicker id="gallery-sheet-model" label="Model" runnerLabel="Pi" choices={choices} allowedModels={choices.map(choice => choice.id)} value="opus-5.5-1m" />
         <ProblemList message="The daemon rejected this request." problems={["model opus-5.5-1m is not allowed for copilot"]} />
         <pre className="markdown-code"><code>{"print(\"literal **code** stays literal\")"}</code></pre>

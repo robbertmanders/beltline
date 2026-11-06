@@ -31,11 +31,11 @@ export function LibraryRepositoriesCard({ settings }: { settings: SettingsRespon
       <Select label="Library role" value={row.role} options={roles} onChange={(role: LibraryRole) => edit(index, { role })} />
       {row.role === "shared" && <Select label="Share publishes as" value={row.publish} options={publishes}
         onChange={(publish: LibraryPublish) => edit(index, { publish })} />}
-      <button type="button" className="paper-button paper-button--small" onClick={() => setRows(current => current.filter((_, at) => at !== index))}>Remove</button>
+      <button type="button" className="btn sm" onClick={() => setRows(current => current.filter((_, at) => at !== index))}>Remove</button>
     </div>)}
     <div className="field-row">
-      <button type="button" className="paper-button paper-button--small" onClick={() => setRows(current => [...current, blankRepository])}>Add repository</button>
-      <button type="button" className="paper-button paper-button--slate paper-button--small" disabled={command.pending}
+      <button type="button" className="btn sm" onClick={() => setRows(current => [...current, blankRepository])}>Add repository</button>
+      <button type="button" className="btn fill paper-button--small" disabled={command.pending}
         onClick={() => command.submit(settingsPatchRequest({ libraryRepositories: rows }))}>Save</button>
     </div>
     {command.error ? <ErrorProblems error={command.error} /> : null}

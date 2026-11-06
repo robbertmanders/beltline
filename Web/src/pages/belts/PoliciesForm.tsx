@@ -17,10 +17,10 @@ export function PoliciesForm() {
       {section.options.map(option => {
         const key = option.key as keyof Policies;
         return <li key={option.key}>
-          <label>
+          <label className="tg">
             <input type="checkbox" checked={current[key] === true} disabled={editor.blocked !== null} aria-describedby={`policy-${option.key}`}
               onChange={event => editor.operate("policies-update", { policies: { ...current, [key]: event.target.checked } })} />
-            {" "}<span>{option.label}</span>
+            <span className="t" aria-hidden="true" /><span>{option.label}</span>
           </label>
           <p id={`policy-${option.key}`} className="policy-detail">{option.detail}</p>
         </li>;

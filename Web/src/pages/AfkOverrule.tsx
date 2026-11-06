@@ -26,8 +26,8 @@ export function OverruleSheet({ decision, offer, onClose }: { decision: AfkDecis
     });
   };
   const footer = <>
-    <button type="button" className="paper-button" disabled={command.pending} onClick={onClose}>Cancel</button>
-    <button type="button" className="paper-button paper-button--primary" disabled={!canSubmit} onClick={submit}>Overrule and restart</button>
+    <button type="button" className="btn" disabled={command.pending} onClick={onClose}>Cancel</button>
+    <button type="button" className="btn fill" disabled={!canSubmit} onClick={submit}>Overrule and restart</button>
   </>;
   return <Sheet title={decision.subjectRef} tag="Overrule" width={620} open onClose={onClose} footer={footer}>
     <p className="overrule-title">{decision.subjectTitle}</p>
@@ -40,9 +40,9 @@ export function OverruleSheet({ decision, offer, onClose }: { decision: AfkDecis
     <div className="sheet-field">
       <label>Restart at</label>
       <div className="overrule-choice">
-        <button type="button" className={`paper-button paper-button--small${choice === "previous" ? " paper-button--slate" : ""}`} disabled={!offer.previous}
+        <button type="button" className={`btn sm${choice === "previous" ? " fill" : ""}`} disabled={!offer.previous}
           aria-pressed={choice === "previous"} onClick={() => setChoice("previous")}>Previous agent</button>
-        <button type="button" className={`paper-button paper-button--small${choice === "chosen" ? " paper-button--slate" : ""}`}
+        <button type="button" className={`btn sm${choice === "chosen" ? " fill" : ""}`}
           aria-pressed={choice === "chosen"} onClick={() => setChoice("chosen")}>Choose an agent in this belt</button>
       </div>
       {choice === "chosen" && <select className="paper-native-select" aria-label="Agent stage" value={chosen} onChange={event => setChosen(event.currentTarget.value)}>
@@ -56,7 +56,7 @@ export function OverruleSheet({ decision, offer, onClose }: { decision: AfkDecis
       <p className="sheet-help">{offer.commentsHelp}</p>
     </div>
     <p className="overrule-warning">{offer.warning}</p>
-    <label className="sheet-toggle"><input type="checkbox" checked={accepted} onChange={event => setAccepted(event.currentTarget.checked)} />I understand, restart anyway</label>
+    <label className="tg"><input type="checkbox" checked={accepted} onChange={event => setAccepted(event.currentTarget.checked)} /><span className="t" aria-hidden="true" />I understand, restart anyway</label>
     <p className="sheet-help">{offer.notice}</p>
     {command.error ? <ErrorProblems error={command.error} /> : null}
   </Sheet>;

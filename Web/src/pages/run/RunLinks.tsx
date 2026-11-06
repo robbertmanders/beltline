@@ -1,3 +1,4 @@
+import { Icon } from "../../components/Icon";
 import { ErrorProblems } from "../../components/ProblemList";
 import { desktopRequest, type DesktopCommandId, type DesktopOperands } from "../../api/runCommands";
 import type { RunLink, RunWorktree } from "../../api/wire.gen";
@@ -23,8 +24,7 @@ export function isDesktopCommand(path: string | undefined): boolean {
 }
 
 /**
- * The daemon's link targets and the desktop actions that act on its Mac, as the second section of the run
- * menu. The daemon lists only the links it has a URL for. A failed launch keeps the menu open with the error
+ * The daemon's link targets and the desktop actions that act on its Mac, as the run page's row of links. The daemon lists only the links it has a URL for. A failed launch keeps the menu open with the error
  * beside the action and never changes the selected attempt.
  */
 export function RunLinkRows({ runId, links, worktrees, worktreeAction, worktreeUnavailable, command, canRead, connection, onDone }: RunLinksProps) {
@@ -36,20 +36,19 @@ export function RunLinkRows({ runId, links, worktrees, worktreeAction, worktreeU
   };
   // As in the app: the subject and pull requests, a hairline, then the worktrees, each one menu row.
   return <>
-    {links.map(link => <a key={link.id} className="run-menu-row" href={link.url} target="_blank" rel="noreferrer noopener"
-      title={link.detail} aria-label={link.detail} onClick={onDone}><span>{link.title}</span></a>)}
-    {links.length > 0 && <div className="run-menu-divider" />}
+    {links.map(link => <a key={link.id} href={link.url} target="_blank" rel="noreferrer noopener"
+      title={link.detail} aria-label={link.detail} onClick={onDone}><Icon name={/pull/i.test(link.title) ? "pr" : "issue"} /><span>{link.title}</span></a>)}
     {worktrees.length === 0
-      ? <div className="run-worktree-empty">
-        <button type="button" className="run-menu-row" disabled>{worktreeAction}</button>
-        <p className="run-menu-note">{worktreeUnavailable}</p>
-      </div>
-      : worktrees.map(worktree => <button key={worktree.id} type="button" className="run-menu-row is-wrapping" title={worktree.detail}
+      ? <span className="run-worktree-empty" title={worktreeUnavailable}>
+        <button type="button" disabled><Icon name="code" />{worktreeAction}</button>
+        <span className="why">{worktreeUnavailable}</span>
+      </span>
+      : worktrees.map(worktree => <button key={worktree.id} type="button" title={worktree.detail}
         aria-label={`${worktree.title}, ${worktree.detail}`} disabled={!online || command.pending}
-        onClick={() => act("vscode", { targetId: worktree.id })}><span>{worktree.title}</span></button>)}
-    {failed && <div className="run-menu-error">
+        onClick={() => act("vscode", { targetId: worktree.id })}><Icon name="code" /><span>{worktree.title}</span></button>)}
+    {failed && <span className="run-menu-error">
       <ErrorProblems error={command.error} />
-      <button type="button" className="quiet-button" onClick={command.retry}>Try again</button>
-    </div>}
+      <button type="button" className="link" onClick={command.retry}>Try again</button>
+    </span>}
   </>;
 }

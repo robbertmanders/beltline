@@ -222,7 +222,7 @@ describe("Sessions sidebar", () => {
     const user = userEvent.setup();
     const { posts } = stubDaemon({ sessions: () => liveWithTerminal() });
     renderRun("?stage=open-branches&attempt=open-branches-1");
-    await user.click(await screen.findByRole("button", { name: "Ghostty" }));
+    await user.click(await screen.findByRole("button", { name: "Attach in Ghostty" }));
     await waitFor(() => expect(posts("/api/v1/desktop/ghostty")).toHaveLength(1));
     expect(posts("/api/v1/desktop/ghostty")[0]!.body).toEqual({ runId, attemptId: "open-branches-1" });
   });

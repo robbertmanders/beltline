@@ -65,11 +65,11 @@ describe("Insights page", () => {
     insightsDaemon();
     renderPage("/insights");
     await screen.findByRole("table", { name: "Belts" });
-    expect(document.querySelector(".page-heading")?.textContent).toContain("EXPERIMENTAL");
+    expect(document.querySelector(".ph")?.textContent).toContain("Experimental");
     cleanup();
     renderPage(`/insights?belt=${everyBelt().beltRows[0]!.id}`);
     await screen.findByRole("button", { name: "Lead time" });
-    expect(document.querySelector(".page-heading")?.textContent).toContain("EXPERIMENTAL");
+    expect(document.querySelector(".ph")?.textContent).toContain("Experimental");
   });
 
   it("shows the belt's stages in the daemon's order", async () => {

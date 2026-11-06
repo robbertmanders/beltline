@@ -50,7 +50,7 @@ Check the trigger's repositories and label, each agent stage's runner and model,
 
 ## 5. Label an issue
 
-Add the label to a small issue. Within a minute (the trigger polls every 60 seconds) the run appears on the **Overview** and on **Work**. Open it to follow each stage: the stage's output, the agent's live session in the **Sessions** sidebar, and what each outcome will do next.
+Add the label to a small issue. Within a minute (the trigger polls every 60 seconds) the run appears on the **Overview** and on **Work**. Open it to follow each stage: the stage's output, the agent's live session under **Sessions**, and what each outcome will do next.
 
 ![A run held at Triage: the agent asked a question, and the run waits for your answer](images/run-held.png)
 
