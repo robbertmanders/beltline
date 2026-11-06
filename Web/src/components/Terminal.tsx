@@ -113,6 +113,6 @@ export function Terminal({ target, offline = false, label = "Terminal", createTe
       {status === "live" ? (writable ? "Connected · input on" : "Watching · read only") : statusText[status]}
     </div>
     <div ref={containerRef} className="terminal-screen" role="region" aria-label={label} />
-    {status === "offline" && <button type="button" className="quiet-button terminal-retry" disabled={offline} onClick={() => setAttempt(value => value + 1)}>Retry</button>}
+    {status === "offline" && <button type="button" className="link terminal-retry" disabled={offline} onClick={() => setAttempt(value => value + 1)}>Retry</button>}
   </div>;
 }

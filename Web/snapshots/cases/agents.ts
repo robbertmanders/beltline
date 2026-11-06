@@ -150,7 +150,7 @@ export const agentsCases: SnapshotCase[] = [
     sidebar: sidebarState({ navigationOpen: true }),
     readiness: "shell",
     fixtures: [{ kind: "ensure-agent-archived", id: "review", archived: true }],
-    readyMarker: '.library-resource-card[aria-label="Open Review"]',
+    readyMarker: '.library-resource-card .row-hit[aria-label="Open Review"]',
     visibleColumns: [library]
   },
   {
@@ -160,7 +160,7 @@ export const agentsCases: SnapshotCase[] = [
     readiness: "shell",
     fixtures: [{ kind: "ensure-agent-archived", id: "review", archived: true }],
     steps: [
-      { kind: "click", target: { selector: '.library-resource-card[aria-label="Open Review"]' } },
+      { kind: "click", target: { selector: '.library-resource-card .row-hit[aria-label="Open Review"]' } },
       { kind: "click", target: { role: "button", name: "Back to Agents" } },
       { kind: "click", target: { role: "link", name: "Belts" } },
       { kind: "click", target: { role: "link", name: "Agents" } }

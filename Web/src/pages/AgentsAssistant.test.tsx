@@ -15,7 +15,7 @@ describe("Agents assistant sidebar", () => {
     renderAgents();
     await screen.findByLabelText("Brief");
     await user.type(await screen.findByLabelText("Name"), " draft");
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     const opening = await screen.findByRole("dialog", { name: "Save your changes first?" });
     await user.click(within(opening).getByRole("button", { name: "Open without saving" }));
     const assistant = await screen.findByRole("complementary", { name: "Assistant" });
@@ -28,7 +28,7 @@ describe("Agents assistant sidebar", () => {
     expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Triage draft");
     expect(screen.getByRole("heading", { name: "Triage draft" })).toBeTruthy();
 
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     const reopening = await screen.findByRole("dialog", { name: "Save your changes first?" });
     await user.click(within(reopening).getByRole("button", { name: "Open without saving" }));
     expect(await screen.findByRole("complementary", { name: "Assistant" })).toBeTruthy();
@@ -42,7 +42,7 @@ describe("Agents assistant sidebar", () => {
     renderAgents();
     await screen.findByLabelText("Brief");
     await user.type(await screen.findByLabelText("Name"), " draft");
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     const opening = await screen.findByRole("dialog", { name: "Save your changes first?" });
     await user.click(within(opening).getByRole("button", { name: "Open without saving" }));
     const assistant = await screen.findByRole("complementary", { name: "Assistant" });
@@ -66,7 +66,7 @@ describe("Agents assistant sidebar", () => {
     renderAgents();
     await screen.findByLabelText("Brief");
     await user.type(await screen.findByLabelText("Name"), " rejected");
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     const opening = await screen.findByRole("dialog", { name: "Save your changes first?" });
     await user.click(within(opening).getByRole("button", { name: "Save and open" }));
     expect(await screen.findByText("Agent save refused.")).toBeTruthy();

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { createPortal } from "react-dom";
 import { apiRequest } from "../api/client";
 import { describeError } from "../api/errors";
 import { assistantCommandRequest, assistantPath, assistantQueryKey } from "../api/assistantCommands";
@@ -8,6 +9,7 @@ import { backendValues } from "../api/wire.gen";
 import type { AssistantConfigurationResponse, AssistantResponse, Backend, ModelRunnerResource, Thinking } from "../api/wire.gen";
 import { useCommand } from "../api/useCommand";
 import { useRuntime } from "../app/runtime";
+import { Icon } from "./Icon";
 import { Sheet } from "./Sheet";
 import { LazyTerminal } from "./LazyTerminal";
 import { clampSidebarWidth, drawnSidebarWidth, sidebarKeyboardStep } from "../state/preferences";
@@ -125,7 +127,8 @@ export function AssistantSidebar({ available, reserved, stored, onWidthChange, o
   const currentModelOffered = local ? modelChoices.some(choice => choice.id === local.model) : false;
   const modelFailure = modelQuery.isError ? describeError(modelQuery.error).message : null;
 
-  return <aside className="assistant-panel" data-column="assistant" aria-label="Assistant" style={{ width: `${drawn}px` }}>
+  // Over the right of the window, so it is portalled out of the page column it opens from.
+  return createPortal(<aside className="assistant-panel inv scroll" data-column="assistant" aria-label="Assistant" style={{ width: `${drawn}px` }}>
     <div className="assistant-divider" role="separator" aria-orientation="vertical" aria-label="Resize Assistant" aria-valuemin={320} aria-valuemax={900} aria-valuenow={Math.round(chosen)} tabIndex={0}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={commitWidth} onPointerCancel={commitWidth}
       onDoubleClick={() => { dragStart.current = null; setDraftWidth(null); onWidthChange(null); }} onKeyDown={onKeyDown} />
@@ -184,7 +187,7 @@ export function AssistantSidebar({ available, reserved, stored, onWidthChange, o
               : <p className="assistant-demo" role="status">Simulated conversation. No real agent is launched in demo mode.</p>}
             <div className="assistant-conversation-foot">
               <p className="assistant-terminal-note">Type in the terminal to continue.</p>
-              <button type="button" className="action-button small" disabled={!connectionReady || command.pending || !stopOffer?.enabled} title={offerReason(stopOffer) ?? undefined} onClick={onStop}>Stop</button>
+              <button type="button" className="btn sm" disabled={!connectionReady || command.pending || !stopOffer?.enabled} title={offerReason(stopOffer) ?? undefined} onClick={onStop}>Stop</button>
             </div>
             {offerReason(stopOffer) && <p className="assistant-action-reason">{offerReason(stopOffer)}</p>}
           </section>
@@ -192,7 +195,7 @@ export function AssistantSidebar({ available, reserved, stored, onWidthChange, o
             <p>Ask for changes to your belts and agents. They take effect as the agent saves them: new runs use them, runs already going keep theirs.</p>
             <textarea className="assistant-request" aria-label="Request" value={request} onChange={event => onRequestChange(event.target.value)} />
             {dirty && <p className="assistant-dirty-note">You have unsaved changes on this page. Save them before you start.</p>}
-            <button type="button" className="action-button small slate assistant-start" disabled={!connectionReady || command.pending || !startOffer?.enabled || request.trim() === ""} title={offerReason(startOffer) ?? undefined} onClick={onStart}>Start</button>
+            <button type="button" className="btn sm fill assistant-start" disabled={!connectionReady || command.pending || !startOffer?.enabled || request.trim() === ""} title={offerReason(startOffer) ?? undefined} onClick={onStart}>Start</button>
             {offerReason(startOffer) && <p className="assistant-action-reason">{offerReason(startOffer)}</p>}
           </section>}
       {resource.problems.length > 0 && <section className="assistant-problems" aria-label="Problems in what it changed">
@@ -202,12 +205,12 @@ export function AssistantSidebar({ available, reserved, stored, onWidthChange, o
       </section>}
     </>}
     <Sheet title="Save your changes first?" open={startWarning} onClose={() => setStartWarning(false)} footer={<>
-      <button type="button" className="paper-button" onClick={() => setStartWarning(false)}>Cancel</button>
-      <button type="button" className="paper-button paper-button--primary" onClick={() => { setStartWarning(false); submitStart(); }}>Start anyway</button>
+      <button type="button" className="btn" onClick={() => setStartWarning(false)}>Cancel</button>
+      <button type="button" className="btn fill" onClick={() => { setStartWarning(false); submitStart(); }}>Start anyway</button>
     </>}>
       <p>The agent changes your belts and agents directly. It can overwrite or remove what you are editing, and your unsaved changes are not kept anywhere. It is better to save first.</p>
     </Sheet>
-  </aside>;
+  </aside>, document.body);
 }
 
 export const assistantRiskCopy = "The agent changes your belts and agents directly. It can overwrite or remove what you are editing, and your unsaved changes are not kept anywhere. It is better to save first.";
@@ -229,11 +232,11 @@ export function AssistantOpenButton({ open, dirty, saveAvailable, onOpenChange, 
     else onOpenChange(true);
   };
   return <>
-    <button type="button" className={`action-button${open ? " slate" : ""}`} aria-expanded={open} title="Ask an agent to change your belts and agents" onClick={requestOpen}>Agent</button>
+    <button type="button" className={`btn ${open ? "fill" : ""}`} aria-expanded={open} title="Ask an agent to change your belts and agents" onClick={requestOpen}><Icon name="chat" />Ask the assistant</button>
     <Sheet title="Save your changes first?" open={confirmOpen} onClose={() => setConfirmOpen(false)} footer={<>
-      <button type="button" className="paper-button" onClick={() => setConfirmOpen(false)}>Cancel</button>
-      <button type="button" className="paper-button" onClick={() => { setConfirmOpen(false); onOpenChange(true); }}>Open without saving</button>
-      {saveAvailable && <button type="button" className="paper-button paper-button--primary" onClick={() => { setConfirmOpen(false); onSaveAndOpen(() => onOpenChange(true)); }}>Save and open</button>}
+      <button type="button" className="btn" onClick={() => setConfirmOpen(false)}>Cancel</button>
+      <button type="button" className="btn" onClick={() => { setConfirmOpen(false); onOpenChange(true); }}>Open without saving</button>
+      {saveAvailable && <button type="button" className="btn fill" onClick={() => { setConfirmOpen(false); onSaveAndOpen(() => onOpenChange(true)); }}>Save and open</button>}
     </>}>
       <p>{assistantRiskCopy}</p>
     </Sheet>

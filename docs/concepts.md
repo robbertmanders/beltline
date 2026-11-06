@@ -48,10 +48,10 @@ The daemon owns every fact and decision: which actions a run allows, whether a b
 
 ## The pages
 
-- **Overview**: a Summary (spend today, sessions, what's running, what shipped, what needs you) and a Floor with every belt as a lane of stage boxes, where belts that share a stage meet.
+- **Overview**: how many runs need you and which, then the Floor, with every belt's line through its stages, where belts that share a stage meet, and then today's figures (spend, sessions, what shipped, what is running).
 - **Work**: every run, grouped and filtered, with the ones that need you highlighted.
 - **Run**: one run's belt, each stage's output and your decisions, and its agent sessions live.
-- **Belts** and **Agents**: searchable card grids of your library, each opening its editor.
+- **Belts** and **Agents**: searchable lists of your library, each row opening its editor.
 - **Library**: your library repositories, to back up, restore, install and share. See [Library](library.md).
 - **AFK**: the decisions AFK mode made, to check. See [AFK mode](afk.md).
 - **Insights** (experimental): first-try rates, time and cost per stage. It's off until you turn on **Show the Insights page** in Settings → Experimental. See [Insights](insights.md).

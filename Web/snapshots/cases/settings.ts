@@ -4,8 +4,8 @@ import { snapshotState } from "../stateFixture";
 export const settingsCases: SnapshotCase[] = [
   ...shellCases("settings", "/settings"),
   { id: "native-7e-settings", route: "/settings", sidebar: sidebarState({ navigationOpen: true }), readiness: "shell", readyMarker: 'section[aria-label="General"]' },
-  { id: "native-7g-settings-paused", route: "/settings", sidebar: sidebarState({ navigationOpen: true }), readiness: "shell", apiResponses: [{ path: "/api/v1/state", status: 200, body: snapshotState({ paused: true }) }], expectedText: "Resume", readyMarker: 'section[aria-label="General"]' },
-  { id: "native-7j-settings-continued", route: "/settings", sidebar: sidebarState({ navigationOpen: true }), readiness: "shell", apiResponses: [{ path: "/api/v1/state", status: 200, body: snapshotState({ paused: false }) }], expectedText: "Pause", readyMarker: 'section[aria-label="General"]' },
+  { id: "native-7g-settings-paused", route: "/settings", sidebar: sidebarState({ navigationOpen: true }), readiness: "shell", apiResponses: [{ path: "/api/v1/state", status: 200, body: snapshotState({ paused: true }) }], steps: [{ kind: "wait", target: { selector: '.global-controls button[aria-label^="Resume"]' }, state: "visible" }], readyMarker: 'section[aria-label="General"]' },
+  { id: "native-7j-settings-continued", route: "/settings", sidebar: sidebarState({ navigationOpen: true }), readiness: "shell", apiResponses: [{ path: "/api/v1/state", status: 200, body: snapshotState({ paused: false }) }], steps: [{ kind: "wait", target: { selector: '.global-controls button[aria-label^="Pause"]' }, state: "visible" }], readyMarker: 'section[aria-label="General"]' },
   { id: "native-7f-settings-factories", route: "/settings", sidebar: sidebarState({ navigationOpen: true }), readiness: "shell", readyMarker: 'section[aria-label="General"]' },
   {
     id: "settings-models-expanded",

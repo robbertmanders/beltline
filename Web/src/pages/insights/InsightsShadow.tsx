@@ -102,8 +102,8 @@ export function ShadowComparison({ shadow, onDecide }: { shadow: InsightsShadow;
       <div className="shadow-arm"><span className="shadow-key is-shadow" aria-hidden="true" /><span><strong>{shadow.shadow.label}</strong><Caps>{shadow.shadow.caption}</Caps></span></div>
       <p className="shadow-arms-note">{shadow.caption}</p>
       {shadow.running && onDecide && <div className="shadow-arms-actions">
-        <button type="button" className="action-button" onClick={() => onDecide("discard")}>Discard shadow…</button>
-        <button type="button" className="action-button shadow-primary" onClick={() => onDecide("accept")}>Accept shadow…</button>
+        <button type="button" className="btn" onClick={() => onDecide("discard")}>Discard shadow…</button>
+        <button type="button" className="btn shadow-primary" onClick={() => onDecide("accept")}>Accept shadow…</button>
       </div>}
       {!shadow.running && shadow.result && <Chip tone={shadow.result === "accepted" ? "good" : "grey"}>{shadow.result}</Chip>}
     </section>

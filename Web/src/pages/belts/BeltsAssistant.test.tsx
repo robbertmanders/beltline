@@ -59,7 +59,7 @@ describe("Belts assistant entry", () => {
     await selectBelt(user, "Docs fixes");
     await user.clear(nameInput());
     await user.type(nameInput(), "Docs fixes draft");
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     const opening = await screen.findByRole("dialog", { name: "Save your changes first?" });
     await user.click(within(opening).getByRole("button", { name: "Open without saving" }));
     const panel = await screen.findByRole("complementary", { name: "Assistant" });
@@ -75,7 +75,7 @@ describe("Belts assistant entry", () => {
     expect(screen.getByLabelText("Location").textContent).toContain("belt=docs");
 
     // Agent opens it again, and that visibility is what the remount below keeps.
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     await user.click(within(await screen.findByRole("dialog", { name: "Save your changes first?" })).getByRole("button", { name: "Open without saving" }));
     expect(await screen.findByRole("complementary", { name: "Assistant" })).toBeTruthy();
 
@@ -98,7 +98,7 @@ describe("Belts assistant entry", () => {
     renderAt("/belts");
     await screen.findByRole("heading", { level: 2, name: firstLive.belt.name });
     await user.type(nameInput(), " draft");
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     const firstSheet = await screen.findByRole("dialog", { name: "Save your changes first?" });
     expect(within(firstSheet).getByText(/changes your belts and agents directly.*overwrite or remove what you are editing/i)).toBeTruthy();
     await user.click(within(firstSheet).getByRole("button", { name: "Cancel" }));
@@ -106,7 +106,7 @@ describe("Belts assistant entry", () => {
     expect(nameInput().value).toBe(`${firstLive.belt.name} draft`);
     expect(daemon.posts("/api/v1/belts/save")).toHaveLength(0);
 
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     const openSheet = await screen.findByRole("dialog", { name: "Save your changes first?" });
     await user.click(within(openSheet).getByRole("button", { name: "Open without saving" }));
     expect(await screen.findByRole("complementary", { name: "Assistant" })).toBeTruthy();
@@ -128,7 +128,7 @@ describe("Belts assistant entry", () => {
     renderAt("/belts");
     await screen.findByRole("heading", { level: 2, name: firstLive.belt.name });
     await user.type(nameInput(), " saved");
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     const sheet = await screen.findByRole("dialog", { name: "Save your changes first?" });
     await user.click(within(sheet).getByRole("button", { name: "Save and open" }));
     expect(await screen.findByRole("complementary", { name: "Assistant" })).toBeTruthy();
@@ -142,7 +142,7 @@ describe("Belts assistant entry", () => {
     renderAt("/belts");
     await screen.findByRole("heading", { level: 2, name: firstLive.belt.name });
     await user.type(nameInput(), " unsaved");
-    await user.click(screen.getByRole("button", { name: "Agent" }));
+    await user.click(screen.getByRole("button", { name: "Ask the assistant" }));
     const openSheet = await screen.findByRole("dialog", { name: "Save your changes first?" });
     await user.click(within(openSheet).getByRole("button", { name: "Open without saving" }));
     const assistant = await screen.findByRole("complementary", { name: "Assistant" });

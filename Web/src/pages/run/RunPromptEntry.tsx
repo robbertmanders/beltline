@@ -36,7 +36,7 @@ export function RunPromptEntry({ prompt, failure, ...props }: RunInlineControlsP
           const action = findRunAction(view.actions, "decide", { stage: stage.id, outcome: outcome.name });
           const takesPrompt = action?.needsNote === true;
           return <button key={outcome.id} type="button"
-            className={`action-button${outcome.id === primaryId ? " slate" : outcome.tone === "problem" ? " danger" : ""}`}
+            className={`btn${outcome.id === primaryId ? " fill" : outcome.tone === "problem" ? " danger" : ""}`}
             disabled={!online || pending || !action?.enabled || (takesPrompt && text.trim() === "")}
             title={action?.reason ?? action?.thenHelp ?? undefined}
             onClick={() => submit("decide", takesPrompt

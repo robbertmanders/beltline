@@ -137,14 +137,6 @@ describe("Sheet", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it("closes on a click outside the panel", async () => {
-    const onClose = vi.fn();
-    render(<Sheet title="Outside" open onClose={onClose}><p>Body</p></Sheet>);
-    const layer = document.querySelector<HTMLElement>(".sheet-layer")!;
-    fireEvent.click(layer);
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
   it("scrolls its body inside the viewport rather than the page", async () => {
     render(<Sheet title="Long" open onClose={() => {}}><p>{"line ".repeat(400)}</p></Sheet>);
     const body = document.querySelector<HTMLElement>(".sheet-body");

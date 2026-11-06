@@ -69,12 +69,12 @@ export function ProblemSummary({ failure, onDismiss, onReveal }: { failure: unkn
           const location = locations[index] ?? null;
           return <li key={index} id={problemDomId(index)}>
             <span>{problem}</span>
-            {location ? <button type="button" className="quiet-button" onClick={() => reveal(location)}>Show {describeLocation(location)}</button>
+            {location ? <button type="button" className="link" onClick={() => reveal(location)}>Show {describeLocation(location)}</button>
               : <span className="problem-unlocated"> (not about one field)</span>}
           </li>;
         })}
       </ol>}
     </div>
-    <button type="button" className="quiet-button" onClick={onDismiss}>Dismiss</button>
+    <button type="button" className="link" onClick={onDismiss}>Dismiss</button>
   </section>;
 }

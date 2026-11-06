@@ -42,8 +42,8 @@ export function useLibraryItem(repo: LibraryRepoRef, item: LibraryItem | undefin
     : `/agents?agent=${encodeURIComponent(`${item.id}@${item.localVersion ?? item.version}`)}`);
   const actions = <>
     <Chip tone={state.tone}>{state.label}</Chip>
-    {item.localVersion !== null && <button type="button" className="action-button" onClick={openYours}>Open yours</button>}
-    <button type="button" className="action-button" onClick={() => setComparing(true)}>Compare</button>
+    {item.localVersion !== null && <button type="button" className="btn" onClick={openYours}>Open yours</button>}
+    <button type="button" className="btn" onClick={() => setComparing(true)}>Compare</button>
     {install && <ActionControl id="install" fallbackLabel={label} action={{ ...install, label }} canRead={runtime.canRead} connection={runtime.connection}
       pending={command.pending} supported kind="slate"
       onActivate={() => {
@@ -57,7 +57,7 @@ export function useLibraryItem(repo: LibraryRepoRef, item: LibraryItem | undefin
   const notice = <>
     {command.error ? <ErrorProblems error={command.error} /> : null}
     {installed ? <p className="library-result library-notice" role="status">{installed}{" "}
-      <button type="button" className="quiet-button" onClick={openYours}>{kind === "belt" ? "Open it in Belts" : "Open it in Agents"}</button></p>
+      <button type="button" className="link" onClick={openYours}>{kind === "belt" ? "Open it in Belts" : "Open it in Agents"}</button></p>
       : item.state === "conflict" && item.reason ? <p className="library-problem library-notice" role="alert">{item.reason}</p>
       : item.state === "update" && item.localVersion !== null ? <p className="library-notice library-notice--update">Yours is v{item.localVersion}.</p>
       : null}

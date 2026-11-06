@@ -13,7 +13,7 @@ nav_order: 11
 
 Everything Beltline keeps lives in its data folder: `~/Library/Application Support/Beltline/` on macOS, `$XDG_DATA_HOME/Beltline/` on Linux (`~/.local/share/Beltline/` when `XDG_DATA_HOME` is unset), or the folder `BELTLINE_DATA_DIR` names. That includes belts, agents, settings, runs, specs, clones of library repositories, and every session's brief, output and log. One daemon owns a data folder at a time. It locks `daemon.lock` in the folder (`flock`, recording its pid) before it reads or writes anything else, and keeps the lock until it stops. A second `beltlined` on the same folder exits and names the owner's pid.
 
-While it runs, `daemon.json` (mode 0600) holds the port and a fresh token, and `beltlined.log` keeps lifecycle and notification messages. The log moves aside to `beltlined.log.1` past 5 MB. Display choices such as folds, column widths and open sidebars are kept in the browser.
+While it runs, `daemon.json` (mode 0600) holds the port and a fresh token, and `beltlined.log` keeps lifecycle and notification messages. The log moves aside to `beltlined.log.1` past 5 MB. Display choices such as folds, the floor's pinned belt and the open assistant are kept in the browser.
 
 The data folder records its format in `format.json`. When a new version of Beltline changes the format, its first start rewrites the folder once. Before rewriting, it copies each file it changes to `upgrade-backups/<time>/`. A version of Beltline that is older than the folder's format refuses to start rather than risk your data. Before 1.0 the format and the API may still change, always with an automatic upgrade.
 
@@ -50,9 +50,9 @@ See [Install](install.md#uninstall).
 
 ## Configure with an agent
 
-**Agent** on the Belts and Agents pages opens a sidebar with a Pi, Copilot, Claude Code, Codex or Cursor conversation that changes your belts and agents for you. Pick the runner, an explicit allowed model and thinking there; they are saved locally. Blank models require repair in Settings → Allowed models before a new conversation can start. Describe what you want and **Start**; the conversation continues in the sidebar's terminal and survives a restart of the daemon.
+**Ask the assistant** on the Belts and Agents pages opens a panel with a Pi, Copilot, Claude Code, Codex or Cursor conversation that changes your belts and agents for you. Pick the runner, an explicit allowed model and thinking there; they are saved locally. Blank models require repair in Settings → Allowed models before a new conversation can start. Describe what you want and **Start**; the conversation continues in the panel's terminal and survives a restart of the daemon.
 
-There is no draft: the agent writes straight into `belts/` and `agents/`, and the daemon reloads them as it does. New runs use the changes right away; runs already going keep the versions they started with. Like the editor, it adds a new version for every change and never rewrites a saved one, and it asks before it archives, pauses or removes anything. Files it changed that can't be read, or that Save would refuse, are listed in the sidebar; a belt or agent whose newest version can't be read is missing from the app until the agent fixes it.
+There is no draft: the agent writes straight into `belts/` and `agents/`, and the daemon reloads them as it does. New runs use the changes right away; runs already going keep the versions they started with. Like the editor, it adds a new version for every change and never rewrites a saved one, and it asks before it archives, pauses or removes anything. Files it changed that can't be read, or that Save would refuse, are listed in the panel; a belt or agent whose newest version can't be read is missing from the app until the agent fixes it.
 
 Save your edits before you start: with unsaved changes on the page, **Agent** and **Start** warn you first, since the agent can overwrite or remove what you are editing.
 

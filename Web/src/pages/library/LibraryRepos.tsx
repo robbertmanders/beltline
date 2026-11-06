@@ -5,20 +5,17 @@ import { libraryBackupRequest, libraryRefreshRequest, libraryRestoreRequest, rep
 import { useCommand } from "../../api/useCommand";
 import { useRuntime } from "../../app/runtime";
 import { ActionControl } from "../../components/ActionControl";
-import { Chip } from "../../components/Paper";
 import { ErrorProblems } from "../../components/ProblemList";
 
 const commandLabels: Record<string, string> = { refresh: "Refresh", backup: "Back up", restore: "Restore…" };
 
 /** The configured library repositories, one row each with its sync state and its own commands. */
 export function LibraryRepos({ repos }: { repos: readonly LibraryRepoResponse[] }) {
-  if (repos.length === 0) return <section className="settings-card library-repos">
-    <p className="muted-line">No library repositories are set up yet.</p>
-    <Link to="/settings">Add one in Settings → Library repositories</Link>
-  </section>;
-  return <section className="settings-card library-repos" aria-label="Library repositories">
+  if (repos.length === 0) return <p className="empty library-repos">No library repositories are set up yet.<br />
+    <Link className="btn" to="/settings">Add one in Settings → Library repositories</Link></p>;
+  return <div className="rows library-repos" role="group" aria-label="Library repositories">
     {repos.map(repo => <RepoRow key={repoKey(repo)} repo={repo} />)}
-  </section>;
+  </div>;
 }
 
 /** One repository: its role and sync state, its actions, and the answer of the last one. */
@@ -42,29 +39,28 @@ function RepoRow({ repo }: { repo: LibraryRepoResponse }) {
     }
   };
 
-  return <section className="library-repo" aria-label={`Library ${repo.repository}${folder}`}>
-    <div className="library-repo-head">
-      <div className="library-repo-title">
-        <Chip tone={backup ? "neutral" : "grey"}>{backup ? "Backup" : "Shared"}</Chip>
-        <strong>{repo.repository}{folder}</strong>
-        {!backup && <span className="mono-note">{!repo.takesShares ? "Install only" : repo.publish === "push" ? "Share pushes" : "Share opens a pull request"}</span>}
-        {backup && repo.changedSinceBackup && <Chip tone="gold">Changed since backup</Chip>}
-      </div>
-      <span className="mono-note">{repo.commit ? `${repo.commit.slice(0, 7)} · ${repo.syncedAt ?? ""}` : "Not synced yet"}</span>
-      <div className="library-repo-actions">
-        {repo.actions.map(action => <ActionControl key={action.id} id={action.id} fallbackLabel={commandLabels[action.id] ?? action.id}
-          action={action} canRead={runtime.canRead} connection={runtime.connection} pending={command.pending} supported kind={action.id === "refresh" ? "plain" : "slate"}
-          onActivate={() => action.id === "restore" ? setConfirmingRestore(true) : run(action)} />)}
-      </div>
+  return <section className="row rr library-repo" aria-label={`Library ${repo.repository}${folder}`}>
+    <div><div className="t mono" style={{ fontSize: 17 }}>{repo.repository}{folder}</div>
+      <div className="m"><span>{backup ? "Backups" : "Shared"}</span>
+        {!backup && <span>{!repo.takesShares ? "Install only" : repo.publish === "push" ? "Share pushes" : "Share opens a pull request"}</span>}
+        {backup && repo.changedSinceBackup && <span className="flag o">Changed since backup</span>}</div></div>
+    <span className="c">{repo.commit ? `Synced ${repo.commit.slice(0, 7)} · ${repo.syncedAt ?? ""}` : "Not synced yet"}</span>
+    <span className="c" style={{ whiteSpace: "normal" }}>{backup ? "Back up writes your belts and agents here; Restore reads them back." : "Install what you want from the tabs below."}</span>
+    <div className="acts library-repo-actions">
+      {repo.actions.map(action => <ActionControl key={action.id} id={action.id} fallbackLabel={commandLabels[action.id] ?? action.id} small
+        action={action} canRead={runtime.canRead} connection={runtime.connection} pending={command.pending} supported kind={action.id === "backup" ? "slate" : "plain"}
+        onActivate={() => action.id === "restore" ? setConfirmingRestore(true) : run(action)} />)}
     </div>
-    {repo.problem && <p className="library-problem" role="alert">{repo.problem}</p>}
-    {confirmingRestore && <div className="confirm-row" role="alertdialog" aria-label="Confirm restore">
-      <span><strong>Restore the library from {repo.repository}?</strong> Your belts and agents are replaced with the repository's. The current ones are kept in library-backups. Runs already going keep theirs.</span>
-      {repo.actions.filter(action => action.id === "restore").map(action => <ActionControl key="restore-confirm" id="restore" fallbackLabel="Restore"
-        action={{ ...action, label: "Restore" }} canRead={runtime.canRead} connection={runtime.connection} pending={command.pending} supported kind="danger" onActivate={() => run(action)} />)}
-      <button type="button" className="paper-button paper-button--small" onClick={() => setConfirmingRestore(false)}>Cancel</button>
+    {(repo.problem || confirmingRestore || command.error || result) && <div className="library-repo-foot" style={{ gridColumn: "1 / -1" }}>
+      {repo.problem && <p className="why library-problem" role="alert">{repo.problem}</p>}
+      {confirmingRestore && <div className="note confirm-row" role="alertdialog" aria-label="Confirm restore">
+        <span><b>Restore the library from {repo.repository}?</b><br /><span className="help">Your belts and agents are replaced with the repository's. The current ones are kept in library-backups. Runs already going keep theirs.</span></span>
+        <span className="acts">{repo.actions.filter(action => action.id === "restore").map(action => <ActionControl key="restore-confirm" id="restore" fallbackLabel="Restore"
+          action={{ ...action, label: "Restore" }} canRead={runtime.canRead} connection={runtime.connection} pending={command.pending} supported kind="slate" onActivate={() => run(action)} />)}
+        <button type="button" className="btn ghost" onClick={() => setConfirmingRestore(false)}>Cancel</button></span>
+      </div>}
+      {command.error ? <ErrorProblems error={command.error} /> : null}
+      {result && <p className="help library-result" role="status">{result}</p>}
     </div>}
-    {command.error ? <ErrorProblems error={command.error} /> : null}
-    {result && <p className="library-result" role="status">{result}</p>}
   </section>;
 }

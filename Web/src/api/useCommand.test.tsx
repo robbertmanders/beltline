@@ -106,7 +106,7 @@ describe("useCommand", () => {
     await waitFor(() => expect(posts().map(post => post.path)).toEqual(["/api/v1/check-now", "/api/v1/pause", "/api/v1/afk"]));
     // Finishing the other commands must not clear Fetch's pending state.
     await waitFor(() => expect(within(controls).getAllByRole("button", { name: "Working…" })).toHaveLength(1));
-    expect(fetchButton.textContent).toBe("Working…");
+    expect(fetchButton.getAttribute("aria-label")).toBe("Working…");
     expect(fetchButton.hasAttribute("disabled")).toBe(true);
     await act(async () => { release.resolve!(status === 200
       ? json(goldenText("command-check-now.json"))

@@ -173,16 +173,15 @@ export const runCases: SnapshotCase[] = [
   // attempt's output and artifacts are fixed here, so the captures do not depend on the demo's saved output.
   ...outputSectionsCases(),
   {
-    // The floating run menu (controls, then links), so its bounds are visible next to the page it floats over.
+    // The run's commands in the control row.
     id: "run-controls-open",
     route: runRoute,
     sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
     readiness: "run",
     steps: [
-      { kind: "click", target: { role: "button", name: "Run actions", exact: true } },
-      { kind: "wait", target: { selector: ".run-menu-card" }, state: "visible" }
+      { kind: "wait", target: { selector: ".run-acts" }, state: "visible" }
     ],
-    readyMarker: ".run-menu-card"
+    readyMarker: ".run-acts"
   },
   {
     id: "run-reduced-motion",
@@ -299,10 +298,9 @@ export const runCases: SnapshotCase[] = [
     sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
     readiness: "run",
     steps: [
-      { kind: "click", target: { role: "button", name: "Run actions", exact: true } },
-      { kind: "wait", target: { selector: ".run-menu-card" }, state: "visible" }
+      { kind: "wait", target: { selector: ".run-acts" }, state: "visible" }
     ],
-    readyMarker: ".run-menu-card"
+    readyMarker: ".run-acts"
   },
   {
     // 5c-stage-adjust: the Adjust stage sheet for the default run's Spec stage, opened from the stage panel's Adjust.
@@ -324,7 +322,6 @@ export const runCases: SnapshotCase[] = [
     sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
     readiness: "run",
     steps: [
-      { kind: "click", target: { role: "button", name: "Run actions", exact: true } },
       { kind: "click", target: { role: "button", name: "Send to…", exact: true } },
       { kind: "wait", target: { selector: '[role="dialog"]' }, state: "visible" }
     ],

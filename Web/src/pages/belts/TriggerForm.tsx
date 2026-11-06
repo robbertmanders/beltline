@@ -55,21 +55,21 @@ export function TriggerForm() {
     <section className="belt-card belt-triggers" aria-label="Triggers">
       <div className="belt-triggers-head">
         <div className="form-heading"><span className="paper-tag">{several ? `Triggers · ${count}` : "Trigger"}</span><h3>{presentation?.heading ?? "Trigger"}</h3></div>
-        {!disabled && <button type="button" className="action-button small" onClick={() => editor.operate("trigger-add", {})}>Add trigger</button>}
+        {!disabled && <button type="button" className="btn sm" onClick={() => editor.operate("trigger-add", {})}>Add trigger</button>}
       </div>
       {reason && !editor.readOnly && <span id="trigger-add-reason" className="action-reason">{reason}</span>}
       {count === 0 ? <p className="field-note">{presentation?.empty ?? "Add at least one trigger"}</p> : <>
         <div className="trigger-chips">
           {triggers.map((entry, index) => <button key={entry.id} type="button" title={kindOf(entry)?.heading}
-            className={`action-button small${entry.id === selected?.id ? " slate" : ""}`} aria-pressed={entry.id === selected?.id}
+            className={`btn sm${entry.id === selected?.id ? " slate" : ""}`} aria-pressed={entry.id === selected?.id}
             onClick={() => setChosen(entry.id)}>{`${index + 1} · ${kindOf(entry)?.title ?? triggerLabels[entry.trigger.kind]}`}</button>)}
         </div>
         {!disabled && selected && <div className="trigger-controls">
-          <button type="button" className="action-button small" disabled={selectedIndex === 0} aria-label={`Move trigger ${selectedIndex + 1} earlier`}
+          <button type="button" className="btn sm" disabled={selectedIndex === 0} aria-label={`Move trigger ${selectedIndex + 1} earlier`}
             onClick={() => editor.operate("trigger-move", { entryId: selected.id, offset: -1 })}>Move up</button>
-          <button type="button" className="action-button small" disabled={selectedIndex === count - 1} aria-label={`Move trigger ${selectedIndex + 1} later`}
+          <button type="button" className="btn sm" disabled={selectedIndex === count - 1} aria-label={`Move trigger ${selectedIndex + 1} later`}
             onClick={() => editor.operate("trigger-move", { entryId: selected.id, offset: 1 })}>Move down</button>
-          <button type="button" className="action-button small" aria-label={`Remove trigger ${selectedIndex + 1} ${triggerLabels[selected.trigger.kind]}`}
+          <button type="button" className="btn sm" aria-label={`Remove trigger ${selectedIndex + 1} ${triggerLabels[selected.trigger.kind]}`}
             onClick={() => { editor.operate("trigger-remove", { entryId: selected.id }); setChosen(null); }}>Remove</button>
         </div>}
       </>}

@@ -12,7 +12,7 @@ nav_order: 4
 
 ## The run page
 
-A run's page shows its belt with the path it took: each stage's state, the route it took at each fork and the routes it didn't. Select a stage to see its attempts: the brief the agent got, its output, the outcome and what that outcome did next. The **Sessions** sidebar lists every agent session of the run and shows the selected one live, in a read-only terminal.
+A run's page opens over the whole window, drawn the other way round, and shows its belt with the path it took: each stage's state, the route it took at each fork and the routes it didn't. Select a stage to see its attempts: the brief the agent got, its output, the outcome and what that outcome did next. **Sessions** at the top opens a sidebar down the right of the window that lists every agent session of the run and shows the selected one live, in a read-only terminal. Drag its edge to resize it, double-click the edge for half the window, and **Hide ›** folds it away; this browser remembers both.
 
 Runs that need you are listed under **Needs you** on the Overview and on Work, and Settings can send a browser notification when one arrives.
 
@@ -58,7 +58,7 @@ Select an agent stage on an active run and choose **Adjust** to change its harne
 
 ## Continuing a session yourself
 
-**Continue** on a session in the Sessions sidebar opens it in the runner's own interactive interface, in a terminal you can type in. Use it to steer an agent by hand. Claude Code opens the same session, Codex resumes the checkout's newest session, and Cursor resumes its chat. You can also open the run's checkout in VS Code, Finder or Ghostty from the run's menu.
+**Continue** on a session under Sessions opens it in the runner's own interactive interface, in a terminal you can type in. Use it to steer an agent by hand. Claude Code opens the same session, Codex resumes the checkout's newest session, and Cursor resumes its chat. You can also open the run's checkout in VS Code from the links under its title, and attach to a session in Ghostty under Sessions.
 
 ## Outputs and artifacts
 

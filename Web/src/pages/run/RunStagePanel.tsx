@@ -71,9 +71,9 @@ function Artifacts({ runId, attemptId, onReveal }: { runId: string; attemptId: s
     <p className="run-muted">{data.warning}</p>
     {data.artifacts.map(artifact => <div key={artifact.name} className="artifact-row">
       <span className="artifact-name">{artifact.name}</span>
-      <button type="button" className="action-button small" disabled={sign.isPending} title={data.warning}
+      <button type="button" className="btn sm" disabled={sign.isPending} title={data.warning}
         onClick={() => void openArtifact(artifact.name)}>Open in browser</button>
-      <button type="button" className="action-button small" onClick={onReveal}>{revealLabel}</button>
+      <button type="button" className="btn sm" onClick={onReveal}>{revealLabel}</button>
     </div>)}
     {error !== null && <ErrorProblems error={error} />}
   </section>;
@@ -160,7 +160,7 @@ export function RunStagePanel({ runId, panel, stage, selectedAttempt, onSelectAt
       {facts && <Chip tone="grey">{attemptFacts && panel.kind === "agent" ? attemptFacts.ranOn.toUpperCase() : facts.kindChip}</Chip>}
       {facts && <StateChip chip={facts.state} />}
       <span className="stage-panel-spacer" />
-      {facts?.canAdjust && <button type="button" className="action-button small" onClick={onAdjust}>Adjust</button>}
+      {facts?.canAdjust && <button type="button" className="btn sm" onClick={onAdjust}>Adjust</button>}
       {panel.attempts.length > 1 && <Select pill label={`Select attempt of ${panel.name}`} value={attempt?.id ?? ""}
         options={panel.attempts.map(item => ({ value: item.id, label: `Attempt ${item.number}` }))} onChange={onSelectAttempt} />}
       {attempt?.content === "historicalOutput" && <Caps>Output</Caps>}
@@ -190,13 +190,13 @@ export function RunStagePanel({ runId, panel, stage, selectedAttempt, onSelectAt
         : attempt?.content === "running" ? <div className="stage-running">
           <span>{facts?.working ?? `${panel.name} is working on it.`}</span>
           <WorkingBar />
-          {stage.type === "agent" && !sessionsOpen && <button type="button" className="action-button small" onClick={onWatchSession}>Watch the session</button>}
+          {stage.type === "agent" && !sessionsOpen && <button type="button" className="btn sm" onClick={onWatchSession}>Watch the session</button>}
           {stage.type === "watch" && facts?.watchLooking && <p className="run-muted">{facts.watchLooking}</p>}
           {stage.type === "watch" && facts?.watchCards.map(card => <div key={card.id} className="stage-watch-card">
             <span className="stage-watch-title">{card.title}</span>
             <span className="run-muted"><Spans spans={card.subtitle} /></span>
             <span className="run-muted">{card.state}</span>
-            <a className="action-button small" href={card.url} target="_blank" rel="noopener noreferrer">Open it</a>
+            <a className="btn sm" href={card.url} target="_blank" rel="noopener noreferrer">Open it</a>
           </div>)}
         </div>
         : attempt?.content === "historicalOutput" ? <>

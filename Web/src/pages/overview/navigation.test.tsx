@@ -9,13 +9,13 @@ import { fixtureRoute, renderRoutes, stubDaemon } from "../../test/daemon";
 const overview = (): OverviewResponse => JSON.parse(goldenText("views-overview.json")) as OverviewResponse;
 const location = () => screen.getByLabelText("Location").textContent;
 
-/** Opens Overview on the Floor, where the boxes, belts and tags it navigates from are drawn. */
+/** Opens Overview, under whose summary the Floor's boxes, belts and tags are drawn. */
 async function openFloor() {
   const user = userEvent.setup();
   stubDaemon({ "/api/v1/views/overview": fixtureRoute("views-overview.json"), "/api/v1/views/work": fixtureRoute("views-work.json") });
   renderRoutes("/overview");
   await screen.findByRole("heading", { level: 1, name: "Overview" });
-  await user.click(screen.getByRole("button", { name: "Floor" }));
+  await waitFor(() => expect(document.querySelector(".floor-box")).not.toBeNull());
   return user;
 }
 
@@ -43,7 +43,7 @@ describe("Overview navigation", () => {
     renderRoutes("/overview");
     await screen.findByRole("heading", { level: 1, name: "Overview" });
     const needs = await screen.findByRole("region", { name: "Needs you" });
-    await userEvent.setup().click(needs.querySelector<HTMLButtonElement>(".overview-row")!);
+    await userEvent.setup().click(needs.querySelector<HTMLButtonElement>(".row-hit")!);
     const expected = `/runs/${encodeURIComponent(row!.runId)}${row!.openStage ? `?stage=${encodeURIComponent(row!.openStage)}` : ""}`;
     await waitFor(() => expect(location()).toBe(expected));
   });
@@ -51,12 +51,12 @@ describe("Overview navigation", () => {
   it("opens a Floor chip at its stage when a person is needed, and at the run otherwise", async () => {
     const user = await openFloor();
     const chip = overview().floor.boxes!.flatMap(box => box.chips)[0]!;
-    await user.click(document.querySelector<HTMLButtonElement>(".floor-tag")!);
+    await user.click(document.querySelector<HTMLButtonElement>(".floor-tag:not(.floor-tag-more)")!);
     const expected = `/runs/${encodeURIComponent(chip.runId)}${chip.openStage ? `?stage=${encodeURIComponent(chip.openStage)}` : ""}`;
     await waitFor(() => expect(location()).toBe(expected));
   });
 
-  it("keeps stored Work and shell folds unchanged across Overview modes and a navigation into Work", async () => {
+  it("keeps stored Work and shell folds unchanged across the Overview and a navigation into Work", async () => {
     const user = userEvent.setup();
     stubDaemon({ "/api/v1/views/overview": fixtureRoute("views-overview.json"), "/api/v1/views/work": fixtureRoute("views-work.json") });
     const stored: WebPreferences = {
@@ -69,8 +69,6 @@ describe("Overview navigation", () => {
     savePreferences(stored);
     renderRoutes("/overview");
     await screen.findByRole("heading", { level: 1, name: "Overview" });
-    await user.click(screen.getByRole("button", { name: "Summary" }));
-    await user.click(screen.getByRole("button", { name: "Floor" }));
     await user.click(screen.getByRole("link", { name: "Work" }));
     await screen.findByRole("heading", { level: 1, name: "Work" });
     const saved = JSON.parse(localStorage.getItem(preferencesStorageKey)!) as WebPreferences;

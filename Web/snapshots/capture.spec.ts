@@ -44,7 +44,9 @@ async function ready(page: Page, runId: string | undefined, readiness: "shell" |
     return;
   }
   try {
-    await expect(page.getByRole("navigation", { name: "Primary navigation" })).toBeVisible();
+    // The top bar is the shell; below 1180px its navigation folds into the Menu button.
+    await expect(page.locator("header.top")).toBeVisible();
+    await expect(page.locator('nav[aria-label="Primary navigation"]')).toBeAttached();
   } catch {
     throw new Error(`Expected the authenticated shell at ${page.url()}, received: ${(await page.locator("body").innerText()).slice(0, 500)}`);
   }
@@ -61,7 +63,7 @@ async function ready(page: Page, runId: string | undefined, readiness: "shell" |
   await page.evaluate(() => document.fonts.ready);
   await expect(page.locator(".app-frame")).toHaveAttribute("data-connection-status", "connected");
   if (readiness === "run") {
-    await expect(page.locator(".run-line .box-map").first()).toBeVisible();
+    await expect(page.locator(".run-line .run-map").first()).toBeVisible();
     await expect(page.locator(".stage-panel").first()).toBeVisible();
     await expect(page.getByRole("status", { name: /Loading run|Loading output|Loading artifacts/ })).toHaveCount(0);
     return;
@@ -188,8 +190,7 @@ async function capture(browser: Browser, item: SnapshotCase, size: { width: numb
       const selected = await page.locator('[aria-current="page"]').first().getAttribute("href");
       const expected = route.startsWith("/runs/") ? "/work" : route.split("?")[0];
       expect(selected).toBe(expected);
-      const nav = await page.locator("[data-column=navigation]").evaluate(element => element.getBoundingClientRect().width);
-      expect(nav).toBe(item.sidebar!.navigationOpen ? item.sidebar!.navigationWidth : 40);
+      // The pages sit under one top bar; the navigation's stored width and fold no longer draw a column.
     }
     if (item.steps?.length) {
       for (const step of item.steps) await runStep(page, item.id, step);
@@ -398,8 +399,8 @@ test("the Sessions list hugs one row, shows six rows without scrolling and scrol
       await context.close();
     }
   }
-  // Six one-line rows (30 px each, 2 px gaps) make the cap, so six fit without scrolling and a seventh scrolls.
-  const cap = 6 * 30 + 5 * 2;
+  // Six 40 px rows under the list's 1 px rule make the cap (run.css), so six fit without scrolling and a seventh scrolls.
+  const cap = 6 * 40 + 1;
   expect(measured[1]!.height, "one row is one line tall").toBeLessThan(cap);
   expect(measured[1]!.scrolls, "one row does not scroll").toBe(false);
   expect(measured[6]!.height, "six rows reach the six-row cap").toBeCloseTo(cap, 0);
@@ -410,7 +411,7 @@ test("the Sessions list hugs one row, shows six rows without scrolling and scrol
 
 /** A box in CSS pixels, read from the browser's layout. */
 interface Box { top: number; bottom: number; height: number }
-/** The Sessions sidebar and its selected screen, and the shell's scroll viewport (`main.content`) they sit in. */
+/** The Sessions sidebar and its selected screen, the run view (`.runv`) it runs down, and the run's own scroll pane (`.run-scroll`). */
 interface SidebarLayout { viewport: Box & { scrollTop: number }; sidebar: Box; screen: Box | null }
 
 async function sidebarLayout(page: Page): Promise<SidebarLayout> {
@@ -419,7 +420,7 @@ async function sidebarLayout(page: Page): Promise<SidebarLayout> {
       const rect = element.getBoundingClientRect();
       return { top: rect.top, bottom: rect.bottom, height: rect.height };
     };
-    const viewport = document.querySelector<HTMLElement>("main.content");
+    const viewport = document.querySelector<HTMLElement>(".runv .run-scroll");
     const sidebar = document.querySelector<HTMLElement>('[data-column="sessions"]');
     if (!viewport || !sidebar) throw new Error("The run page has no scroll viewport or Sessions sidebar");
     const screen = sidebar.querySelector<HTMLElement>(".session-screen");
@@ -427,7 +428,7 @@ async function sidebarLayout(page: Page): Promise<SidebarLayout> {
   });
 }
 
-/** Waits until the sidebar has refitted to the viewport's height, which it reads after the resize observer fires. */
+/** Waits until the sidebar is as tall as the run view beside it. */
 async function waitForSidebarFit(page: Page): Promise<void> {
   await expect.poll(async () => {
     const layout = await sidebarLayout(page);
@@ -474,7 +475,7 @@ test("run-wrapping-open fits the Sessions sidebar to the visible content at the 
   await capture(browser, sessionsFitCase, { width: 1080, height: 680 }, seededRuns, {
     captureImage: false,
     inspect: async page => {
-      await expect.poll(() => page.evaluate(() => document.querySelector("main.content")!.scrollTop)).toBe(0);
+      await expect.poll(() => page.evaluate(() => document.querySelector(".runv .run-scroll")!.scrollTop)).toBe(0);
       await waitForSidebarFit(page);
       expectFitsViewport(await sidebarLayout(page), "1080x680");
       await page.setViewportSize({ width: 1440, height: 900 });
@@ -487,7 +488,7 @@ test("run-wrapping-open fits the Sessions sidebar to the visible content at the 
   });
 });
 
-test("run-wrapping-open moves the Sessions sidebar with the page when scrolled, and restores it at the top", async ({ browser }) => {
+test("run-wrapping-open keeps the Sessions sidebar in place while the run scrolls beside it", async ({ browser }) => {
   if (seededRuns.length === 0) seededRuns = await loadSeededRuns(browser);
   await capture(browser, sessionsFitCase, { width: 1080, height: 680 }, seededRuns, {
     captureImage: false,
@@ -495,45 +496,18 @@ test("run-wrapping-open moves the Sessions sidebar with the page when scrolled, 
       await waitForSidebarFit(page);
       const top = await sidebarLayout(page);
       expect(top.viewport.scrollTop, "the page starts at the top").toBe(0);
-      await page.evaluate(() => { document.querySelector("main.content")!.scrollTop = 120; });
+      await page.evaluate(() => { document.querySelector(".runv .run-scroll")!.scrollTop = 120; });
       const scrolled = await sidebarLayout(page);
       const moved = scrolled.viewport.scrollTop;
       expect(moved, "the long output scrolls the page").toBeGreaterThan(0);
-      expect(Math.abs(scrolled.sidebar.top - (top.sidebar.top - moved)), "the sidebar moves up by the scroll distance").toBeLessThan(1);
+      expect(Math.abs(scrolled.sidebar.top - top.sidebar.top), "the sidebar stays where it is").toBeLessThan(1);
       expect(Math.abs(scrolled.sidebar.height - top.sidebar.height), "the sidebar keeps its height").toBeLessThan(1);
-      expect(Math.abs(scrolled.screen!.top - (top.screen!.top - moved)), "the screen moves up by the scroll distance").toBeLessThan(1);
+      expect(Math.abs(scrolled.screen!.top - top.screen!.top), "the screen stays where it is").toBeLessThan(1);
       expect(Math.abs(scrolled.screen!.height - top.screen!.height), "the screen keeps its height").toBeLessThan(1);
-      await page.evaluate(() => { document.querySelector("main.content")!.scrollTop = 0; });
+      await page.evaluate(() => { document.querySelector(".runv .run-scroll")!.scrollTop = 0; });
       const restored = await sidebarLayout(page);
       expect(Math.abs(restored.sidebar.top - top.sidebar.top), "returning to the top restores the sidebar position").toBeLessThan(1);
       expect(Math.abs(restored.sidebar.height - top.sidebar.height), "returning to the top restores the sidebar height").toBeLessThan(1);
-    }
-  });
-});
-
-test("run-wrapping-open respects the status-message area above the content when it refits", async ({ browser }) => {
-  if (seededRuns.length === 0) seededRuns = await loadSeededRuns(browser);
-  await capture(browser, sessionsFitCase, { width: 1080, height: 680 }, seededRuns, {
-    captureImage: false,
-    inspect: async page => {
-      await waitForSidebarFit(page);
-      const before = await sidebarLayout(page);
-      // The shell's own offline message, inserted above the content as the app shows it.
-      await page.evaluate(() => {
-        const content = document.querySelector("main.content")!;
-        const notice = document.createElement("div");
-        notice.id = "layout-status-fixture";
-        notice.className = "status-message offline-message";
-        notice.textContent = "Offline — reconnecting";
-        content.parentElement!.insertBefore(notice, content);
-      });
-      await expect.poll(async () => (await sidebarLayout(page)).viewport.height).toBeLessThan(before.viewport.height);
-      await waitForSidebarFit(page);
-      const reduced = await sidebarLayout(page);
-      expectFitsViewport(reduced, "with the status message");
-      await page.evaluate(() => document.getElementById("layout-status-fixture")?.remove());
-      await waitForSidebarFit(page);
-      expect(Math.abs((await sidebarLayout(page)).viewport.height - before.viewport.height), "removing the message restores the content height").toBeLessThan(1);
     }
   });
 });

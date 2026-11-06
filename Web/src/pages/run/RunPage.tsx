@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiRequest } from "../../api/client";
 import { describeError } from "../../api/errors";
@@ -14,9 +14,9 @@ import { usePreferences } from "../../state/usePreferences";
 import { emptyStageDraft, runDraftStore, type StageDraft } from "../../state/runDrafts";
 import { QuickAction, RunAfkButton, RunControls, type RunCommandSubmit, type RunControlsProps } from "./RunControls";
 import { RunInlineControls } from "./RunInlineControls";
-import { Caps, Chip, Tag } from "../../components/Paper";
+import { Icon } from "../../components/Icon";
+import { rememberClick } from "../../components/reveal";
 import { RunLinkRows } from "./RunLinks";
-import { RunMenu } from "./RunMenu";
 import { RunBoxes } from "./RunBoxes";
 import { RunStagePanel } from "./RunStagePanel";
 import { SessionsSidebar } from "./SessionsSidebar";
@@ -149,8 +149,6 @@ export function RunPage() {
   const sessionCount = view?.sessionCount ?? 0;
   // The stage line opens with the run's current stage in its middle; the URL's selection never moves it.
   const opening = view ? { run: runId, stage: view.run.stageId } : undefined;
-  const linkRows = view ? <RunLinkRows runId={runId} links={view.links} worktrees={view.worktrees} worktreeAction={view.worktreeAction} worktreeUnavailable={view.worktreeUnavailable}
-    command={command} canRead={runtime.canRead} connection={runtime.connection} onDone={() => setMenuOpen(false)} /> : null;
   const notFound = viewQuery.error && typeof viewQuery.error === "object" && "status" in viewQuery.error && viewQuery.error.status === 404;
   // One props object for the stage panel's inline forms and the Run controls menu, so both read the same
   // selection, draft and command controller.
@@ -167,66 +165,108 @@ export function RunPage() {
     command, submit, canRead: runtime.canRead, connection: runtime.connection, onErased: () => undefined
   } : null;
 
-  return <div className="run-workspace" ref={workspaceRef}>
-    <article className="page-content run-page">
-      {menuOpen && <div className="run-menu-scrim" onClick={() => setMenuOpen(false)} />}
-      {runtime.canRead && viewQuery.isPending && <p className="loading-state" role="status">Loading run…</p>}
-      {runtime.canRead && notFound && <section className="empty-panel" role="status">
-        <h2>This run is gone</h2>
-        <p>{describeError(viewQuery.error).message}</p>
-        <button type="button" className="quiet-button" onClick={() => navigate("/work")}>← Work</button>
+  const close = useCallback(() => { if (window.history.length > 1) navigate(-1); else navigate("/work"); }, [navigate]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented || document.querySelector("[data-sheet-layer]")) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.closest(".xterm") || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+      close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [close]);
+  const [shown, setShown] = useState(false);
+  const [origin] = useState(() => rememberClick.last());
+  useEffect(() => { const frame = requestAnimationFrame(() => setShown(true)); return () => cancelAnimationFrame(frame); }, []);
+  const current = view?.stages.find(item => item.id === view.run.stageId);
+  const selected = view?.stages.find(item => item.id === selectedStageId);
+
+  return <div className={`runv inv ${shown ? "open" : ""}`} ref={workspaceRef} role="region" aria-label="Run"
+    style={{ "--cx": `${origin.x}px`, "--cy": `${origin.y}px` } as CSSProperties}>
+    <div className="run-scroll scroll" data-column="main">
+    <header className="rtop">
+      <nav className="crumb" style={{ margin: 0 }} aria-label="Where you are">
+        <button type="button" className="run-back" onClick={close}><Icon name="back" /><span>Work</span></button>
+        {view && <><span>/</span><span>{view.heading}</span><span>/</span><span>{view.reference}</span></>}
+      </nav>
+      <span className="run-top-actions">
+        {!preferences.sessionsOpen && <button type="button" className="btn sm ghost" title="Show the sessions" aria-label="Sessions" aria-expanded={false}
+          onClick={() => update({ sessionsOpen: true })}><Icon name="term" />Sessions{sessionCount > 0 ? ` · ${sessionCount}` : ""}</button>}
+        <button type="button" className="crumb" style={{ margin: 0 }} onClick={close}>Close <span className="kbd">Esc</span></button>
+      </span>
+    </header>
+    <main className="rin run-page">
+      {runtime.canRead && viewQuery.isPending && <p className="help" role="status">Loading run…</p>}
+      {runtime.canRead && notFound && <section className="empty" role="status">
+        <h2 className="h2">This run is gone</h2>
+        <p className="help">{describeError(viewQuery.error).message}</p>
+        <button type="button" className="btn" onClick={() => navigate("/work")}><Icon name="back" />Work</button>
       </section>}
-      {runtime.canRead && viewQuery.error && !notFound && (!view || view === undefined) && <section className="error-panel" role="alert">
-        <h2>Unable to load this run</h2>
+      {runtime.canRead && viewQuery.error && !notFound && (!view || view === undefined) && <section className="note error-panel" role="alert"><div>
+        <h2 className="h3">Unable to load this run</h2>
         <p>{describeError(viewQuery.error).message}</p>
         <ProblemItems problems={describeError(viewQuery.error).problems} />
-      </section>}
-      {view && <div className="run-topbar">
-        <button type="button" className="run-back" onClick={() => { if (window.history.length > 1) navigate(-1); else navigate("/work"); }}>← Work</button>
-        <div className="run-actions">
-          {/* One menu holds the run's controls, then its open links; without a stage there are no controls, only the links. */}
-          {controlsProps
-            ? <RunControls {...controlsProps} open={menuOpen} onOpenChange={setMenuOpen} links={linkRows} />
-            : <RunMenu label="Run actions" open={menuOpen} onOpenChange={setMenuOpen}>{linkRows}</RunMenu>}
+      </div></section>}
+      {view && <>
+        <div className="rmeta">
+          <span>{view.heading}</span>
+          {view.cost.line && <span className="run-cost">Cost {view.cost.line}</span>}
+          {view.shadow && <span className="flag f" data-shadow title="This run started on the shadow version and keeps it to the end">{view.shadow}</span>}
+          {view.firstVerdict && <span className="flag o" data-first-verdict={view.firstVerdict}>{view.firstVerdict}</span>}
+          {view.run.issue.labels.length > 0 && <ul className="run-label-list" aria-label="Labels">{view.run.issue.labels.map(label => <li key={label}><span className="flag f">{label}</span></li>)}</ul>}
+        </div>
+        <h1 className="rh run-title"><span className="run-title-ref soft">{view.reference} </span>{view.run.issue.title}</h1>
+        {view.pauseCopy && <p className="lede run-pause" role="status">{view.pauseCopy}</p>}
+        <div className="rlinks">
+          <RunLinkRows runId={runId} links={view.links} worktrees={view.worktrees} worktreeAction={view.worktreeAction} worktreeUnavailable={view.worktreeUnavailable}
+            command={command} canRead={runtime.canRead} connection={runtime.connection} onDone={() => setMenuOpen(false)} />
+        </div>
+        <div className="rctl">
+          {current && <span className={`flag ${current.status.look === "waiting" ? "" : "o"}`}>{current.status.text}</span>}
+          {current && <span className="soft" style={{ fontSize: 14 }}>{current.name}</span>}
+          <span className="sp" />
           {view.active && <RunAfkButton view={view} submit={submit} online={online} pending={command.pending} />}
           {view.quickActions.includes("start-now") && <QuickAction view={view} id="start-now" label="Start now" submit={submit} online={online} pending={command.pending} />}
           {view.quickActions.includes("retry-continuation") && <QuickAction view={view} id="retry-continuation" label="Retry" submit={submit} online={online} pending={command.pending} />}
-          {!preferences.sessionsOpen && <button type="button" className="action-button small" title="Show the sessions" aria-label="Sessions" aria-expanded={false}
-            onClick={() => update({ sessionsOpen: true })}>Sessions{sessionCount > 0 ? ` · ${sessionCount}` : ""}</button>}
+          {controlsProps && <RunControls {...controlsProps} open={menuOpen} onOpenChange={setMenuOpen} />}
         </div>
-      </div>}
-      {view && <header className="page-heading run-heading">
-        <Tag>{view.heading}</Tag>
-        <h1 className="run-title"><span className="run-title-ref">{view.reference} </span>{view.run.issue.title}</h1>
-        {view.cost.line && <Caps className="run-cost">Cost {view.cost.line}</Caps>}
-        {view.pauseCopy && <p className="run-pause" role="status">{view.pauseCopy}</p>}
-        {(view.run.issue.labels.length > 0 || view.firstVerdict || view.shadow) && <ul className="run-label-list" aria-label="Labels">
-          {view.shadow && <li data-shadow><Chip tone="shadow" title="This run started on the shadow version and keeps it to the end">{view.shadow}</Chip></li>}
-          {view.run.issue.labels.map(label => <li key={label}><Chip tone="grey">{label}</Chip></li>)}
-          {view.firstVerdict && <li data-first-verdict={view.firstVerdict}><Chip>{view.firstVerdict}</Chip></li>}
-        </ul>}
-      </header>}
-      {view && view.legs.length > 0 && <section className="run-legs paper-card" aria-label="Split routes">
-        <ul className="route-row-list">
-          {view.legs.map(leg => <li key={leg.id} className={`route-row route-${leg.look}`}>
-            <Tag>{leg.route ?? "route"}</Tag>
-            <span className="route-stage">{leg.stage}</span>
-            <Caps className={`route-state route-state-${leg.look}`}>{leg.state}</Caps>
-          </li>)}
-        </ul>
-        <p className="route-note">Run controls apply to the whole run.</p>
-      </section>}
-      {view && <RunBoxes boxes={view.boxes} metadata={view.metadata} selectedStageId={selectedStageId} onSelectStage={selectStage} opening={opening} />}
-      {view && controlsProps && <RunStagePanel runId={runId} run={view.run} panel={controlsProps.panel} stage={controlsProps.stage}
-        selectedAttempt={selectedAttemptId} onSelectAttempt={selectAttempt} watchNotes={view.watchNotes}
-        command={command} canRead={runtime.canRead} connection={runtime.connection}
-        sessionsOpen={preferences.sessionsOpen} onWatchSession={() => update({ sessionsOpen: true })}
-        onAdjust={() => setAdjustOpen(true)}
-        answer={<RunInlineControls {...controlsProps} part="answer" />} decision={<RunInlineControls {...controlsProps} part="decision" />} />}
-      {view && viewQuery.isError && <p className="stale-error" role="status">Showing the last loaded run; refresh failed.</p>}
-    </article>
-    {preferences.sessionsOpen && <SessionsSidebar key={runId} runId={runId} selectedStage={selectedStageId} selectedAttempt={selectedAttemptId}
+        {view.legs.length > 0 && <section className="run-legs" aria-label="Split routes">
+          <ul className="side route-row-list">
+            {view.legs.map(leg => <li key={leg.id} className={`route-row route-${leg.look}`}>
+              <span>{leg.route ?? "route"}</span> <b>{leg.stage}</b> <span className={`route-state route-state-${leg.look}`}>{leg.state}</span>
+            </li>)}
+          </ul>
+          <p className="why route-note">Run controls apply to the whole run.</p>
+        </section>}
+        <section className="route"><RunBoxes boxes={view.boxes} metadata={view.metadata} selectedStageId={selectedStageId} onSelectStage={selectStage} opening={opening} /></section>
+        {/* Only the selected stage: the line above is how you move between them. */}
+        <div className="rgrid run-chapters">
+          <div>
+            {selected && controlsProps && <section className="here-c run-stage" data-stage-chapter={selected.id} aria-label={selected.name}>
+              <div className="hd">
+                <span className="cn disp soft">{String(selected.number).padStart(2, "0")}</span>
+                <h2 className="ct">{selected.name}</h2>
+                {/* The status is in the panel's own head, so the line under the name says only who works it and how often. */}
+                {(selected.worker || selected.attempts.length > 1) && <span className="sub">
+                  {[selected.worker, selected.attempts.length > 1 ? `${selected.attempts.length} tries` : null].filter(Boolean).join(" · ")}</span>}
+              </div>
+              <div className="bd">
+                <RunStagePanel runId={runId} run={view.run} panel={controlsProps.panel} stage={controlsProps.stage}
+                  selectedAttempt={selectedAttemptId} onSelectAttempt={selectAttempt} watchNotes={view.watchNotes}
+                  command={command} canRead={runtime.canRead} connection={runtime.connection}
+                  sessionsOpen={preferences.sessionsOpen} onWatchSession={() => update({ sessionsOpen: true })} onAdjust={() => setAdjustOpen(true)}
+                  answer={<RunInlineControls {...controlsProps} part="answer" />} decision={<RunInlineControls {...controlsProps} part="decision" />} />
+              </div>
+            </section>}
+            {viewQuery.isError && <p className="why" role="status">Showing the last loaded run; refresh failed.</p>}
+          </div>
+        </div>
+      </>}
+    </main>
+    </div>
+    {view && preferences.sessionsOpen && <SessionsSidebar key={runId} runId={runId} selectedStage={selectedStageId} selectedAttempt={selectedAttemptId}
       available={workspaceWidth} stored={preferences.sessionsWidth} onWidthChange={sessionsWidth => update({ sessionsWidth })}
-      onSelect={selectSession} onHide={() => update({ sessionsOpen: false })} />}
+      onSelect={selectSession} onHide={() => update({ sessionsOpen: false })} count={sessionCount} />}
   </div>;
 }

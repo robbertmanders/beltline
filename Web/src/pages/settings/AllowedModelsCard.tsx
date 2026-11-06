@@ -46,7 +46,7 @@ export function AllowedModelsCard() {
         <span aria-hidden="true" className={`disclosure-mark ${expanded ? "open" : ""}`}>▶</span>
         <span className="paper-tag paper-tag--strong">Allowed models</span>
       </button>
-      {expanded && <button type="button" className="paper-button paper-button--small" disabled={!refreshAction?.available || command.pending} onClick={refresh}>Refresh</button>}
+      {expanded && <button type="button" className="btn sm" disabled={!refreshAction?.available || command.pending} onClick={refresh}>Refresh</button>}
     </header>
     {expanded && <>
       <p className="muted-line">Changes apply to new runs and assistant sessions. Existing runs and sessions keep their allowed models.</p>

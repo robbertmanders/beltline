@@ -202,11 +202,9 @@ describe("run controls", () => {
   });
 
   it("leaves overruling an AFK decision to the AFK page, as the Mac app did", async () => {
-    const user = userEvent.setup();
     const view = golden<RunViewResponse>("views-run.json");
     view.actions = [...view.actions, { id: "overrule-afk", enabled: true, decision: "decision-1" }];
     render(<Harness view={view} stageId={view.run.stageId!} command={controller()} submit={vi.fn<RunCommandSubmit>()} />);
-    await user.click(screen.getByRole("button", { name: "Run actions" }));
     expect(screen.queryByRole("button", { name: /Overrule/ })).toBeNull();
   });
 
@@ -227,7 +225,6 @@ describe("run controls", () => {
   it("preserves the Send to message when the destination changes", async () => {
     const user = userEvent.setup();
     render(<Harness view={heldView()} stageId="watch" command={controller()} />);
-    await user.click(screen.getByRole("button", { name: "Run actions" }));
     await user.click(screen.getByRole("button", { name: "Send to…" }));
     const message = await screen.findByLabelText("Message (optional)");
     await user.type(message, "please carry on");
@@ -241,7 +238,6 @@ describe("run controls", () => {
   it("offers Run again separately from Send to and targets the current stage", async () => {
     const user = userEvent.setup();
     render(<Harness view={heldView()} stageId="watch" command={controller()} />);
-    await user.click(screen.getByRole("button", { name: "Run actions" }));
     await user.click(screen.getByRole("button", { name: "Run Merge again" }));
     // As in the app, running the held stage again names it and offers no other stage.
     const sheet = await screen.findByRole("dialog", { name: "Merge" });
@@ -254,7 +250,6 @@ describe("run controls", () => {
     const view = heldView();
     const submit = vi.fn();
     const { rerender } = render(<Harness view={view} stageId="watch" command={controller()} submit={submit} />);
-    await user.click(screen.getByRole("button", { name: "Run actions" }));
     await user.click(screen.getByRole("button", { name: "Send to…" }));
     await user.type(await screen.findByLabelText("Message (optional)"), "please carry on");
     await user.click(screen.getByRole("button", { name: "Send" }));
@@ -276,8 +271,7 @@ describe("run controls", () => {
     const view = heldView();
     const submit = vi.fn();
     render(<Harness view={view} stageId="watch" command={controller()} submit={submit} />);
-    await user.click(screen.getByRole("button", { name: "Run actions" }));
-    await user.click(within(screen.getByLabelText("Run actions menu")).getByRole("button", { name: "Drop…" }));
+    await user.click(within(screen.getByRole("group", { name: "Run actions" })).getByRole("button", { name: "Drop…" }));
     const dialog = await screen.findByRole("dialog", { name: `Drop ${view.reference}?` });
     await user.click(within(dialog).getByRole("button", { name: "Drop the run" }));
     expect(submit.mock.calls[0]?.[0]).toBe("drop");
@@ -285,10 +279,8 @@ describe("run controls", () => {
   });
 
   it("draws the daemon's menu rows, each enabled from its own record", async () => {
-    const user = userEvent.setup();
     render(<Harness view={golden<RunViewResponse>("views-run.json")} stageId="watch" command={controller()} />);
-    await user.click(screen.getByRole("button", { name: "Run actions" }));
-    const menu = within(screen.getByLabelText("Run actions menu"));
+    const menu = within(screen.getByRole("group", { name: "Run actions" }));
     expect(menu.getAllByRole("button").map(button => button.textContent)).toEqual(["Pause", "Park", "Send to…", "Abort…", "Drop…"]);
     expect((menu.getByRole("button", { name: "Send to…" }) as HTMLButtonElement).disabled).toBe(false);
     expect((menu.getByRole("button", { name: "Drop…" }) as HTMLButtonElement).disabled).toBe(false);

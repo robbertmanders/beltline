@@ -34,7 +34,7 @@ make notices     # rewrite THIRD_PARTY_NOTICES after a dependency change
 
 One daemon owns a data folder at a time. It locks `daemon.lock` in the folder (`flock`, recording its pid) before it reads or writes anything else, and keeps it until it stops. A second `beltlined` on the same folder exits and names the owner's pid; when the owner stops or dies the lock goes with it, so the next start takes over without deleting anything. Stopping the daemon leaves agent tmux sessions running, and the next start picks them up. Each `make demo` gets its own folder under `$TMPDIR/beltline-demo`, removed when it stops, so demos run side by side. `--check-library` only reads, and works while the folder is owned.
 
-While it runs, `<data-folder>/daemon.json` (mode 0600) holds the port and a fresh token, and `<data-folder>/beltlined.log` keeps lifecycle and notification messages. The web app shows notifications in the browser once you allow them in Settings. Display choices such as folds, column widths and open sidebars are kept in the browser.
+While it runs, `<data-folder>/daemon.json` (mode 0600) holds the port and a fresh token, and `<data-folder>/beltlined.log` keeps lifecycle and notification messages. The web app shows notifications in the browser once you allow them in Settings. Display choices such as folds, the floor's pinned belt and the open assistant are kept in the browser.
 
 ## Architecture
 

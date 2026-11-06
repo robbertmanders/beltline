@@ -66,7 +66,8 @@ describe("run page Sessions route", () => {
       expect(element).not.toBeNull();
       return element!;
     });
-    expect(within(panel).getByText("Sessions", { selector: ".sessions-tag" })).toBeTruthy();
+    expect(within(panel).getByRole("heading", { level: 2, name: "Sessions" })).toBeTruthy();
+    expect(within(panel).getByText(/read only/)).toBeTruthy();
     expect(within(panel).getByText("01 Triage · attempt 1")).toBeTruthy();
     expect(within(panel).getByRole("button", { name: /01 Triage · attempt 1/ }).getAttribute("title")).toBe("bl-demo-61-triage");
     expect(within(panel).getByText("3m 0s · $0.04")).toBeTruthy();

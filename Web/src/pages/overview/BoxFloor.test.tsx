@@ -45,25 +45,24 @@ const cell = (id: string) => document.querySelector<HTMLElement>(`.floor-box[dat
 afterEach(() => cleanup());
 
 describe("Floor drawing", () => {
-  it("shows each box's status above it and at most three run tags, then the count of the rest", () => {
+  it("shows each box's status beside it and at most three run tags, then the count of the rest", () => {
     const view = overview();
     const busy = view.floor.boxes.find(box => box.runCount > 3);
     expect(busy).toBeDefined();
     render(<Harness view={view} />);
     const element = cell(busy!.id);
-    expect(element.querySelector(".floor-box-status")?.textContent).toBe(busy!.status.text);
+    expect(element.querySelector(".fstatus")?.textContent).toBe(busy!.status.text);
     expect(element.querySelectorAll(".floor-tag:not(.floor-tag-more)").length).toBe(Math.min(busy!.chips.length, 3));
-    expect(element.querySelector(".floor-tag-more")?.textContent).toBe(`+${busy!.more}`);
+    expect(element.querySelector(".floor-tag-more")?.textContent).toBe(`${busy!.more} more`);
   });
 
-  it("names each belt on its card, with its counts and Runs button", () => {
+  it("names each belt where its line starts, with its counts as the link to its runs", () => {
     const view = overview();
     render(<Harness view={view} />);
     for (const belt of view.floor.belts) {
       const card = document.querySelector(`.box-belt[data-belt='${belt.id}']`)!;
       expect(card.textContent).toContain(belt.name);
-      expect(card.querySelector(".box-belt-runs")?.textContent).toBe("Runs →");
-      expect(card.querySelector(".box-belt-running")?.textContent).toBe(`${belt.counts.running} running`);
+      expect(card.querySelector(".box-belt-runs")?.textContent).toBe(`${belt.counts.running} running${belt.counts.needYou > 0 ? ` · ${belt.counts.needYou} need you` : ""}`);
     }
   });
 });

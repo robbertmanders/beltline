@@ -164,7 +164,7 @@ export function BeltsPage({ onShare = () => undefined }: { onShare?: (id: string
       if (editorQuery.isError) return <section className="error-panel" role="alert"><h2>Unable to load belts</h2><ErrorProblems error={editorQuery.error} /></section>;
       return <section className="empty-panel" role="status">
         <h2>This belt is missing</h2><p>It may have been deleted. Choose another belt.</p>
-        {defaultKey !== null && <button type="button" className="action-button" onClick={() => select(defaultKey)}>Show the first belt</button>}
+        {defaultKey !== null && <button type="button" className="btn" onClick={() => select(defaultKey)}>Show the first belt</button>}
       </section>;
     }
     // Every editor path returns the same shape, so the editor keeps its state as a draft appears or goes.
@@ -172,7 +172,7 @@ export function BeltsPage({ onShare = () => undefined }: { onShare?: (id: string
       {missing && <section className="error-panel belt-missing-draft" role="alert">
         <h2>This belt is no longer in the library</h2>
         <p>Your unsent changes are kept below. This belt cannot be saved while it is missing, so discard the changes to finish.</p>
-        <button type="button" className="action-button" onClick={discardMissing}>Discard changes</button>
+        <button type="button" className="btn" onClick={discardMissing}>Discard changes</button>
       </section>}
       <BeltEditor key={draftKey} base={shown} snapshot={selectedRecord ?? null} missing={missing} allIds={records.map(item => item.belt.id)}
         liveIds={liveIds} onSelect={select} followSelection={followSelection} onShare={onShare} onAssistantState={onAssistantState} assistantButton={assistantButton}
@@ -184,7 +184,7 @@ export function BeltsPage({ onShare = () => undefined }: { onShare?: (id: string
     const browserData: LibraryBrowserData | undefined = browserQuery.data?.browser;
     const loading = !browserQuery.data && browserQuery.isPending;
     const error = browserQuery.isError ? browserQuery.error : undefined;
-    return <LibraryBrowser title="Belts" lead="Build and manage the workflows that move work forward."
+    return <LibraryBrowser title="Belts" lead="A belt is a trigger and its stages. Each save makes a new version; runs already on a belt keep the version they started on."
       browser={browserData} search={search} filter={filter}
       onSearch={value => patchSearchParams({ search: value }, true)}
       onFilter={value => patchSearchParams({ filter: value }, true)}
@@ -201,7 +201,7 @@ export function BeltsPage({ onShare = () => undefined }: { onShare?: (id: string
   const mainContent = <>
     {hasSelection && command.error !== null && command.error !== undefined && <div className="belt-problem">
       <ErrorProblems error={command.error} />
-      <button type="button" className="quiet-button" onClick={command.clearError}>Dismiss</button>
+      <button type="button" className="link" onClick={command.clearError}>Dismiss</button>
     </div>}
     {hasSelection && editorQuery.isError && editorQuery.data !== undefined && <div className="belts-stale">
       <p className="stale-error" role="status">Showing the last loaded belts; refresh failed.</p><ErrorProblems error={editorQuery.error} />

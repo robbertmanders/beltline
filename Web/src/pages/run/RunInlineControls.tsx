@@ -31,10 +31,10 @@ export function RunInlineControls(props: RunInlineControlsProps & { part?: "answ
           }
         }} />
       <div className="run-answer-actions">
-        <button type="button" className="action-button small slate" disabled={!online || pending || empty || !answerAction.enabled}
+        <button type="button" className="btn sm fill" disabled={!online || pending || empty || !answerAction.enabled}
           title={answerAction.enabled ? "Return sends it; Option-Return starts a new line" : answerAction.reason ?? undefined}
           onClick={() => submit("answer", { answer: draft.answer, stage: answerAction.stage, attempt: answerAction.attempt })}>Send answer</button>
-        <button type="button" className="action-button small" disabled={!online || pending || !answerAction.enabled}
+        <button type="button" className="btn sm" disabled={!online || pending || !answerAction.enabled}
           title={answerAction.reason ?? view.heldAnswer?.buttonHelp ?? undefined}
           onClick={() => submit("answer", { answer: null, stage: answerAction.stage, attempt: answerAction.attempt })}>
           {view.heldAnswer?.buttonTitle ?? "I answered in the session"}
@@ -56,7 +56,7 @@ export function RunInlineControls(props: RunInlineControlsProps & { part?: "answ
   const decideAction = (outcome: (typeof outcomes)[number]) => actionFor("decide", { stage: stage.id, outcome: outcome.name });
   const decideButton = (outcome: (typeof outcomes)[number], kind: string) => {
     const action = decideAction(outcome);
-    return <button key={outcome.id} type="button" className={`action-button ${kind}`} disabled={!online || pending || !action?.enabled}
+    return <button key={outcome.id} type="button" className={`btn ${kind}`} disabled={!online || pending || !action?.enabled}
       title={action?.reason ?? action?.thenHelp ?? undefined}
       onClick={() => {
         if (action?.needsNote) props.onPendingOutcomeChange(outcome.id);
@@ -69,9 +69,9 @@ export function RunInlineControls(props: RunInlineControlsProps & { part?: "answ
       <textarea id="run-decision-note" className="paper-field" rows={3} placeholder="What should change" value={draft.notes[deciding.id] ?? ""} disabled={!online || pending}
         onChange={event => props.onDecisionNoteChange(deciding.id, event.currentTarget.value)} />
       <div className="run-decide-actions">
-        <button type="button" className="action-button danger" disabled={!online || pending || (draft.notes[deciding.id] ?? "").trim() === ""}
+        <button type="button" className="btn danger" disabled={!online || pending || (draft.notes[deciding.id] ?? "").trim() === ""}
           onClick={() => submit("decide", { outcome: deciding.name, note: draft.notes[deciding.id] ?? "", stage: stage.id })}>{deciding.label}</button>
-        <button type="button" className="action-button" disabled={pending} onClick={() => props.onPendingOutcomeChange(null)}>Cancel</button>
+        <button type="button" className="btn" disabled={pending} onClick={() => props.onPendingOutcomeChange(null)}>Cancel</button>
       </div>
     </> : <>
       {primary && <div className="run-decide-primary">{decideButton(primary, "slate wide")}</div>}

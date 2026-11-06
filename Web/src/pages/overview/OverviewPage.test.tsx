@@ -27,8 +27,7 @@ function renderOverview(entry = "/overview") {
 }
 
 /** Waits until the page has its answer: a drawn view, or an error. */
-const answered = () => waitFor(() => expect(document.querySelector(".overview-summary, .overview-floor, .error-panel")).not.toBeNull());
-const modeButton = (name: string) => screen.getByRole("button", { name });
+const answered = () => waitFor(() => expect(document.querySelector(".overview-page .ov1, [role='alert']")).not.toBeNull());
 /** A belt card's pin on the Floor. */
 const pinButton = (belt: string) => document.querySelector<HTMLButtonElement>(`.box-belt[data-belt='${belt}'] .box-belt-pin`)!;
 /** Stores a full preferences record, since the stored shape is strict and a partial one reads as the defaults. */
@@ -48,15 +47,15 @@ afterEach(() => {
 });
 
 describe("Overview page", () => {
-  it("greets by the fixed clock, shows the caption and the three controls, and lands on Summary", async () => {
+  it("greets by the fixed clock, words the headline from the daemon's count, and keeps its caption", async () => {
     stubOverview(() => json(goldenText("views-overview.json")));
     renderOverview();
     await answered();
     expect(screen.getByRole("heading", { level: 1, name: "Overview" })).toBeTruthy();
     expect(screen.getByText("Good morning.")).toBeTruthy();
     expect(screen.getByText(overviewGolden().caption)).toBeTruthy();
-    expect(modeButton("Summary").getAttribute("aria-pressed")).toBe("true");
-    expect(modeButton("Floor").getAttribute("aria-pressed")).toBe("false");
+    expect(document.querySelector(".hero")?.textContent).toBe("Six runs need you.");
+    expect(document.querySelector(".overview-floor")).not.toBeNull();
   });
 
   it("renders all six Summary sections with the daemon's limits and order", async () => {
@@ -83,20 +82,21 @@ describe("Overview page", () => {
     expect(screen.getByText("Nothing needs you.")).toBeTruthy();
   });
 
-  it("switches between Summary and Floor without a new request and keeps the saved belt pin", async () => {
+  it("draws the floor under the summary from one request, and pins a belt from its chip or shows every belt again", async () => {
     storePin("issues");
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const overview = stubOverview(() => json(goldenText("views-overview.json")));
     renderOverview();
     await answered();
-    await user.click(modeButton("Floor"));
     expect(document.querySelector(".overview-floor")).not.toBeNull();
-    expect(modeButton("Floor").getAttribute("aria-pressed")).toBe("true");
     expect(pinButton("issues").getAttribute("aria-pressed")).toBe("true");
-    await user.click(modeButton("Summary"));
-    expect(document.querySelector(".overview-summary")).not.toBeNull();
+    const chips = within(screen.getByRole("group", { name: "Show a belt on the floor" }));
+    await user.click(chips.getByRole("button", { name: "All belts" }));
+    expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).floorPinnedBeltId).toBeNull();
+    expect(pinButton("issues").getAttribute("aria-pressed")).toBe("false");
+    await user.click(chips.getByRole("button", { name: /^Security fixes/ }));
+    expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).floorPinnedBeltId).toBe("security");
     expect(overview.reads()).toBe(1);
-    expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).floorPinnedBeltId).toBe("issues");
   });
 
   it("pins a belt from the Floor, saves it, and restores it after a remount", async () => {
@@ -104,23 +104,19 @@ describe("Overview page", () => {
     stubOverview(() => json(goldenText("views-overview.json")));
     const first = renderOverview();
     await answered();
-    await user.click(modeButton("Floor"));
     await user.click(pinButton("issues"));
     expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).floorPinnedBeltId).toBe("issues");
     first.unmount();
     renderOverview();
     await answered();
-    await user.click(modeButton("Floor"));
     expect(pinButton("issues").getAttribute("aria-pressed")).toBe("true");
   });
 
   it("ignores a saved pin for a belt the floor no longer has, with no dimming", async () => {
     storePin("gone");
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     stubOverview(() => json(goldenText("views-overview.json")));
     renderOverview();
     await answered();
-    await user.click(modeButton("Floor"));
     expect(document.querySelectorAll(".box-belt.is-pinned").length).toBe(0);
     expect(document.querySelectorAll("[style*='opacity: 0.35']").length).toBe(0);
   });
@@ -131,7 +127,6 @@ describe("Overview page", () => {
     const overview = stubOverview(call => json(JSON.stringify(call === 1 ? overviewGolden() : changed)));
     renderOverview();
     await answered();
-    await user.click(modeButton("Floor"));
     await user.click(pinButton("issues"));
     await act(async () => {
       AppSocket.instances[0]!.send({ type: "hello", apiVersion: 1 });
@@ -153,11 +148,9 @@ describe("Overview page", () => {
   });
 
   it("keeps the last valid view with a refresh-failed message when a refetch fails", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
         stubOverview(call => call === 1 ? json(goldenText("views-overview.json")) : json(goldenText("error-not-found.json"), 500));
     renderOverview();
     await answered();
-    await user.click(modeButton("Floor"));
     const drawn = document.querySelectorAll(".floor-box").length;
     await act(async () => {
       AppSocket.instances[0]!.send({ type: "hello", apiVersion: 1 });
@@ -168,7 +161,6 @@ describe("Overview page", () => {
   });
 
   it("refetches on a library change, and falls back to no focus when the pinned belt is removed", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
         storePin("issues");
     const removed = overviewGolden();
     removed.floor.belts = removed.floor.belts.filter((belt: { id: string }) => belt.id !== "issues");
@@ -176,7 +168,6 @@ describe("Overview page", () => {
     const overview = stubOverview(call => json(JSON.stringify(call === 1 ? overviewGolden() : removed)));
     renderOverview();
     await answered();
-    await user.click(modeButton("Floor"));
     expect(pinButton("issues").getAttribute("aria-pressed")).toBe("true");
     await act(async () => {
       AppSocket.instances[0]!.send({ type: "hello", apiVersion: 1 });
@@ -191,11 +182,9 @@ describe("Overview page", () => {
   it("stays usable when browser storage throws on read and write", async () => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("denied"); });
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("denied"); });
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     stubOverview(() => json(goldenText("views-overview.json")));
     renderOverview();
     await answered();
-    await user.click(modeButton("Floor"));
     expect(document.querySelector(".box-floor")).not.toBeNull();
   });
 });

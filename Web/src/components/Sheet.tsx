@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { rememberClick } from "./reveal";
 
 export interface SheetProps {
   title: string;
@@ -19,6 +20,10 @@ export interface SheetProps {
   hideClose?: boolean;
   /** Extra class names on the panel. */
   className?: string;
+  /** Drawn the other way round: the ink as the paper. Sheets are, unless they say otherwise. */
+  inverse?: boolean;
+  /** No heading of its own: the title only names the dialog, and the children lay out the whole sheet. */
+  bare?: boolean;
 }
 
 const focusableSelector = [
@@ -40,10 +45,13 @@ export function Sheet({ open, ...props }: SheetProps) {
   return <SheetDialog {...props} />;
 }
 
-function SheetDialog({ title, onClose, children, footer, tag, width, subtitle, closeMark, hideClose, className }: Omit<SheetProps, "open">) {
+function SheetDialog({ title, onClose, children, footer, tag, width, subtitle, closeMark, hideClose, className, inverse = true, bare }: Omit<SheetProps, "open">) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const [opener] = useState(() => (document.activeElement instanceof HTMLElement ? document.activeElement : null));
+  const [origin] = useState(() => rememberClick.last());
+  const [shown, setShown] = useState(false);
+  useEffect(() => { const frame = requestAnimationFrame(() => setShown(true)); return () => cancelAnimationFrame(frame); }, []);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -55,9 +63,9 @@ function SheetDialog({ title, onClose, children, footer, tag, width, subtitle, c
       child.setAttribute("inert", "");
       inerted.push(child);
     }
-    // Focus starts on the first control of the content, then the header's Close, then the sheet itself.
+    // Focus starts on the control that asks for it, else the first control of the content, then Close, then the sheet itself.
     const body = dialog.querySelector<HTMLElement>(".sheet-body") ?? dialog;
-    (focusables(body)[0] ?? focusables(dialog)[0] ?? dialog).focus();
+    (dialog.querySelector<HTMLElement>("[data-autofocus]") ?? focusables(body)[0] ?? focusables(dialog)[0] ?? dialog).focus();
     // Focus that reaches the page by any other route (a script, a scroll-into-view) is brought back into the sheet.
     const pullBack = (event: FocusEvent) => {
       if (event.target instanceof Node && !dialog.contains(event.target)) (focusables(dialog)[0] ?? dialog).focus();
@@ -93,9 +101,9 @@ function SheetDialog({ title, onClose, children, footer, tag, width, subtitle, c
   };
 
   return createPortal(
-    <div className="sheet-layer" data-sheet-layer onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className={`sheet-layer ${inverse ? "inv" : ""}`} data-sheet-layer>
       <SheetPanel title={title} titleId={titleId} panelRef={dialogRef} onKeyDown={onKeyDown} onClose={hideClose || (tag && !closeMark) ? undefined : onClose} footer={footer} tag={tag} width={width}
-        subtitle={subtitle} closeMark={closeMark} className={className}>{children}</SheetPanel>
+        subtitle={subtitle} closeMark={closeMark} className={`${className ?? ""} ${shown ? "open" : ""}`} origin={origin} bare={bare}>{children}</SheetPanel>
     </div>,
     document.body
   );
@@ -114,20 +122,30 @@ export interface SheetPanelProps {
   subtitle?: ReactNode;
   closeMark?: boolean;
   className?: string;
+  origin?: { x: number; y: number };
+  bare?: boolean;
 }
 
-/** The sheet's surface and layout without its modal behaviour, so a static sample can show the same panel. */
-export function SheetPanel({ title, titleId, onClose, footer, children, panelRef, onKeyDown, tag, width, subtitle, closeMark, className }: SheetPanelProps) {
-  const classes = ["sheet", tag ? "is-form" : null, className ?? null].filter(Boolean).join(" ");
-  return <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={titleId} className={classes} tabIndex={-1} onKeyDown={onKeyDown}
-    style={width ? { width: `min(${width}px, 100%)` } : undefined}>
-    <header className="sheet-header">
-      {tag ? <div className="form-heading"><span className="paper-tag">{tag}</span><h2 id={titleId}>{title}</h2>{subtitle && <p className="sheet-subtitle">{subtitle}</p>}</div> : <h2 id={titleId}>{title}</h2>}
-      {onClose && (closeMark
-        ? <button type="button" className="paper-button paper-button--small sheet-close-mark" aria-label="Close" onClick={onClose}>×</button>
-        : <button type="button" className="quiet-button" onClick={onClose}>Close</button>)}
-    </header>
-    <div className="sheet-body">{children}</div>
-    {footer && <footer className="sheet-footer">{footer}</footer>}
+/**
+ * The sheet's surface and layout without its modal behaviour, so a static sample can show the same panel: the
+ * whole window, opened as a circle from where it was asked for, with Close at the top right, the tag and title,
+ * the content and its buttons in one column.
+ */
+export function SheetPanel({ title, titleId, onClose, footer, children, panelRef, onKeyDown, tag, width, subtitle, className, origin, bare }: SheetPanelProps) {
+  const classes = ["sheet", "scroll", tag ? "is-form" : null, className ?? null].filter(Boolean).join(" ");
+  const style = { "--cx": `${origin?.x ?? 0}px`, "--cy": `${origin?.y ?? 0}px`, ...(width ? { "--sheet-w": `${Math.max(width, 620)}px` } : {}) } as CSSProperties;
+  return <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={bare ? undefined : titleId} aria-label={bare ? title : undefined} className={classes} tabIndex={-1} onKeyDown={onKeyDown} style={style}>
+    {onClose && <button type="button" className="x" aria-label="Close" onClick={onClose}>Close <span className="kbd">Esc</span></button>}
+    <div className="in">
+      {bare ? children : <>
+        <header className="sheet-header">
+          {tag && <span className="sheet-tag">{tag}</span>}
+          <h2 id={titleId} className="h1">{title}</h2>
+          {subtitle && <p className="lede sheet-subtitle">{subtitle}</p>}
+        </header>
+        <div className="sheet-body">{children}</div>
+        {footer && <footer className="sheet-footer acts">{footer}</footer>}
+      </>}
+    </div>
   </div>;
 }

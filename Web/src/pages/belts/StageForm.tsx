@@ -84,7 +84,7 @@ function ModelRow({ className, id, labels, menu, runner, model, thinking, staleR
     <div className="agent-field model-cell" data-heading="Thinking">
       <ThinkingSelect label={labels.thinking} runner={choice} value={thinking} onChange={onThinking} />
     </div>
-    {onRemove && <button type="button" className="quiet-button agent-form-remove" aria-label={labels.remove} onClick={onRemove}>Remove</button>}
+    {onRemove && <button type="button" className="link agent-form-remove" aria-label={labels.remove} onClick={onRemove}>Remove</button>}
   </div>;
 }
 
@@ -165,17 +165,17 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
     <section className="agent-card belt-card" aria-label="Stage settings">
       <div className="agent-card-head stage-form-head">
         <div className="form-heading"><span className="paper-tag">{heading}</span><h3>{name || "Unnamed stage"}</h3></div>
-        {readOnly ? stage.agent && <button type="button" className="action-button small" onClick={() => onEditAgent(stage.agent!)}>Open agent</button>
+        {readOnly ? stage.agent && <button type="button" className="btn sm" onClick={() => onEditAgent(stage.agent!)}>Open agent</button>
           : <div className="stage-form-moves" role="group" aria-label="Move this stage">
-          <button type="button" className="action-button small" disabled={reason !== null} aria-label={`Fork at ${stage.name}`}
+          <button type="button" className="btn sm" disabled={reason !== null} aria-label={`Fork at ${stage.name}`}
             onClick={() => editor.operate("fork-add", { stageId: stage.id })}>Fork here</button>
-          <button type="button" className="action-button small" disabled={reason !== null || !feedAgent} aria-label={`Feed a new stage into ${stage.name}`}
+          <button type="button" className="btn sm" disabled={reason !== null || !feedAgent} aria-label={`Feed a new stage into ${stage.name}`}
             onClick={() => { if (feedAgent) void editor.addStage({ type: "agent", agent: { id: feedAgent.id, version: feedAgent.version }, feed: stage.id }); }}>Feed in here</button>
-          <button type="button" className="action-button small" disabled={reason !== null || !menu?.canMoveEarlier}
+          <button type="button" className="btn sm" disabled={reason !== null || !menu?.canMoveEarlier}
             onClick={() => editor.operate("stage-move", { stageId: stage.id, step: -1 })}>← Earlier</button>
-          <button type="button" className="action-button small" disabled={reason !== null || !menu?.canMoveLater}
+          <button type="button" className="btn sm" disabled={reason !== null || !menu?.canMoveLater}
             onClick={() => editor.operate("stage-move", { stageId: stage.id, step: 1 })}>Later →</button>
-          <button type="button" className="action-button small danger" disabled={reason !== null}
+          <button type="button" className="btn sm danger" disabled={reason !== null}
             onClick={() => { editor.operate("stage-remove", { stageId: stage.id }); editor.selectStage(null); }}>Remove stage</button>
         </div>}
       </div>
@@ -192,9 +192,9 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
               <code>v{stage.agent?.version ?? 0}</code>
               {pinned?.archived && <span className="field-note">Archived: kept for this stage, not offered for new ones.</span>}
               {pinned?.missing && <span className="field-note">This version is missing from the library.</span>}
-              {!readOnly && pinned?.latestVersion != null && <button type="button" className="quiet-button" disabled={reason !== null || !updateStageEnabled}
+              {!readOnly && pinned?.latestVersion != null && <button type="button" className="link" disabled={reason !== null || !updateStageEnabled}
                 onClick={() => onUpdateStage(stage.id)}>Update to v{pinned.latestVersion}</button>}
-              {!readOnly && stage.agent && <button type="button" className="action-button small agent-pin-edit" onClick={() => onEditAgent(stage.agent!)}>Edit</button>}
+              {!readOnly && stage.agent && <button type="button" className="btn sm agent-pin-edit" onClick={() => onEditAgent(stage.agent!)}>Edit</button>}
             </span>
           </div>}
           {kind === "approve" && <label className="agent-field"><span className="agent-field-label">Decided by</span>
@@ -249,7 +249,7 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
         </div>}
         {isAgent && menu && <p className="agent-hint">{alternates.length === 0 ? "Only the model above." : menu.alternatesNote}</p>}
         {isAgent && menu && !readOnly && <div>
-          <button type="button" className="action-button small" onClick={() => setAlternates([...alternates, { runner: menu.defaultRunner as Backend, model: "" }])}>Add a model</button>
+          <button type="button" className="btn sm" onClick={() => setAlternates([...alternates, { runner: menu.defaultRunner as Backend, model: "" }])}>Add a model</button>
         </div>}
       </div>
       </fieldset>
@@ -263,9 +263,9 @@ export function StageForm({ stage, onEditAgent, onUpdateStage, updateStageEnable
         ? `The brief of ${pinned?.name ?? "the agent"} v${stage.agent?.version ?? 1}. ${readOnly ? "" : "Edit it to change it for this belt only. "}`
         : "Changed for this belt. "}The issue, any note, and the outcome footer are added automatically.</p>
       {!readOnly && <>
-      {brief !== "" && <button type="button" className="quiet-button stage-brief-reset" disabled={reason !== null}
+      {brief !== "" && <button type="button" className="link stage-brief-reset" disabled={reason !== null}
         onClick={() => { setBrief(""); apply({ brief: "" }); }}>Use the agent's brief</button>}
-      {form.typed && <button type="button" className="quiet-button" onClick={form.clear}>Discard typed changes</button>}
+      {form.typed && <button type="button" className="link" onClick={form.clear}>Discard typed changes</button>}
       {placeholders.length > 0 && <ul className="placeholder-chips" aria-label="Placeholders">
         {placeholders.map(entry => <li key={entry.name} title={entry.description}><code>{`{${entry.name}}`}</code></li>)}
       </ul>}

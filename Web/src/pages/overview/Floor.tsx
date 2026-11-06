@@ -1,7 +1,6 @@
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { OverviewFloor, OverviewFloorChip, OverviewRun } from "../../api/wire.gen";
 import { BoxFloor } from "./BoxFloor";
-import { Chip, NeedChip } from "../../components/Paper";
 
 export interface FloorProps {
   floor: OverviewFloor;
@@ -9,32 +8,53 @@ export interface FloorProps {
   focus: string | null;
   pinned: string | null;
   onHover: (belt: string, pointing: boolean) => void;
-  onPin: (belt: string) => void;
+  /** Pins a belt, or with null shows every belt again. */
+  onPin: (belt: string | null) => void;
   onOpenRun: (chip: OverviewFloorChip) => void;
   onOpenStage: (stageId: string) => void;
   onOpenBelt: (beltId: string) => void;
 }
 
-/** The Floor's card: its title and the factory's totals, with a ring while anything needs you. */
-export function FloorCard({ total, children }: { total: OverviewFloor["total"]; children: ReactNode }) {
-  return <section className={`overview-floor${total.needYou > 0 ? " needs-you" : ""}`} aria-label="Factory floor">
-    <header className="overview-floor-header">
-      <h2 className="overview-section-title">Factory floor</h2>
-      <div className="overview-floor-totals">
-        {total.needYou > 0 && <NeedChip>{total.needYou} need you</NeedChip>}
-        <Chip look={total.running > 0 ? "running" : "plain"}>{total.running} RUNNING</Chip>
-        <Chip tone="grey">{total.inProgress} IN PROGRESS</Chip>
-        <Chip tone="good">{total.shippedToday} SHIPPED TODAY</Chip>
-      </div>
-    </header>
-    {children}
-  </section>;
+/** One line under the chosen chip, which slides to the next chip chosen. */
+export function useChipIndicator<T>(dependency: T) {
+  const box = useRef<HTMLDivElement>(null);
+  const line = useRef<HTMLSpanElement>(null);
+  const placed = useRef(false);
+  useLayoutEffect(() => {
+    const chip = box.current?.querySelector<HTMLElement>(".chip.on");
+    const mark = line.current;
+    if (!mark) return;
+    if (!chip) { mark.style.width = "0px"; return; }
+    if (!placed.current) mark.style.transition = "none";
+    mark.style.left = `${chip.offsetLeft}px`;
+    mark.style.top = `${chip.offsetTop + chip.offsetHeight - 1}px`;
+    mark.style.width = `${chip.offsetWidth}px`;
+    if (!placed.current) { void mark.offsetWidth; mark.style.transition = ""; placed.current = true; }
+  }, [dependency]);
+  return { box, line };
 }
 
-/** The Floor: every merged stage as a box, inside its card. */
+/**
+ * The floor: a chip per belt to pin one, and every merged stage on the tracks the daemon laid out. Pinning a belt
+ * or pointing at it traces its way through the factory and lets the rest fall back.
+ */
 export function Floor({ floor, ...map }: FloorProps) {
-  return <FloorCard total={floor.total}>
+  const { box, line } = useChipIndicator(map.pinned);
+  const focused = floor.belts.find(belt => belt.id === map.focus);
+  const { total } = floor;
+  return <section className="sec overview-floor" aria-label="Factory floor">
+    <div className="sec-h"><h2 className="h3">The floor</h2>
+      <span className="help">{focused ? `${focused.name}: ${focused.summary} · ${focused.counts.running} running · ${focused.counts.needYou} need you`
+        : `${total.running} running · ${total.needYou} need you · ${total.inProgress} in progress · ${total.shippedToday} shipped today`}</span></div>
+    <div className="chips fchips" ref={box} role="group" aria-label="Show a belt on the floor">
+      <span className="cind" ref={line} aria-hidden="true" />
+      <button type="button" className={`chip ${map.pinned === null ? "on" : ""}`} aria-pressed={map.pinned === null} onClick={() => map.onPin(null)}>All belts</button>
+      {floor.belts.map(belt => <button key={belt.id} type="button" className={`chip ${map.pinned === belt.id ? "on" : ""}`} aria-pressed={map.pinned === belt.id}
+        onPointerEnter={() => map.onHover(belt.id, true)} onPointerLeave={() => map.onHover(belt.id, false)} onClick={() => map.onPin(belt.id)}>
+        {belt.name} <span className="k">{belt.counts.inProgress}</span>
+      </button>)}
+    </div>
     <BoxFloor track={floor.track} belts={floor.belts} boxes={floor.boxes} runs={map.runs} focus={map.focus} pinned={map.pinned}
-      onHover={map.onHover} onPin={map.onPin} onOpenRun={map.onOpenRun} onOpenStage={map.onOpenStage} onOpenBelt={map.onOpenBelt} />
-  </FloorCard>;
+      onHover={map.onHover} onPin={belt => map.onPin(belt)} onOpenRun={map.onOpenRun} onOpenStage={map.onOpenStage} onOpenBelt={map.onOpenBelt} />
+  </section>;
 }

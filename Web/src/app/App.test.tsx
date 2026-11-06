@@ -1,10 +1,9 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { AppProviders, AppRoutes, TestApp } from "./App";
 import { AppSocket } from "../test/setup";
-import { defaultPreferences, preferencesStorageKey } from "../state/preferences";
 import { goldenText } from "../test/golden";
 import { json } from "../test/response";
 import { fixtureRoute, history, refusal, renderRoutes, stubDaemon, type Handler } from "../test/daemon";
@@ -159,7 +158,7 @@ describe("global controls and visible state", () => {
     const controls = await screen.findByLabelText("Global controls");
     await within(controls).findByRole("button", { name: "Pause everything" });
     const buttons = within(controls).getAllByRole("button").filter(button => button.textContent !== "Dismiss");
-    expect(buttons.map(button => button.textContent)).toEqual(["Pause everything", "Fetch"]);
+    expect(buttons.map(button => button.getAttribute("aria-label") ?? button.textContent)).toEqual(["Pause everything", "Fetch"]);
     await waitFor(() => expect(buttons[0]?.hasAttribute("disabled")).toBe(false));
     await user.click(buttons[0]!);
     await waitFor(() => expect(daemon.posts("/api/v1/pause")).toHaveLength(1));
@@ -172,7 +171,7 @@ describe("global controls and visible state", () => {
     expect(daemon.posts("/api/v1/check-now")[0]!.body).toEqual({});
   });
 
-  it("shows AFK as a switch at the foot of the sidebar, with the daemon's setting and reason", async () => {
+  it("shows AFK as a switch in the top bar, with the daemon's setting and reason", async () => {
     const state = JSON.parse(stateWithLibrary({ offered: true, changedSinceBackup: true })) as { actions: Array<{ id: string; enabled: boolean; reason?: string | null }>; settings: { afkEnabled: boolean } };
     daemonFor({ "/api/v1/state": () => json({ ...state, settings: { ...state.settings, afkEnabled: true }, actions: state.actions.map(action => action.id === "afk" ? { ...action, enabled: false, reason: "AFK is locked by policy." } : action) }) });
     renderPage("/overview");
@@ -180,7 +179,6 @@ describe("global controls and visible state", () => {
     expect(afk.getAttribute("aria-checked")).toBe("true");
     expect(afk.hasAttribute("disabled")).toBe(true);
     expect(within(afk.closest(".nav-switch") as HTMLElement).getByText("AFK is locked by policy.")).toBeTruthy();
-    expect(afk.closest(".nav-switch")?.previousElementSibling?.classList.contains("nav-backup")).toBe(true);
   });
 
   it("shows the daemon's disabled reasons, and never sends an unsupported or disabled action", async () => {
@@ -243,24 +241,16 @@ describe("global controls and visible state", () => {
     expect(within(screen.getByLabelText("Global controls")).getByRole("button", { name: "Fetch" }).hasAttribute("disabled")).toBe(true);
   });
 
-  it("persists navigation collapse and width changes, including the double-click reset", async () => {
-    localStorage.clear();
+  it("opens every page from the Menu sheet and closes it on the way", async () => {
     daemonFor();
     const user = userEvent.setup();
-    const first = renderPage("/overview");
-    await screen.findByRole("heading", { level: 1, name: "Overview" });
-    await user.click(screen.getByRole("button", { name: "Hide navigation" }));
-    await screen.findByRole("button", { name: "Show navigation" });
-    expect(JSON.parse(localStorage.getItem(preferencesStorageKey) ?? "{}")).toMatchObject({ navigationOpen: false });
-    await user.click(screen.getByRole("button", { name: "Show navigation" }));
-    const handle = screen.getByRole("separator", { name: "Resize navigation" });
-    fireEvent.keyDown(handle, { key: "ArrowRight" });
-    expect(handle.getAttribute("aria-valuenow")).toBe("230");
-    fireEvent.doubleClick(handle);
-    expect(JSON.parse(localStorage.getItem(preferencesStorageKey) ?? "{}")).toMatchObject({ navigationWidth: defaultPreferences.navigationWidth });
-    first.unmount();
     renderPage("/overview");
-    expect(await screen.findByRole("button", { name: "Hide navigation" })).toBeTruthy();
+    await screen.findByRole("heading", { level: 1, name: "Overview" });
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const sheet = await screen.findByRole("dialog", { name: "Pages" });
+    await user.click(within(sheet).getByRole("link", { name: "Work" }));
+    await screen.findByRole("heading", { level: 1, name: "Work" });
+    expect(screen.queryByRole("dialog", { name: "Pages" })).toBeNull();
   });
 });
 

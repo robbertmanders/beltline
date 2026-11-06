@@ -47,8 +47,8 @@ export function ShadowDecisionSheet({ beltId, beltName, shadowLabel, test, decis
   }));
 
   const footer = <>
-    <button type="button" className="action-button" onClick={onClose}>Cancel</button>
-    <button type="button" className={`action-button ${accept ? "shadow-primary" : "danger"}`} disabled={offline || command.pending} onClick={submit}>
+    <button type="button" className="btn" onClick={onClose}>Cancel</button>
+    <button type="button" className={`btn ${accept ? "fill" : "danger"}`} disabled={offline || command.pending} onClick={submit}>
       {accept ? "Accept shadow" : "Discard shadow"}
     </button>
   </>;

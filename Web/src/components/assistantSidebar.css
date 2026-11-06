@@ -60,3 +60,23 @@
   .assistant-panel { padding: 16px 12px; }
 
 }
+
+/* In the mockup's terms: the assistant is a panel drawn the other way round, sliding in over the right of the window. */
+.assistant-panel.inv { position: fixed; top: 0; right: 0; bottom: 0; z-index: 65; width: min(500px, 100vw) !important; height: auto !important; gap: 18px; padding: 22px 24px 24px; border-left: 0; background: var(--bg); color: var(--ink); overflow-y: auto; box-shadow: -30px 0 60px -30px rgba(0, 0, 0, .4); animation: asst-in .7s var(--ease) both; }
+@keyframes asst-in { from { transform: translateX(102%); } }
+.assistant-panel .assistant-divider { display: none; }
+.assistant-header { padding-bottom: 14px; border-bottom: 1px solid var(--faint); }
+.assistant-header h2 { font: 600 19px/1.2 var(--font-display), sans-serif; letter-spacing: -.02em; }
+.assistant-status { color: var(--soft); font: 12.5px var(--font-body), sans-serif; }
+.assistant-status.is-running, .assistant-status.is-busy { color: var(--ink); font-weight: 600; }
+.assistant-compact select, .assistant-field select { padding: 6px 22px 6px 0; border: 0; border-bottom: 1px solid var(--faint); border-radius: 0; background: transparent; color: var(--ink); }
+.assistant-field > span { color: var(--soft); }
+.assistant-request, .assistant-field textarea { padding: 12px 14px; border: 1px solid var(--faint); border-radius: 14px; background: transparent; color: var(--ink); font: 14.5px/1.55 var(--font-body), sans-serif; }
+.assistant-ask > p { color: var(--soft); font-size: 14px; }
+.assistant-note, .assistant-action-reason, .assistant-terminal-note { color: var(--soft); }
+.assistant-saved-selection, .assistant-dirty-note { padding: 0; background: none; color: var(--ink); font-weight: 600; }
+.assistant-demo { border-radius: 14px; background: var(--wash2); color: var(--ink); }
+.assistant-problems ul, .assistant-error, .assistant-read-error { color: var(--ink); }
+.assistant-read-error { border: 1px solid var(--ink); border-radius: 14px; background: none; }
+.assistant-conversation .terminal { border-radius: 14px; overflow: hidden; background: var(--screen); }
+@media (prefers-reduced-motion: reduce) { .assistant-panel.inv { animation: none; } }

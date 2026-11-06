@@ -15,7 +15,7 @@ function ruleDeclarations(selector: string): Record<string, string> {
   return merged;
 }
 
-const declarations = ruleDeclarations(":root");
+const declarations = { ...ruleDeclarations(":root"), ...ruleDeclarations(":root, .inv") };
 const darkDeclarations = ruleDeclarations(':root[data-theme="dark"]');
 // The roles are mixed from the pair in one rule; Light's own rule is the first `:root {`, which also holds them.
 const roles = Object.keys(declarations).filter(name => !["--A", "--B", "--P", "--I"].includes(name) && /^(var|color-mix|#)/.test(declarations[name]!));
@@ -93,6 +93,10 @@ describe("Two Inks tokens", () => {
     expect(darkDeclarations["--B"]).toBe("#EFE2DC");
     // Dark swaps the pair and nothing else, so it cannot drift from Light.
     expect(Object.keys(darkDeclarations).sort()).toEqual(["--A", "--B"]);
+    // A part drawn the other way round swaps the paper and the ink, and darkens the screen it sits on.
+    const inverse = ruleDeclarations(".inv");
+    expect(inverse["--P"]).toBe("var(--B)");
+    expect(inverse["--I"]).toBe("var(--A)");
     // The only literal colours are the pair and the screen, which is the light ink in both appearances.
     const literal = Object.keys(declarations).filter(name => isLiteralColour(declarations[name]!));
     expect(literal.sort()).toEqual(["--A", "--B", "--screen", "--screen-bar", "--screen-dim", "--screen-text"]);

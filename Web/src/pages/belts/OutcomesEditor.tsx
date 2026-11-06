@@ -58,7 +58,7 @@ export function OutcomesEditor({ stageId, kind, outcomes, context, menu, disable
   return <div className="outcomes-editor" aria-label="Outcomes">
     <div className="agent-outcomes-header">
       <div className="form-heading"><span className="paper-tag">Outcomes</span><h3>How it can end</h3>{menu && <p className="agent-lead">{menu.outcomesIntro}</p>}</div>
-      {!readOnly && <button type="button" className="action-button small" disabled={disabled} onClick={addOutcome}>+ Add outcome</button>}
+      {!readOnly && <button type="button" className="btn sm" disabled={disabled} onClick={addOutcome}>+ Add outcome</button>}
     </div>
     <div className="outcomes-scroll" data-scroll-viewport>
       <table className="outcomes-table">

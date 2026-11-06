@@ -28,10 +28,14 @@ export interface ActionControlProps {
   kind?: ButtonKind;
   /** Whether this client knows the action's endpoint. Defaults to the shell's global commands. */
   supported?: boolean;
-  /** Extra class names, such as the AFK switch's mono caps. */
+  /** Extra class names. */
   className?: string;
-  /** Shows the control as a switch: its checked state, its icon, and whether only the icon shows (a folded rail). */
-  switchOptions?: { checked: boolean; icon: ReactNode; iconOnly: boolean };
+  /** The smaller button. */
+  small?: boolean;
+  /** Draws the button as this icon alone; the label stays its accessible name and its tooltip. */
+  icon?: ReactNode;
+  /** Shows the control as a switch: its checked state, its icon, whether only the icon shows, and a shorter visible label. */
+  switchOptions?: { checked: boolean; icon: ReactNode; iconOnly: boolean; text?: string };
   onActivate: () => void;
 }
 
@@ -40,7 +44,7 @@ export interface ActionControlProps {
  * is compatible and the connection is online. Every reason it is unavailable is written out for keyboard
  * and screen-reader users, not only shown as a tooltip.
  */
-export function ActionControl({ id, fallbackLabel, action, canRead, connection, pending, primary, kind, supported: supportedProp, className, switchOptions, onActivate }: ActionControlProps) {
+export function ActionControl({ id, fallbackLabel, action, canRead, connection, pending, primary, kind, supported: supportedProp, className, small, icon, switchOptions, onActivate }: ActionControlProps) {
   const explanationId = useId();
   const [showWorking, setShowWorking] = useState(false);
   useEffect(() => {
@@ -66,20 +70,20 @@ export function ActionControl({ id, fallbackLabel, action, canRead, connection, 
   if (switchOptions) {
     // A switch keeps its label and says its state through aria-checked; the daemon's action still decides whether it works.
     return <div className="nav-switch">
-      <button type="button" role="switch" aria-checked={switchOptions.checked} aria-label={switchOptions.iconOnly ? fallbackLabel : undefined}
-        className={["action-switch", className ?? ""].filter(Boolean).join(" ")} disabled={disabled} aria-busy={pending} aria-describedby={explanationId}
+      <button type="button" role="switch" aria-checked={switchOptions.checked} aria-label={switchOptions.iconOnly || switchOptions.text ? fallbackLabel : undefined}
+        className={["tg action-switch", className ?? ""].filter(Boolean).join(" ")} disabled={disabled} aria-busy={pending} aria-describedby={explanationId}
         title={explanation || action?.help || fallbackLabel} onClick={onActivate}>
         {switchOptions.icon}
-        {!switchOptions.iconOnly && <span className="action-switch-label">{fallbackLabel}</span>}
-        <span className="action-switch-track" aria-hidden="true"><span className="action-switch-thumb" /></span>
+        <span className="t" aria-hidden="true" />
+        {!switchOptions.iconOnly && <span className="action-switch-label">{switchOptions.text ?? fallbackLabel}</span>}
       </button>
       {explanationText}
     </div>;
   }
   return <div className="global-action">
-    <button type="button" className={[`action-button`, look === "plain" ? "" : look, className ?? ""].filter(Boolean).join(" ")} disabled={disabled} aria-busy={pending} aria-describedby={explanationId}
-      title={explanation || action?.help || undefined} onClick={onActivate}>
-      <span className="action-button-label" data-label={label}><span>{pending && showWorking ? "Working…" : label}</span></span>
+    <button type="button" className={["btn", small ? "sm" : "", icon ? "icon" : "", look === "primary" || look === "slate" ? "fill" : look === "danger" ? "danger" : "", className ?? ""].filter(Boolean).join(" ")} disabled={disabled} aria-busy={pending} aria-describedby={explanationId}
+      aria-label={icon ? (pending && showWorking ? "Working…" : label) : undefined} title={icon ? [label, explanation || action?.help].filter(Boolean).join(". ") : explanation || action?.help || undefined} onClick={onActivate}>
+      {icon ?? <span className="btn-label" data-label={label}><span>{pending && showWorking ? "Working…" : label}</span></span>}
     </button>
     {explanationText}
   </div>;

@@ -66,7 +66,6 @@ export function StageLine({ line: sent, onUpdateStage, updateStageEnabled }: Sta
         onClick={() => editor.selectStage(selected ? null : stage.id)}>
         <span className="stage-block-kind">{stage.kind}</span>
         <span className="stage-block-title">{name}</span>
-        <span className="stage-block-lines">{[0, 1].map(index => <span key={index}>{stage.subtitle[index] ?? " "}</span>)}</span>
       </button>
       {difference && <span className="shadow-diff__tag">{difference.label}</span>}
       {!disabled && <button type="button" className="stage-block-remove" aria-label={`Remove ${name}`} title={`Remove ${name}`}
@@ -89,7 +88,6 @@ export function StageLine({ line: sent, onUpdateStage, updateStageEnabled }: Sta
           title={line.trigger.help ?? "The trigger: where the belt's work comes from"} onClick={() => editor.selectStage(null)}>
           <span className="stage-block-kind">{line.trigger.kind}</span>
           <span className="stage-block-title">{line.trigger.title}</span>
-          <span className="stage-block-lines">{[0, 1].map(index => <span key={index}>{line.trigger.lines[index] ?? " "}</span>)}</span>
         </button>
         {items(line.items)}
         <AddMenu line={line} at={line.addEnd} disabled={disabled} />

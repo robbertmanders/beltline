@@ -6,7 +6,7 @@ import { describeError } from "../../api/errors";
 import { apiQueryKey, resourcesForPath } from "../../api/resources";
 import { insightsFigureIDValues, insightsPeriodValues, type InsightsEvolutionView, type InsightsFigureID, type InsightsPeriod, type InsightsView } from "../../api/wire.gen";
 import { useRuntime } from "../../app/runtime";
-import { Caps, Chip, Segmented, Select, Tag } from "../../components/Paper";
+import { Segmented } from "../../components/Paper";
 import { BeltList, Stages } from "./InsightsSections";
 import { Evolution, evolutionRequestPath, type EvolutionChoice } from "./InsightsEvolution";
 import { ShadowComparison } from "./InsightsShadow";
@@ -118,36 +118,31 @@ export function InsightsPage() {
   const shadow = data?.shadow;
   const { message } = current.error ? describeError(current.error) : { message: "" };
 
-  return <article className="page-content insights-page">
-    <header className="page-heading work-heading-row">
-      <div className="work-title-block">
-        <div className="insights-eyebrow">
-          <Tag>{belt ? "Insights · belt" : "Insights"}</Tag>
-          <Chip tone="gold" title="Insights is experimental: its figures and layout may still change.">EXPERIMENTAL</Chip>
-        </div>
-        <h1>{heading?.title ?? "Insights"}</h1>
-      </div>
-      {heading && <div className="page-heading-actions"><Caps className="work-caption">{heading.caption}</Caps></div>}
-    </header>
-    <div className="work-toolbar insights-toolbar">
-      <div className="work-toolbar-controls">
-        <Caps>Belt</Caps>
-        <Select pill width={230} label="Belt" options={beltOptions} value={belt} onChange={value => change({ belt: value })} />
-        <label className="insights-archive"><input type="checkbox" checked={showArchived}
-          onChange={event => change({ showArchived: event.currentTarget.checked })} />Show archived</label>
-        {belt && !evolution && versionOptions.length > 0 && <>
-          <Caps>Version</Caps>
-          <Select pill width={shadow ? 260 : 200} label="Version" options={versionOptions} value={version} onChange={value => change({ version: value })} />
-        </>}
-      </div>
-      <div className="work-toolbar-controls">
+  return <article className="pin insights-page">
+    <header className="ph">
+      <div className="insights-eyebrow"><span className="eyebrow">{belt ? "Insights · belt" : "Insights"}</span>
+        <span className="flag o" title="Insights is experimental: its figures and layout may still change.">Experimental</span></div>
+      <h1 className="h1">{heading?.title ?? "Insights"}</h1>
+      {heading && <p className="lede work-caption">{heading.caption}</p>}
+      <div className="ph-row insights-toolbar" style={{ gap: "16px 28px" }}>
+        <label className="insights-pick"><span className="lab">Belt</span>
+          <select className="sel inline" aria-label="Belt" value={belt} onChange={event => change({ belt: event.currentTarget.value })}>
+            {beltOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select></label>
+        {belt && !evolution && versionOptions.length > 0 && <label className="insights-pick"><span className="lab">Version</span>
+          <select className="sel inline" aria-label="Version" value={version} onChange={event => change({ version: event.currentTarget.value })}>
+            {versionOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select></label>}
+        <label className="tg"><input type="checkbox" checked={showArchived}
+          onChange={event => change({ showArchived: event.currentTarget.checked })} /><span className="t" aria-hidden="true" />Show archived</label>
+        <span className="sp" style={{ flex: 1 }} />
         {/* A shadow test has its own dates: it counts the runs that started during it. */}
-        {!evolution && (shadow ? <Caps>{shadow.dates}</Caps>
+        {!evolution && (shadow ? <span className="help">{shadow.dates}</span>
           : <Segmented label="Period" options={data?.periods ?? fallbackPeriods} value={period} onChange={value => change({ period: value })} />)}
         {belt && <Segmented label="View" options={[{ value: "evolution", label: "Evolution" }, { value: "stages", label: "Stages" }] as const}
           value={evolution ? "evolution" : "stages"} onChange={value => change({ view: value })} />}
       </div>
-    </div>
+    </header>
     {!runtime.canRead && <p className="loading-state" role="status">{runtime.versionLoading ? "Checking API version…" : "Waiting for the daemon connection…"}</p>}
     {runtime.canRead && current.isPending && <p className="loading-state" role="status">Loading Insights…</p>}
     {runtime.canRead && current.error && !heading && <section className="error-panel" role="alert"><h2>Unable to load Insights</h2><p>{message}</p></section>}

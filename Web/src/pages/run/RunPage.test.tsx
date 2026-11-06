@@ -47,10 +47,11 @@ function renderRun(search = "") {
   return render(<AppProviders><MemoryRouter initialEntries={[`/runs/${encodeURIComponent(runId)}${search}`]}><AppRoutes /></MemoryRouter></AppProviders>);
 }
 
+
 /** Measured bounds for the workspace and the main column, and a ResizeObserver a test can fire by hand. */
 function measureLayout(bounds: { workspace: number }) {
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
-    const width = this.classList.contains("run-workspace") ? bounds.workspace : 800;
+    const width = this.classList.contains("runv") ? bounds.workspace : 800;
     return { x: 0, y: 0, top: 0, left: 0, right: width, bottom: 0, width, height: 0, toJSON: () => ({}) } as DOMRect;
   });
   const observers: Array<() => void> = [];
@@ -118,8 +119,8 @@ describe("Run page", () => {
     await heading();
     expect(screen.getByText("Belt v1 · 11 stages")).toBeTruthy();
     expect(screen.getByText("Cost $0.11 · partial")).toBeTruthy();
-    expect(container.querySelectorAll(".stage-box").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: /^Plan the epic/ }).getAttribute("data-stage")).toBe("plan-epic");
+    expect(container.querySelectorAll(".run-map .run-node").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /^Plan the epic/ }).closest("[data-stage]")?.getAttribute("data-stage")).toBe("plan-epic");
     const panel = await screen.findByRole("region", { name: "Stage 1: Plan the epic" });
     expect(within(panel).getByText("Contract stage output")).toBeTruthy();
     expect(within(panel).getByText("contract.html")).toBeTruthy();
@@ -160,7 +161,6 @@ describe("Run page", () => {
     const daemon = stubDaemon();
     renderRun();
     await heading();
-    await user.click(screen.getByRole("button", { name: "Run actions" }));
     await user.click(await screen.findByRole("button", { name: /Open in VS Code/ }));
     await waitFor(() => expect(daemon.posts("/api/v1/desktop/vscode")).toHaveLength(1));
     expect(daemon.posts("/api/v1/desktop/vscode")[0]!.body).toEqual({ runId, targetId: "main" });
@@ -206,24 +206,17 @@ describe("Run page", () => {
     expect((textarea as HTMLTextAreaElement).value).toBe("  keep this text  ");
   });
 
-  it("holds the run's controls first, then the open links after a divider, in one menu that dismisses on Escape and an outside click", async () => {
-    const user = userEvent.setup();
+  it("lays the run's commands out in the control row, and its links and worktrees in the link row above it", async () => {
     stubDaemon();
     renderRun();
     await heading();
-    const trigger = screen.getByRole("button", { name: "Run actions" });
-    await user.click(trigger);
-    const menu = screen.getByLabelText("Run actions menu");
-    const rows = within(menu).getAllByRole("button").map(row => row.textContent);
-    expect(rows.indexOf("Drop…")).toBeLessThan(rows.indexOf("Open in VS Code"));
-    const link = within(menu).getByRole("link", { name: /Open Ticket PAY-40/ });
-    expect(link.previousElementSibling?.classList.contains("run-menu-divider")).toBe(true);
-    await user.keyboard("{Escape}");
-    expect(screen.queryByLabelText("Run actions menu")).toBeNull();
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Run actions" }));
-    await user.click(trigger);
-    await user.click(document.querySelector(".run-menu-scrim")!);
-    expect(screen.queryByLabelText("Run actions menu")).toBeNull();
+    const controls = screen.getByRole("group", { name: "Run actions" });
+    const rows = within(controls).getAllByRole("button").map(row => row.textContent);
+    expect(rows).toContain("Drop…");
+    expect(within(controls).queryByRole("link")).toBeNull();
+    const links = document.querySelector<HTMLElement>(".rlinks")!;
+    expect(within(links).getByRole("link", { name: /Open Ticket PAY-40/ })).toBeTruthy();
+    expect(within(links).getByRole("button", { name: /Open in VS Code/ })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Stage 5: Watch the ticket" })).toBeTruthy();
   });
 
@@ -235,7 +228,6 @@ describe("Run page", () => {
     const daemon = stubDaemon({ [viewPath]: () => json(view), [`POST ${runPath}/resume`]: refusal("Continue refused", ["holds are not answerable", "stage changed"]) });
     renderRun();
     await heading();
-    await user.click(screen.getByRole("button", { name: "Run actions" }));
     await user.click(screen.getByRole("button", { name: "Send to…" }));
     await user.type(await screen.findByLabelText("Message (optional)"), "please carry on");
     await user.click(screen.getByRole("button", { name: "Send" }));

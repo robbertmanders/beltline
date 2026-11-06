@@ -98,14 +98,14 @@ export function AgentEditor(props: AgentEditorProps) {
         <h2 className={agent.name.trim() ? "" : "is-unnamed"}>{agent.name.trim() || "Unnamed agent"}</h2>
       </div>
       {library ? <div className="belt-actions">{library.actions}</div> : <div className="belt-actions">
-        <button type="button" className="action-button slate" disabled={!!shareReason} title={shareReason ?? "Share this saved agent version to a library repository"} onClick={props.onShare}>Share…</button>
-        {!isNew && !dirty && archiveAction && <button type="button" className="action-button" disabled={!canCommand || !archiveAction.enabled}
+        <button type="button" className="btn fill" disabled={!!shareReason} title={shareReason ?? "Share this saved agent version to a library repository"} onClick={props.onShare}>Share…</button>
+        {!isNew && !dirty && archiveAction && <button type="button" className="btn" disabled={!canCommand || !archiveAction.enabled}
           title={archiveAction.reason ?? commandReason ?? (presentation?.archived ? "Let new stages use this agent again, and put it back in this list" : "Take it out of this list and the + menu. Belts that use it keep working.")}
           onClick={() => props.onArchive(!presentation?.archived)}>{archiveAction.label}</button>}
         {(dirty || isNew) && <>
-          <button type="button" className="action-button" onClick={props.onDiscard}>Discard</button>
+          <button type="button" className="btn" onClick={props.onDiscard}>Discard</button>
           {/* Save is there only when it can be used; offline, the banner says why. */}
-          {canSave && <button type="button" className="action-button primary" aria-busy={props.saving || undefined}
+          {canSave && <button type="button" className="btn fill" aria-busy={props.saving || undefined}
             onClick={() => { if (!props.saving) props.onSave(); }}>{props.saving ? "Saving…" : "Save"}</button>}
         </>}
         {props.assistantButton}
@@ -120,7 +120,7 @@ export function AgentEditor(props: AgentEditorProps) {
     {commandError !== null && commandError !== undefined && <div className="agent-command-error" role="alert">
       <ProblemItems problems={describeError(commandError).problems} />
       <p>{describeError(commandError).message}</p>
-      <button type="button" className="action-button small" onClick={onRetry}>Retry</button>
+      <button type="button" className="btn sm" onClick={onRetry}>Retry</button>
     </div>}
 
     {presentation && presentation.warnings.length > 0 && <ul className="belt-warnings agent-warnings" aria-label="Validation warnings">
@@ -186,12 +186,12 @@ export function AgentEditor(props: AgentEditorProps) {
               onModel={model => change({ alternates: agent.alternates.map((entry, at) => at === index ? { ...entry, model } : entry) })}
               onThinking={thinking => change({ alternates: agent.alternates.map((entry, at) => at === index ? { ...entry, thinking: thinking ?? undefined } : entry) })}
               onChangeRunner={runner => onChangeRunner(runner, index)} />
-            {!readOnly && <button type="button" className="quiet-button agent-form-remove" aria-label={`Remove alternate ${index + 1}`}
+            {!readOnly && <button type="button" className="link agent-form-remove" aria-label={`Remove alternate ${index + 1}`}
               onClick={() => change({ alternates: agent.alternates.filter((_, at) => at !== index) })}>Remove</button>}
           </div>)}
         </div>
         {!readOnly && <div>
-          <button type="button" className="action-button small" onClick={() => change({ alternates: [...agent.alternates, { model: "", runner: agent.runner }] })}>+ Add a model</button>
+          <button type="button" className="btn sm" onClick={() => change({ alternates: [...agent.alternates, { model: "", runner: agent.runner }] })}>+ Add a model</button>
         </div>}
       </div>
       </fieldset>
@@ -210,7 +210,7 @@ export function AgentEditor(props: AgentEditorProps) {
     <div className="agent-card belt-card">
       <div className="agent-outcomes-header"><div className="form-heading"><span className="paper-tag">Outcomes</span><h3>How it can end</h3>
         <p className="agent-lead">The agent picks one and writes it as the last line of its output, so describe when each one applies. A new stage starts with these; “Go to a stage” goes to a stage with one of the agents you pick: the nearest earlier one, or else the nearest later one.</p></div>
-        {!readOnly && <button type="button" className="action-button small"
+        {!readOnly && <button type="button" className="btn sm"
           onClick={() => change({ outcomes: [...agent.outcomes, { name: "", when: "", tone: "neutral", then: { do: "hold" }, to: [] }] })}>+ Add outcome</button>}
       </div>
       <fieldset className="editor-fields" disabled={readOnly}>
@@ -240,8 +240,8 @@ export function AgentEditor(props: AgentEditorProps) {
         <span className="agent-usage-name">{use.beltName}</span>
         <code>v{use.version}</code>
         {!readOnly && use.version < agent.version && <span className="agent-hint">Open the belt and pick “Update to v{agent.version}” on its stage to move it.</span>}
-        {readOnly ? <button type="button" className="action-button small agent-open-belt" onClick={() => props.onOpenBelt(use.beltId)}>Open belt</button>
-          : <a className="action-button small agent-open-belt" href={`/belts?belt=${encodeURIComponent(use.beltId)}`} onClick={event => { event.preventDefault(); props.onOpenBelt(use.beltId); }}>Open belt</a>}
+        {readOnly ? <button type="button" className="btn sm agent-open-belt" onClick={() => props.onOpenBelt(use.beltId)}>Open belt</button>
+          : <a className="btn sm agent-open-belt" href={`/belts?belt=${encodeURIComponent(use.beltId)}`} onClick={event => { event.preventDefault(); props.onOpenBelt(use.beltId); }}>Open belt</a>}
       </li>)}</ul>}
       {saved?.agent.key && <p className="agent-hint">Legacy key <code>{saved.agent.key}</code> still renders older runs.</p>}
     </div>}
@@ -260,7 +260,7 @@ function AgentFolderRow({ agentId, version, folder }: { agentId: string; version
     <span className="agent-field-label">Folder</span>
     <div className="agent-folder-line">
       <code className="agent-folder-path" title={folder}>{folder}</code>
-      <button type="button" className="paper-button paper-button--small" disabled={command.pending} onClick={reveal}
+      <button type="button" className="btn sm" disabled={command.pending} onClick={reveal}
         title={`Each version is a Markdown file. Add a v${version + 1}.md by hand and it shows here after a restart.`}>Open folder</button>
     </div>
     {command.error ? <ErrorProblems error={command.error} /> : null}
