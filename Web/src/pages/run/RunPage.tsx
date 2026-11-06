@@ -182,7 +182,7 @@ export function RunPage() {
   const current = view?.stages.find(item => item.id === view.run.stageId);
   const selected = view?.stages.find(item => item.id === selectedStageId);
 
-  return <div className={`runv inv ${shown ? "open" : ""}`} ref={workspaceRef} role="region" aria-label="Run"
+  return <div className={`runv ${shown ? "open" : ""}`} ref={workspaceRef} role="region" aria-label="Run"
     style={{ "--cx": `${origin.x}px`, "--cy": `${origin.y}px` } as CSSProperties}>
     <div className="run-scroll scroll" data-column="main">
     <header className="rtop">

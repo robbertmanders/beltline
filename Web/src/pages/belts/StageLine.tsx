@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
+import { Icon } from "../../components/Icon";
 import { useDraftEditor, useTypedForm } from "./draftEditor";
 import type { Belt, StageLinePresentation, StageLinePresentationItem, StageLinePresentationRouteRow } from "../../api/wire.gen";
 
@@ -180,7 +181,7 @@ function AddMenu({ line, at, route, disabled }: { line: StageLinePresentation; a
   return <div className="add-menu" ref={ref}>
     <span className="add-menu-track" aria-hidden="true" />
     {!disabled && <button ref={plus} type="button" className="add-menu-plus" aria-haspopup="menu" aria-expanded={open} aria-label="Add a stage here" title="Add a stage here"
-      onClick={() => { if (open) setPlacement(null); else if (plus.current) setPlacement(placeMenu(plus.current)); }}>+</button>}
+      onClick={() => { if (open) setPlacement(null); else if (plus.current) setPlacement(placeMenu(plus.current)); }}><Icon name="plus" /></button>}
     {placement && <div className="add-menu-card" role="menu" style={{ left: placement.left, top: placement.top, bottom: placement.bottom, maxHeight: placement.maxHeight }}>
       <p className="add-menu-section">Agent</p>
       {line.agents.map(agent => <button key={`${agent.id}@${agent.version}`} type="button" role="menuitem" onClick={() => add({ type: "agent", agent: { id: agent.id, version: agent.version } })}>{agent.name}</button>)}

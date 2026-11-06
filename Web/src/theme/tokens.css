@@ -59,14 +59,14 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 
-  --A: #ECE4DF;
-  --B: #420C12;
+  --A: #EFE2DC;
+  --B: #22070A;
   --P: var(--A);
   --I: var(--B);
   /* The terminal and code: the light ink, in both appearances. */
-  --screen: #420C12;
-  --screen-text: #ECE4DF;
-  --screen-bar: #36090E;
+  --screen: #22070A;
+  --screen-text: #EFE2DC;
+  --screen-bar: #1A0507;
   --screen-dim: #B89A9C;
 
   --font-display: "Funnel Display";
@@ -141,7 +141,7 @@
   --B: #EFE2DC;
 }
 
-/* A part of the page drawn the other way round: the run page, the sheets and the assistant. */
+/* A part of the page drawn the other way round: the sheets and the assistant. */
 .inv {
   color-scheme: dark;
   --P: var(--B);
@@ -150,10 +150,10 @@
   color: var(--ink);
   caret-color: var(--ink);
   /* On the dark ink the terminal sits a step darker than the page. */
-  --screen: #2B070B;
-  --screen-bar: #22060A;
+  --screen: #160406;
+  --screen-bar: #100304;
 }
-:root[data-theme="dark"] .inv { color-scheme: light; --screen: #420C12; --screen-bar: #36090E; }
+:root[data-theme="dark"] .inv { color-scheme: light; --screen: #22070A; --screen-bar: #1A0507; }
 
 /* The roles, from the pair. Declared on the root and again on every inverse part, so they follow its swap. */
 :root, .inv {

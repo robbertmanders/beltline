@@ -40,7 +40,7 @@ export interface BeltEditorActionsProps {
   onSave: () => void;
 }
 
-/** The belt header's action buttons. Their gates and labels come from the daemon; this only decides which are shown. */
+/** The belt header's commands: quiet links with icons for the belt itself, then pill buttons for what finishes an edit. Their gates and labels come from the daemon; this only decides which are shown. */
 export function BeltEditorActions({ belt, snapshot, archived, paused, editing, outdated, saveGate, startGate, shareGate, saving, actionGate, assistantButton, onShare, onUpdateAll, onStartTask, onPause, onAfk, onArchive, onCopy, onDiscard, onSave,
   shadowMode = false, saveLabel = "Save", onCreateShadow, onDecideShadow }: BeltEditorActionsProps) {
   const manual = snapshot ? manualEntries(snapshot.belt) : [];
@@ -54,18 +54,18 @@ export function BeltEditorActions({ belt, snapshot, archived, paused, editing, o
   // The daemon refuses the new shadow's start: its Start button stays, disabled with the reason, in place of Save.
   const refusedStart = startGate !== undefined && !startGate.enabled;
   return <div className="belt-actions">
-    {live && <ActionButton label="Share…" kind="slate" gate={shareGate} help="Preview and propose this saved belt version" onClick={onShare} />}
-    {snapshot && !archived && outdated > 0 && <ActionButton label={outdated === 1 ? "Update 1 stage" : `Update all ${outdated} stages`} gate={actionGate("update-all-stages")}
+    {live && <ActionButton label="Share…" icon="ext" gate={shareGate} help="Preview and propose this saved belt version" onClick={onShare} />}
+    {snapshot && !archived && outdated > 0 && <ActionButton icon="up" label={outdated === 1 ? "Update 1 stage" : `Update all ${outdated} stages`} gate={actionGate("update-all-stages")}
       help="Move every stage whose agent has a newer version to it. Settings you changed on a stage stay. Save to start using it." onClick={onUpdateAll} />}
-    {live && snapshot && !archived && manual.length > 0 && <ActionButton label="Start a task…" kind="slate" gate={actionGate()} help="Start a run on a task you describe" onClick={onStartTask} />}
-    {snapshot && !archived && <ActionButton label={paused ? "Resume belt" : "Pause belt"} gate={actionGate(paused ? "resume" : "pause")}
+    {live && snapshot && !archived && manual.length > 0 && <ActionButton label="Start a task…" icon="plus" gate={actionGate()} help="Start a run on a task you describe" onClick={onStartTask} />}
+    {snapshot && !archived && <ActionButton icon={paused ? "play" : "pause"} label={paused ? "Resume belt" : "Pause belt"} gate={actionGate(paused ? "resume" : "pause")}
       help="A paused belt takes no new issues and starts no new sessions. Runs already going keep going." onClick={onPause} />}
-    {live && snapshot && !archived && <ActionButton ariaLabel="AFK mode for new runs" label={<><span className={`afk-lamp ${afkOn ? "is-on" : ""}`} aria-hidden="true" />{afkLabel}</>}
-      kind={`belt-afk ${afkOn ? "slate" : ""}`} gate={actionGate("afk")} help={`${afkHelp(belt.afk, afkOn)} Click for ${nextAfk === "always" ? "AFK: Always" : nextAfk === "never" ? "AFK: Never" : "AFK: Global"}.`}
+    {live && snapshot && !archived && <ActionButton ariaLabel="AFK mode for new runs" icon="afk" label={afkLabel}
+      kind={`belt-afk${afkOn ? " is-on" : ""}`} gate={actionGate("afk")} help={`${afkHelp(belt.afk, afkOn)} Click for ${nextAfk === "always" ? "AFK: Always" : nextAfk === "never" ? "AFK: Never" : "AFK: Global"}.`}
       onClick={() => onAfk(nextAfk)} />}
-    {live && snapshot && <ActionButton label={archived ? "Restore" : "Archive"} gate={actionGate(archived ? "unarchive" : "archive")} onClick={onArchive} />}
-    {live && snapshot && <ActionButton label="Copy belt" gate={actionGate("copy")} help="Start a new belt from this one. It takes no issues until you save it." onClick={onCopy} />}
-    {live && snapshot && !archived && !shadowRuns && onCreateShadow && <ActionButton label="Create shadow…" kind="shadow-outline" gate={actionGate("shadow-create")}
+    {live && snapshot && <ActionButton icon={archived ? "undo" : "down"} label={archived ? "Restore" : "Archive"} gate={actionGate(archived ? "unarchive" : "archive")} onClick={onArchive} />}
+    {live && snapshot && <ActionButton icon="copy" label="Copy belt" gate={actionGate("copy")} help="Start a new belt from this one. It takes no issues until you save it." onClick={onCopy} />}
+    {live && snapshot && !archived && !shadowRuns && onCreateShadow && <ActionButton label="Create shadow…" icon="branch" gate={actionGate("shadow-create")}
       help="Try a changed copy of this belt on half of its new runs, then accept or discard it." onClick={onCreateShadow} />}
     {shadowMode && shadowRuns && onDecideShadow && <>
       <ActionButton label="Discard shadow…" gate={actionGate("shadow-discard")} help="End the test and keep the live version." onClick={() => onDecideShadow("discard")} />

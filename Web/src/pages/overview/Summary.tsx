@@ -1,11 +1,8 @@
-import type { OverviewResponse, OverviewRun } from "../../api/wire.gen";
-import { Spinner } from "../../components/Paper";
+import type { OverviewResponse } from "../../api/wire.gen";
 import { shippedCurve } from "./shippedChart";
 
 export interface TodayProps {
   today: OverviewResponse["today"];
-  runs: ReadonlyMap<string, OverviewRun>;
-  onOpenRun: (runId: string, stage?: string | null) => void;
 }
 
 /** Shipped runs per week as a line with its area, over twelve weeks, in a 300 × 150 space; the daemon names the weeks. */
@@ -21,9 +18,9 @@ function ShippedChart({ weeks, chart }: { weeks: readonly number[]; chart: Overv
   </svg>;
 }
 
-/** Today, so far: spend, sessions and what shipped as the mockup's figures, then what runs right now. Every figure comes from the daemon. */
-export function Today({ today, runs, onOpenRun }: TodayProps) {
-  const { spend, sessions, running, shipped } = today;
+/** Today, so far: spend, sessions and what shipped as the mockup's figures. Every figure comes from the daemon. */
+export function Today({ today }: TodayProps) {
+  const { spend, sessions, shipped } = today;
   return <section className="sec overview-today" aria-label="Today">
     <div className="sec-h"><h2 className="h3">Today, so far</h2></div>
     <div className="figs">
@@ -45,19 +42,5 @@ export function Today({ today, runs, onOpenRun }: TodayProps) {
         <ShippedChart weeks={shipped.weeks} chart={shipped.chart} />
       </section>
     </div>
-    <section className="sec-s overview-running" aria-label="Running now">
-      <div className="sec-h"><h3 className="h3">Running now</h3><span className="help">{running.busy}</span></div>
-      {running.count === 0 ? <p className="empty">{running.empty}</p> : <ol className="rows">
-        {running.runIds.map(id => {
-          const run = runs.get(id);
-          return <li key={id} className="row" style={{ gridTemplateColumns: "20px minmax(0,1fr) auto" }}>
-            <button type="button" className="row-hit" onClick={() => onOpenRun(id)} aria-label={run ? `${run.stageName} · ${run.title}` : id} />
-            <Spinner />
-            <div><div className="t">{run?.title ?? id}</div><div className="m"><span>{run ? `${run.repository} ${run.ref}` : ""}</span><span>{run?.beltName}</span></div></div>
-            <span className="c r">{run?.stageName}</span>
-          </li>;
-        })}
-      </ol>}
-    </section>
   </section>;
 }

@@ -4,7 +4,7 @@ import { readPreferences, type Appearance } from "./preferences";
 export const appearanceAttribute = "data-theme";
 
 /** The browser's theme-color for each appearance; index.html sets the Light one before any script runs. */
-const themeColors: Record<Appearance, string> = { light: "#ece4df", dark: "#22070a" };
+const themeColors: Record<Appearance, string> = { light: "#efe2dc", dark: "#22070a" };
 
 /** The appearance the browser stored, or Light when storage cannot be read. */
 export function storedAppearance(storage?: Pick<Storage, "getItem">): Appearance {

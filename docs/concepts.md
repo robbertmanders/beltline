@@ -48,7 +48,7 @@ The daemon owns every fact and decision: which actions a run allows, whether a b
 
 ## The pages
 
-- **Overview**: how many runs need you and which, then the Floor, with every belt's line through its stages, where belts that share a stage meet, and then today's figures (spend, sessions, what shipped, what is running).
+- **Overview**: today's figures (spend, sessions and what shipped), then how many runs need you and which, then the Floor, with every belt's line through its stages and where belts that share a stage meet.
 - **Work**: every run, grouped and filtered, with the ones that need you highlighted.
 - **Run**: one run's belt, each stage's output and your decisions, and its agent sessions live.
 - **Belts** and **Agents**: searchable lists of your library, each row opening its editor.

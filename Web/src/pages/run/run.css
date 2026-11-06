@@ -1,10 +1,7 @@
-/* The run page, drawn the other way round over the whole window (two-inks.css: .runv, .rtop, .rin, .rmeta, .rh,
+/* The run page, over the whole window in the page's own colours (two-inks.css: .runv, .rtop, .rin, .rmeta, .rh,
    .rlinks, .rctl, .route, .rgrid, .here-c, .sess). These rules fit the daemon's run view into them. */
 /* The run page scrolls on its own beside the Sessions sidebar, which runs the window's full height on the right. */
-.runv { z-index: 40; display: flex; overflow: hidden; }
-/* The run page is drawn the other way round, where light text on the dark paper reads fainter than the reverse, so its
-   secondary text and hairlines are a step stronger than the page's. */
-.runv.inv { --soft: color-mix(in srgb, var(--I) 80%, var(--P)); --muted: color-mix(in srgb, var(--I) 80%, var(--P)); --faint: color-mix(in srgb, var(--I) 26%, var(--P)); }
+.runv { z-index: 40; display: flex; overflow: hidden; background: var(--bg); color: var(--ink); }
 .run-scroll { flex: 1 1 auto; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; }
 /* The heading scales with the run's own column, which the Sessions sidebar narrows. */
 .run-scroll { container-type: inline-size; }
