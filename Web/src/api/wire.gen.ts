@@ -2224,6 +2224,8 @@ export interface StageLinePresentationRouteRow {
   items: StageLinePresentationItem[];
   addEnd: number;
   empty?: string;
+  opens: boolean;
+  joins: boolean;
 }
 
 export interface StageLinePresentationTrigger {

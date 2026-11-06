@@ -321,6 +321,7 @@
 .fork-box-actions button { color: var(--soft); font-size: 11.5px; text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
 .fork-box-actions button:hover { color: var(--ink); }
 .fork-route { position: relative; min-height: 0; }
+.fork-route.is-feeding > .fork-route-name::before { left: 16px; }
 /* The route's name stands where a stage would, on the route's own line. */
 .fork-route-name { position: relative; flex: 0 0 120px; width: 120px; height: calc(2 * var(--sl)); display: grid; grid-template-rows: 18px 22px auto; align-content: start; gap: 0; padding: 0 14px 0 16px; border: 0; }
 .fork-route-name::before { content: ""; position: absolute; left: 0; right: 0; top: var(--sl); height: 1px; background: var(--faint); }
@@ -331,20 +332,14 @@
 .fork-route-empty { padding-left: 6px; font-size: 12px; }
 /* The end of each route's line runs on to the fork's right edge, where the routes join again. */
 .fork-route > .add-menu { flex: 1 0 26px; }
-/* The spines. Each route's line runs through its middle, so each route draws its own share of them: from its line to
-   halfway into the gap on either side, the first and last turning into their line on a round corner. Together they
-   run from the first route's line to the last's, through the middle of the fork, where the main line meets them. */
-.fork-route::before, .fork-route::after { position: absolute; top: calc(-.5 * var(--route-gap)); bottom: calc(-.5 * var(--route-gap)); width: 12px; box-sizing: border-box; pointer-events: none; }
-.fork-box-head ~ .fork-route::before, .fork-box-head ~ .fork-route::after { content: ""; }
-.fork-box-head + .fork-route:last-child::before, .fork-box-head + .fork-route:last-child::after { content: none; }
-.fork-route::before { left: 0; border-left: 1px solid var(--faint); }
-.fork-route::after { right: 0; border-right: 1px solid var(--faint); }
-.fork-box-head + .fork-route::before, .fork-box-head + .fork-route::after { top: 50%; border-top: 1px solid var(--faint); }
-.fork-box-head + .fork-route::before { border-top-left-radius: 10px; }
-.fork-box-head + .fork-route::after { border-top-right-radius: 10px; }
-.fork-route:last-child::before, .fork-route:last-child::after { bottom: calc(50% - 1px); border-bottom: 1px solid var(--faint); }
-.fork-route:last-child::before { border-bottom-left-radius: 10px; }
-.fork-route:last-child::after { border-bottom-right-radius: 10px; }
+/* The spines (StageLine's useForkSpines): the main line meets the fork at its middle and turns into each route it
+   opens, and each route that joins turns back into it on the right. A route that ends stops at its last stage. */
+.fork-spines { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.fork-spines path { fill: none; stroke: var(--faint); stroke-width: 1px; }
+.fork-route.is-ending > .add-menu { flex: 0 0 26px; }
+/* After a fork none of whose routes joins, the "+" stands apart, off any route's line. */
+.stage-line-piece:has(> .fork-box.is-ending) + .stage-line-piece > .add-menu, .stage-line-piece:has(> .fork-box.is-ending) + .add-menu { margin-left: 18px; }
+.stage-line-piece:has(> .fork-box.is-ending) + .stage-line-piece > .add-menu > .add-menu-track, .stage-line-piece:has(> .fork-box.is-ending) + .add-menu > .add-menu-track { visibility: hidden; }
 .fork-route-name, .fork-route > .stage-line-piece, .fork-route > .add-menu { position: relative; z-index: 1; }
 
 @media (max-width: 900px) {

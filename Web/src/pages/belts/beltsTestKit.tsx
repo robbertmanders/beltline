@@ -107,7 +107,7 @@ export function lineFor(belt: Belt) {
     placed.add(fork.id);
     items.push({ addAt: at, fork: { id: fork.id, heading: `FORK · ${fork.routes.length} ROUTES`, feeding: false, routes: fork.routes.map((route, at) => {
       const stages = belt.stages.filter(item => item.route === route.id);
-      return { id: route.id, caption: at === 0 ? "ROUTE · FIRST" : "ROUTE", help: "", removable: true, items: stages.map(block),
+      return { id: route.id, caption: at === 0 ? "ROUTE · FIRST" : "ROUTE", help: "", removable: true, opens: true, joins: true, items: stages.map(block),
         addEnd: stages.length ? index(stages[stages.length - 1]!.id) + 1 : at, ...(stages.length ? {} : { empty: "No stages: runs skip ahead" }) };
     }) } });
   };

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactElement } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactElement } from "react";
 import { Icon } from "../../components/Icon";
+import { arcTrack } from "../../theme/stages/tracks";
 import { useDraftEditor, useTypedForm } from "./draftEditor";
 import type { Belt, StageLinePresentation, StageLinePresentationItem, StageLinePresentationRouteRow } from "../../api/wire.gen";
 
@@ -103,7 +104,14 @@ function ForkBox({ item, line, disabled, renderItems }: {
 }) {
   const editor = useDraftEditor();
   const fork = item.fork!;
-  return <section className="fork-box" id={`fork-${fork.id}`} aria-label={`Fork ${fork.id}`}>
+  const box = useRef<HTMLElement>(null);
+  const spines = useForkSpines(box, fork.routes);
+  // When no route joins the line again, the line after the fork starts on its own rather than running out of a route.
+  const ends = !fork.routes.some(route => route.joins);
+  return <section ref={box} className={`fork-box${ends ? " is-ending" : ""}`} id={`fork-${fork.id}`} aria-label={`Fork ${fork.id}`}>
+    {spines && <svg className="fork-spines" width={spines.width} height={spines.height} aria-hidden="true">
+      {spines.paths.map((d, index) => <path key={index} d={d} />)}
+    </svg>}
     <div className="fork-box-head">
       <span className="fork-box-heading">{fork.heading}</span>
       {!disabled && <span className="fork-box-actions">
@@ -117,12 +125,52 @@ function ForkBox({ item, line, disabled, renderItems }: {
   </section>;
 }
 
+/** How far a spine reaches into a route's line before it runs along it, and the radius it turns on. */
+const spineReach = 12;
+const spineCorner = 10;
+
+/**
+ * The spines of a fork, in points over its box: the main line meets the fork at its middle and turns into each route
+ * the line splits into (opens), and each route a run carries on from (joins) turns back into the middle on the right.
+ * Which routes do is the daemon's; this measures where each route's line runs, its middle, as the box lays out.
+ */
+function useForkSpines(box: React.RefObject<HTMLElement | null>, routes: readonly StageLinePresentationRouteRow[]) {
+  const [spines, setSpines] = useState<{ width: number; height: number; paths: string[] } | null>(null);
+  const key = routes.map(route => `${route.id}:${route.opens}:${route.joins}`).join(",");
+  useLayoutEffect(() => {
+    const element = box.current;
+    if (!element) return;
+    const measure = () => {
+      const rows = [...element.querySelectorAll<HTMLElement>(":scope > .fork-route")];
+      const width = element.offsetWidth, height = element.offsetHeight;
+      if (width === 0 || height === 0) { setSpines(null); return; }
+      const middle = height / 2;
+      const paths: string[] = [];
+      rows.forEach((row, index) => {
+        const route = routes[index];
+        if (!route) return;
+        const y = row.offsetTop + row.offsetHeight / 2;
+        if (route.opens) paths.push(arcTrack([{ x: 0, y: middle }, { x: 0, y }, { x: spineReach, y }], spineCorner));
+        if (route.joins) paths.push(arcTrack([{ x: width - spineReach, y }, { x: width, y }, { x: width, y: middle }], spineCorner));
+      });
+      setSpines(current => current && current.width === width && current.height === height && current.paths.join() === paths.join() ? current : { width, height, paths });
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [box, key, routes]);
+  return spines;
+}
+
 function RouteRow({ route, line, disabled, renderItems }: {
   route: StageLinePresentationRouteRow; line: StageLinePresentation; disabled: boolean; renderItems: (list: readonly StageLinePresentationItem[], route?: string) => ReactElement[]
 }) {
   const editor = useDraftEditor();
   const name = editor.routeName(route.id);
-  return <div className="fork-route" id={`route-${route.id}`}>
+  // A route a run never carries on from ends with its last stage: its line stops there instead of running on to the join.
+  return <div className={`fork-route${route.opens ? "" : " is-feeding"}${route.joins ? "" : " is-ending"}`} id={`route-${route.id}`}>
     <div className="fork-route-name">
       <span className="fork-route-caption" title={route.help || undefined}>{route.caption}</span>
       <RouteName routeId={route.id} name={name} disabled={disabled} />

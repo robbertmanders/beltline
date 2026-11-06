@@ -67,6 +67,12 @@ type StageLinePresentationRouteRow struct {
 	AddEnd int `json:"addEnd"`
 	// Empty is what an empty route says.
 	Empty *string `json:"empty,omitzero"`
+	// Opens is whether the line splits into the route (BeltLayout.Opens): a route that feeds in starts on its own.
+	Opens bool `json:"opens"`
+	// Joins is whether a run that finishes the route carries on to a stage where the routes meet (BeltLayout.Joins),
+	// so the drawing joins it to the line again. A route that only goes back, holds or drops ends there, and so does
+	// every route of a fork with no stage after it, where finishing the route finishes the run.
+	Joins bool `json:"joins"`
 }
 
 // StageLinePresentationAgentChoice is an agent a "+" offers, by id, version and name.
@@ -124,6 +130,8 @@ func (b stageLineBuild) items(segments []BeltLayoutSegment) []StageLinePresentat
 // forkBox is a fork's box with a row per route, each route's items drawn from routes.
 func (b stageLineBuild) forkBox(fork Fork, routes [][]BeltLayoutSegment) StageLinePresentationForkBox {
 	feeds := stageLineFeeding(fork)
+	// The routes meet at a stage only when one follows the fork, here or past the forks around it.
+	meets := b.layout.Resume(fork).Stage != nil
 	rows := make([]StageLinePresentationRouteRow, 0, len(fork.Routes))
 	for i, route := range fork.Routes {
 		segments := []BeltLayoutSegment{}
@@ -135,6 +143,7 @@ func (b stageLineBuild) forkBox(fork Fork, routes [][]BeltLayoutSegment) StageLi
 		rows = append(rows, StageLinePresentationRouteRow{
 			ID: route.ID, Caption: caption, Help: help, Removable: !feeds || !line,
 			Items: b.items(segments), AddEnd: b.belt.End(route.ID), Empty: stageLineRouteEmpty(segments, line, feeds),
+			Opens: b.layout.Opens(route.ID), Joins: meets && b.layout.Joins(route.ID),
 		})
 	}
 	return StageLinePresentationForkBox{ID: fork.ID, Heading: b.forkHeading(fork, feeds), Feeding: feeds, Routes: rows}
