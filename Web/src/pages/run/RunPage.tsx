@@ -180,15 +180,21 @@ export function RunPage() {
   const [origin] = useState(() => rememberClick.last());
   useEffect(() => { const frame = requestAnimationFrame(() => setShown(true)); return () => cancelAnimationFrame(frame); }, []);
   const current = view?.stages.find(item => item.id === view.run.stageId);
+  const selected = view?.stages.find(item => item.id === selectedStageId);
 
-  return <div className={`runv inv scroll ${shown ? "open" : ""}`} ref={workspaceRef} data-column="main" role="region" aria-label="Run"
+  return <div className={`runv inv ${shown ? "open" : ""}`} ref={workspaceRef} role="region" aria-label="Run"
     style={{ "--cx": `${origin.x}px`, "--cy": `${origin.y}px` } as CSSProperties}>
+    <div className="run-scroll scroll" data-column="main">
     <header className="rtop">
       <nav className="crumb" style={{ margin: 0 }} aria-label="Where you are">
         <button type="button" className="run-back" onClick={close}><Icon name="back" /><span>Work</span></button>
         {view && <><span>/</span><span>{view.heading}</span><span>/</span><span>{view.reference}</span></>}
       </nav>
-      <button type="button" className="crumb" style={{ margin: 0 }} onClick={close}>Close <span className="kbd">Esc</span></button>
+      <span className="run-top-actions">
+        {!preferences.sessionsOpen && <button type="button" className="btn sm ghost" title="Show the sessions" aria-label="Sessions" aria-expanded={false}
+          onClick={() => update({ sessionsOpen: true })}><Icon name="term" />Sessions{sessionCount > 0 ? ` · ${sessionCount}` : ""}</button>}
+        <button type="button" className="crumb" style={{ margin: 0 }} onClick={close}>Close <span className="kbd">Esc</span></button>
+      </span>
     </header>
     <main className="rin run-page">
       {runtime.canRead && viewQuery.isPending && <p className="help" role="status">Loading run…</p>}
@@ -234,36 +240,33 @@ export function RunPage() {
           <p className="why route-note">Run controls apply to the whole run.</p>
         </section>}
         <section className="route"><RunBoxes boxes={view.boxes} metadata={view.metadata} selectedStageId={selectedStageId} onSelectStage={selectStage} opening={opening} /></section>
-        <div className="rgrid">
+        {/* Only the selected stage: the line above is how you move between them. */}
+        <div className="rgrid run-chapters">
           <div>
-            <div className="sec-h"><h2 className="h2">The run so far</h2><span className="soft" style={{ fontSize: 13.5 }}>{view.stages.length} stages</span></div>
-            <div className="ch">
-              {view.stages.map(item => item.id === selectedStageId && controlsProps
-                ? <div key={item.id} className="here-c" data-stage-chapter={item.id}>
-                  <div className="hd"><span className="cn disp soft">{String(item.number).padStart(2, "0")}</span><span className="ct">{item.name}</span></div>
-                  <div className="bd">
-                    <RunStagePanel runId={runId} run={view.run} panel={controlsProps.panel} stage={controlsProps.stage}
-                      selectedAttempt={selectedAttemptId} onSelectAttempt={selectAttempt} watchNotes={view.watchNotes}
-                      command={command} canRead={runtime.canRead} connection={runtime.connection}
-                      sessionsOpen onWatchSession={() => undefined} onAdjust={() => setAdjustOpen(true)}
-                      answer={<RunInlineControls {...controlsProps} part="answer" />} decision={<RunInlineControls {...controlsProps} part="decision" />} />
-                  </div>
-                </div>
-                : <button key={item.id} type="button" className={`chr ${item.attempts.length === 0 ? "to" : ""}`} data-stage-chapter={item.id} onClick={() => selectStage(item.id)}
-                  aria-label={`${item.name}: ${item.status.text}`}>
-                  <span className="cn">{String(item.number).padStart(2, "0")}</span>
-                  <span className="ct">{item.name}{item.attempts.length > 1 && <span className="soft" style={{ fontSize: 14, fontWeight: 400 }}> · {item.attempts.length} tries</span>}</span>
-                  <span className="co">{item.status.look === "waiting" || item.status.look === "held" ? <b>{item.status.text}</b> : item.status.text}</span>
-                  <span className="cd">{item.worker ?? ""}</span>
-                </button>)}
-            </div>
+            {selected && controlsProps && <section className="here-c run-stage" data-stage-chapter={selected.id} aria-label={selected.name}>
+              <div className="hd">
+                <span className="cn disp soft">{String(selected.number).padStart(2, "0")}</span>
+                <h2 className="ct">{selected.name}</h2>
+                {/* The status is in the panel's own head, so the line under the name says only who works it and how often. */}
+                {(selected.worker || selected.attempts.length > 1) && <span className="sub">
+                  {[selected.worker, selected.attempts.length > 1 ? `${selected.attempts.length} tries` : null].filter(Boolean).join(" · ")}</span>}
+              </div>
+              <div className="bd">
+                <RunStagePanel runId={runId} run={view.run} panel={controlsProps.panel} stage={controlsProps.stage}
+                  selectedAttempt={selectedAttemptId} onSelectAttempt={selectAttempt} watchNotes={view.watchNotes}
+                  command={command} canRead={runtime.canRead} connection={runtime.connection}
+                  sessionsOpen={preferences.sessionsOpen} onWatchSession={() => update({ sessionsOpen: true })} onAdjust={() => setAdjustOpen(true)}
+                  answer={<RunInlineControls {...controlsProps} part="answer" />} decision={<RunInlineControls {...controlsProps} part="decision" />} />
+              </div>
+            </section>}
             {viewQuery.isError && <p className="why" role="status">Showing the last loaded run; refresh failed.</p>}
           </div>
-          <SessionsSidebar key={runId} runId={runId} selectedStage={selectedStageId} selectedAttempt={selectedAttemptId}
-            available={workspaceWidth} stored={preferences.sessionsWidth} onWidthChange={sessionsWidth => update({ sessionsWidth })}
-            onSelect={selectSession} onHide={() => update({ sessionsOpen: false })} count={sessionCount} />
         </div>
       </>}
     </main>
+    </div>
+    {view && preferences.sessionsOpen && <SessionsSidebar key={runId} runId={runId} selectedStage={selectedStageId} selectedAttempt={selectedAttemptId}
+      available={workspaceWidth} stored={preferences.sessionsWidth} onWidthChange={sessionsWidth => update({ sessionsWidth })}
+      onSelect={selectSession} onHide={() => update({ sessionsOpen: false })} count={sessionCount} />}
   </div>;
 }

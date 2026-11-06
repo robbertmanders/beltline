@@ -281,25 +281,63 @@
 .toggle-menu-item:hover, .add-menu-card button:hover { background: var(--wash2); }
 .add-menu-section { color: var(--soft); }
 
-/* The stage line: outlined cards on a dashed hairline, the trigger on a wash, forks in a dashed frame. */
-.stage-block { height: 100px; border: 1px solid var(--faint); border-radius: 14px; background: var(--bg); transition: border-color .3s; }
-.stage-block:hover { border-color: var(--soft); }
-.stage-block.is-selected { border-color: var(--ink); background: var(--bg); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--ink); }
-.stage-block-trigger { border-color: transparent; background: var(--wash2); color: var(--ink); }
-.stage-block-trigger:hover { border-color: var(--soft); }
-.stage-block-trigger.is-selected { border-color: var(--ink); background: var(--wash2); }
-.stage-block-kind, .stage-block-trigger .stage-block-kind { color: var(--soft); }
-.stage-block-title { font: 600 16px/1.2 var(--font-display), sans-serif; letter-spacing: -.015em; }
-.stage-block-lines, .stage-block-trigger .stage-block-lines { color: var(--soft); }
-.stage-block-remove { border: 1px solid var(--faint); background: var(--bg); color: var(--ink); }
-.stage-block-update { background: var(--ink); color: var(--bg); }
-.add-menu-track { border-top: 1px dashed var(--faint); }
-.add-menu-plus { border: 1px solid var(--faint); background: var(--bg); color: var(--soft); transition: border-color .2s, color .2s; }
-.add-menu-plus:hover { border-color: var(--ink); color: var(--ink); }
-.fork-box { border: 1px dashed var(--soft); border-radius: 18px; background: none; }
-.fork-box-heading, .fork-route-caption { font: 500 12px/1 var(--font-body), sans-serif; letter-spacing: 0; color: var(--soft); }
-.fork-box-actions button { color: var(--ink); text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
-.fork-route-remove { color: var(--soft); }
+/* The stage line, drawn as the Overview's Floor draws a belt: each stage a dot on one hairline with its kind and name
+   above the line, the "+" sitting on the line between stages. A fork's routes stack under one
+   another, each opening with its name; a spine on the left splits the line into them and one on the right joins them
+   again, turning on round corners. --sl is where the line runs from the top of a piece. */
+.stage-line-card { --sl: 44px; --route-gap: 22px; --route-row: 72px; }
+.stage-line-scroll { padding-top: 30px; padding-bottom: 6px; }
+.stage-line-row, .stage-line-piece, .fork-route { align-items: flex-start; }
+.stage-block-wrap { flex: 0 0 150px; width: 150px; padding: 0; }
+.stage-block, .stage-block-trigger { position: relative; display: grid; grid-template-rows: 18px 22px auto; align-content: start; gap: 0; height: var(--route-row); min-height: 0;
+  margin: 0; padding: 0 12px 0 26px; border: 0; border-radius: 0; background: none; color: var(--soft); box-shadow: none; overflow: visible; }
+.stage-block-trigger { flex: 0 0 150px; width: 150px; color: var(--ink); }
+.stage-block::before, .stage-block-trigger::before { content: ""; position: absolute; left: 0; right: 0; top: var(--sl); height: 1px; background: var(--faint); transition: background-color .35s var(--ease); }
+.stage-block::after, .stage-block-trigger::after { content: ""; position: absolute; left: 10px; top: calc(var(--sl) - 3.5px); width: 8px; height: 8px; box-sizing: border-box;
+  border-radius: 50%; border: 1px solid var(--soft); background: var(--bg); transition: border-color .2s, background-color .2s; }
+.stage-block-trigger::before, .stage-block.is-selected::before { background: var(--ink); }
+.stage-block-trigger::after, .stage-block.is-selected::after, .stage-block-trigger.is-selected::after { border-color: var(--ink); background: var(--ink); }
+.stage-block-trigger.is-selected::after { box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--ink); }
+.stage-block:hover, .stage-block.is-selected { color: var(--ink); background: none; box-shadow: none; }
+.stage-block:hover::after { border-color: var(--ink); }
+.stage-block-kind, .stage-block-trigger .stage-block-kind { align-self: end; font: 300 12px/1.3 var(--font-display), sans-serif; color: var(--soft); font-variant-numeric: tabular-nums; }
+.stage-block-title { align-self: center; font: 500 14.5px/1.2 var(--font-body), sans-serif; letter-spacing: 0; }
+.stage-block-trigger .stage-block-title, .stage-block.is-selected .stage-block-title, .stage-block:hover .stage-block-title { font-weight: 600; }
+.stage-block.is-selected .stage-block-title { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; padding-bottom: 3px; }
+.stage-block-lines, .stage-block-trigger .stage-block-lines { gap: 1px; margin-top: 12px; font: 12px/1.35 var(--font-body), sans-serif; color: var(--soft); }
+.stage-block-remove { top: 4px; right: 4px; width: 20px; height: 20px; border: 0; background: none; color: var(--soft); font-size: 14px; line-height: 20px; }
+.stage-block-remove:hover { background: var(--ink); color: var(--bg); }
+.stage-block-update { right: 12px; bottom: 8px; background: var(--ink); color: var(--bg); }
+.add-menu { flex: 0 0 26px; height: 1px; margin-top: var(--sl); }
+.add-menu-track { top: 0; border-top: 1px solid var(--faint); transform: none; }
+.add-menu-plus { position: absolute; z-index: 1; top: -8px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border: 1px solid var(--faint); background: var(--bg); color: var(--soft);
+  font-size: 11px; line-height: 14px; opacity: .7; transition: border-color .2s, color .2s, background-color .2s, opacity .2s; }
+.stage-line-card:hover .add-menu-plus { opacity: 1; }
+.add-menu-plus:hover, .add-menu-plus[aria-expanded="true"] { opacity: 1; border-color: var(--ink); background: var(--ink); color: var(--bg); }
+.fork-box { position: relative; display: flex; flex-direction: column; gap: var(--route-gap); padding: 0; border: 0; border-radius: 0; background: none; }
+.fork-box-head { position: absolute; left: 0; right: 0; top: -26px; height: 18px; }
+.fork-box-heading, .fork-route-caption { font: 500 11.5px/1 var(--font-body), sans-serif; letter-spacing: 0; color: var(--soft); text-transform: none; }
+.fork-box-actions button { color: var(--soft); font-size: 11.5px; text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
+.fork-box-actions button:hover { color: var(--ink); }
+.fork-route { position: relative; min-height: var(--route-row); }
+/* The route's name stands where a stage would, on the route's own line. */
+.fork-route-name { position: relative; flex: 0 0 120px; width: 120px; display: grid; grid-template-rows: 18px 22px auto; gap: 0; padding: 0 14px 0 16px; border: 0; }
+.fork-route-name::before { content: ""; position: absolute; left: 0; right: 0; top: var(--sl); height: 1px; background: var(--faint); }
+.fork-route-caption { align-self: end; }
+.fork-route-input { align-self: center; height: 22px; padding: 0 !important; border: 0 !important; background: none !important; font: 600 14.5px/1.2 var(--font-body), sans-serif !important; color: var(--ink); }
+.fork-route-remove { justify-self: start; margin-top: 12px; color: var(--soft); font-size: 11.5px; text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
+.fork-route-remove:hover { color: var(--ink); }
+.fork-route-empty { margin-top: calc(var(--sl) + 8px); padding-left: 6px; font-size: 12px; }
+/* The end of each route's line runs on to the fork's right edge, where the routes join again. */
+.fork-route > .add-menu { flex: 1 0 26px; }
+/* The spines: a route under the first turns down into its line from the one above, on the left, and up out of it on the
+   right; each route's own height carries the left spine on down to the next. */
+.fork-route + .fork-route::before { content: ""; position: absolute; left: 0; top: calc(-1 * var(--route-gap)); width: 12px; height: calc(var(--route-gap) + var(--sl) + 1px);
+  box-sizing: border-box; border-left: 1px solid var(--faint); border-bottom: 1px solid var(--faint); border-bottom-left-radius: 10px; pointer-events: none; }
+.fork-route:has(+ .fork-route)::after { content: ""; position: absolute; left: 0; top: var(--sl); bottom: 0; border-left: 1px solid var(--faint); pointer-events: none; }
+.fork-route + .fork-route > .add-menu::after { content: ""; position: absolute; right: 0; bottom: 0; width: 12px; height: calc(var(--route-row) + var(--route-gap));
+  box-sizing: border-box; border-right: 1px solid var(--faint); border-bottom: 1px solid var(--faint); border-bottom-right-radius: 10px; pointer-events: none; }
+.fork-route-name, .fork-route > .stage-line-piece, .fork-route > .add-menu { position: relative; z-index: 1; }
 
 @media (max-width: 900px) {
   .belt-card, .belt-triggers { grid-template-columns: minmax(0, 1fr); }

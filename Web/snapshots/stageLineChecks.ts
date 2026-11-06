@@ -1,13 +1,13 @@
 import { expect, type Page } from "@playwright/test";
 
-/** The width of every stage card in the belts editor, the trigger included (belts.css). */
-const stageCardWidth = 132;
+/** The width of every stage cell in the belts editor, the trigger included (belts.css). */
+const stageCardWidth = 150;
 /** The belts cases whose stage line is measured after they are ready, before capture. */
 export const stageLineCases = ["belts-trigger-reviews", "belts-stage-form", "belts-nested-forks", "belts-epic"];
 /** The stage forms whose cards and model rows are checked: the editor scrolls to each card, then goes back before capture. */
 export const stageFormCases = ["belts-agent-stage-form", "belts-model-pool", "belts-codex-stage", "belts-model-error", "belts-stage-form", "belts-watch-stage", "belts-route-stage"];
 
-/** Every stage card on the editor's line is 132 px wide, the trigger included, offscreen cards too. */
+/** Every stage cell on the editor's line is 150 px wide, the trigger included, offscreen cards too. */
 async function expectStageCardWidths(page: Page, caseId: string): Promise<void> {
   const cards = await page.locator(".stage-line-card .stage-block").evaluateAll(elements => elements.map(element => ({
     name: element.getAttribute("aria-label") ?? "",
@@ -50,7 +50,7 @@ async function expectJoinedLine(page: Page, caseId: string): Promise<void> {
   }
 }
 
-/** A belt wider than the stage area scrolls inside it: the far end holds the last main-line card, 132 px wide, and the scroll position is restored. */
+/** A belt wider than the stage area scrolls inside it: the far end holds the last main-line card, 150 px wide, and the scroll position is restored. */
 async function expectScrollToEnd(page: Page, caseId: string): Promise<void> {
   const scroll = page.locator(".stage-line-scroll").first();
   const before = await scroll.evaluate(element => ({ overflows: element.scrollWidth > element.clientWidth, left: element.scrollLeft }));

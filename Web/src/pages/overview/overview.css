@@ -40,32 +40,7 @@
 .factory-lane-arrow { fill: var(--soft); }
 .factory-lane-label { position: absolute; transform: translate(-50%, -50%); padding: 0 6px; background: var(--bg); color: var(--soft); font-size: 11.5px; white-space: nowrap; transition: opacity .35s var(--ease); }
 
-.floor-box { position: absolute; transition: opacity .35s var(--ease); }
-.floor-box .ln.h { position: absolute; left: 0; right: 0; top: var(--line); height: 1px; background: var(--faint); }
 .box-floor.trace .floor-box[style*="opacity: 1"] .ln.h { background: var(--ink); }
-.floor-box .dot, .box-belt .dot { position: absolute; top: calc(var(--line) - 3.5px); width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--soft); background: var(--bg); }
-.floor-box .dot { left: 10px; }
-.floor-box.has .dot { border-color: var(--ink); background: var(--ink); }
-.floor-box.is-waiting .dot, .floor-box.is-held .dot { box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--ink); }
-.floor-box .fh { position: absolute; left: 26px; right: 0; top: calc(var(--line) - 25px); display: flex; gap: 8px; align-items: baseline; padding: 0; border: 0; background: none; color: var(--soft); cursor: pointer; font: inherit; font-size: 13.5px; text-align: left; }
-.floor-box .fh b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.floor-box.has .fh b { color: var(--ink); font-weight: 600; }
-.floor-box .fh:hover b { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
-.floor-box .fh .link { margin-left: auto; font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.floor-box .fstatus { position: absolute; left: 26px; right: 0; top: calc(var(--line) + 6px); overflow: hidden; color: var(--soft); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.floor-box .fstatus.is-strong { color: var(--ink); font-weight: 600; }
-.floor-box .lane { position: absolute; left: 26px; right: 0; top: calc(var(--line) + 30px); display: grid; grid-template-columns: minmax(0, 1fr); }
-
-/* A run under a stage: one line, its title and reference, a hairline filled while it waits for you. */
-.floor-box .mini { position: relative; min-width: 0; width: 100%; overflow: hidden; display: flex; gap: 6px; align-items: baseline; height: 23px; padding: 3px 0 0; border: 0; background: none; color: var(--ink); cursor: pointer; font: inherit; text-align: left; }
-.floor-box .mini .t { min-width: 0; overflow: hidden; font-size: 12.5px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
-.floor-box .mini .s { flex: 0 1 auto; min-width: 0; max-width: 50%; white-space: nowrap; overflow: hidden; font-size: 11.5px; text-overflow: ellipsis; }
-.floor-box .mini .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; margin: 0; background: transparent; }
-.floor-box .mini .bar i { opacity: 0; }
-.floor-box .mini.wait .bar i { opacity: 1; }
-.floor-box .mini:hover .t { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
-.floor-box .floor-tag-needs .t, .floor-box .floor-tag-held .t { font-weight: 600; }
-.floor-box .fmore { justify-self: start; margin-top: 2px; font-size: 12px; }
 
 /* A belt where its line starts. */
 .box-floor-entrance { position: absolute; left: 0; width: 200px; transition: opacity .35s var(--ease); }

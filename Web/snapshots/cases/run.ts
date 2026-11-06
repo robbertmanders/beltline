@@ -134,13 +134,17 @@ export const runCases: SnapshotCase[] = [
   { id: "run-open", route: runRoute, sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }), readiness: "run" },
   { id: "run-closed", route: runRoute, sidebar: sidebarState({ navigationOpen: false, sessionsOpen: false }), readiness: "run" },
   {
-    // The Sessions column beside the stages, once its read is in.
+    // A new snapshot starts with Sessions closed, clicks the real button, and captures the panel once it is ready.
     id: "run-sessions-click",
     route: runRoute,
     sidebar: sidebarState({ navigationOpen: true, sessionsOpen: false }),
     readiness: "run",
-    steps: [{ kind: "wait", target: { selector: sessionsReady }, state: "visible" }],
+    steps: [
+      { kind: "click", target: { role: "button", name: "Sessions", exact: true } },
+      { kind: "wait", target: { selector: sessionsReady }, state: "visible" }
+    ],
     readyMarker: sessionsReady,
+    expectedPreferences: { sessionsOpen: true },
     visibleColumns: [sessionsPanel]
   },
   {

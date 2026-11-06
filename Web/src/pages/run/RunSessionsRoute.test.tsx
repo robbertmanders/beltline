@@ -1,7 +1,9 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
 import { AppProviders, AppRoutes } from "../../app/App";
+import { preferencesStorageKey } from "../../state/preferences";
 import { json } from "../../test/response";
 import { stubDaemon } from "../../test/daemon";
 import { goldenText } from "../../test/golden";
@@ -44,43 +46,67 @@ function renderRun() {
   return render(<AppProviders><MemoryRouter initialEntries={["/runs/issues%3Aacme%2Fweb%2361"]}><AppRoutes /></MemoryRouter></AppProviders>);
 }
 
+const sessionsButton = () => screen.getByRole("button", { name: "Sessions" });
 
 beforeEach(() => {
   localStorage.clear();
 });
 
 describe("run page Sessions route", () => {
-  it("lists the daemon's session rows beside the run, read only, without sending anything", async () => {
+  it("starts closed, then opens a read-only sidebar that lists the daemon's session rows", async () => {
+    const user = userEvent.setup();
     const { posts } = stubRun(goldenText("views-run-forked.json"));
     renderRun();
     await screen.findByRole("heading", { level: 1, name: /Remember the last export format$/ });
+    expect(sessionsButton().getAttribute("aria-expanded")).toBe("false");
+    expect(document.querySelector('[data-column="sessions"]')).toBeNull();
+    await user.click(sessionsButton());
     const panel = await waitFor(() => {
       const element = document.querySelector<HTMLElement>('[data-column="sessions"][data-ready="true"]');
       expect(element).not.toBeNull();
       return element!;
     });
     expect(within(panel).getByRole("heading", { level: 2, name: "Sessions" })).toBeTruthy();
+    expect(within(panel).getByText(/read only/)).toBeTruthy();
     expect(within(panel).getByText("01 Triage · attempt 1")).toBeTruthy();
     expect(within(panel).getByRole("button", { name: /01 Triage · attempt 1/ }).getAttribute("title")).toBe("bl-demo-61-triage");
     expect(within(panel).getByText("3m 0s · $0.04")).toBeTruthy();
-    expect(within(panel).getByText(/read only/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Sessions" })).toBeNull();
+    expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).sessionsOpen).toBe(true);
     expect(posts()).toHaveLength(0);
   });
 
   it("shows the daemon's empty copy when no attempt ran in a session", async () => {
+    const user = userEvent.setup();
     stubRun(goldenText("views-run-forked.json"), emptySessionsBody);
     renderRun();
     await screen.findByRole("heading", { level: 1, name: /Remember the last export format$/ });
+    await user.click(sessionsButton());
     expect(await screen.findByText(/^No sessions yet\./)).toBeTruthy();
   });
 
-  it("keeps the session list across remounting the run page", async () => {
+  it("hides from the sidebar's own control, storing the preference and sending nothing", async () => {
+    const user = userEvent.setup();
+    const { posts } = stubRun(goldenText("views-run-forked.json"));
+    renderRun();
+    await user.click(await screen.findByRole("button", { name: "Sessions" }));
+    await user.click(await screen.findByRole("button", { name: "Hide ›" }));
+    expect(document.querySelector('[data-column="sessions"]')).toBeNull();
+    expect(sessionsButton().getAttribute("aria-expanded")).toBe("false");
+    expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).sessionsOpen).toBe(false);
+    expect(posts()).toHaveLength(0);
+  });
+
+  it("keeps the open preference across remounting the run page", async () => {
+    const user = userEvent.setup();
     stubRun(goldenText("views-run-forked.json"));
     const first = renderRun();
+    await user.click(await screen.findByRole("button", { name: "Sessions" }));
     await screen.findByText("01 Triage · attempt 1");
     first.unmount();
     renderRun();
     expect(await screen.findByText("01 Triage · attempt 1")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Sessions" })).toBeNull();
   });
 
   it("shows a failed run read with the daemon's problems through the shared list", async () => {

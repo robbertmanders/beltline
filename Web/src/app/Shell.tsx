@@ -124,7 +124,7 @@ export function GlobalControl({ action, state, small = true, label, iconOnly = f
   </>;
 }
 
-function TopBar({ onMenu, onPalette, onTask }: { onMenu: () => void; onPalette: () => void; onTask: () => void }) {
+function TopBar({ onMenu, onPalette }: { onMenu: () => void; onPalette: () => void }) {
   const location = useLocation();
   const stateQuery = useStateQuery();
   const state = stateQuery.data;
@@ -142,7 +142,6 @@ function TopBar({ onMenu, onPalette, onTask }: { onMenu: () => void; onPalette: 
         {state?.actions.filter(action => action.id === "afk").map(action => <GlobalControl key="afk" action={action} state={state} asSwitch />)}
         {stateQuery.error && !state && <ErrorProblems error={stateQuery.error} />}
       </div>
-      <button type="button" className="btn sm ghost" onClick={onTask}><Icon name="plus" />New task</button>
       <button type="button" className="btn sm ghost icon" onClick={onPalette} aria-label="Search and commands (⌘K)" title="Search and commands (⌘K)"><Icon name="search" /></button>
       <button type="button" className="btn sm ghost menu-b" onClick={onMenu}><Icon name="menu" />Menu</button>
     </div>
@@ -150,7 +149,7 @@ function TopBar({ onMenu, onPalette, onTask }: { onMenu: () => void; onPalette: 
 }
 
 /** Below 1180px the pages move into a sheet that covers the window. */
-function MenuSheet({ onClose, onPalette, onTask }: { onClose: () => void; onPalette: () => void; onTask: () => void }) {
+function MenuSheet({ onClose, onPalette }: { onClose: () => void; onPalette: () => void }) {
   const location = useLocation();
   const state = useStateQuery().data;
   const items = useDestinations();
@@ -163,7 +162,6 @@ function MenuSheet({ onClose, onPalette, onTask }: { onClose: () => void; onPale
       })}
     </nav>
     <div className="acts" style={{ marginTop: 40 }}>
-      <button type="button" className="btn fill" onClick={() => { onClose(); onTask(); }}><Icon name="plus" />New task</button>
       <button type="button" className="btn" onClick={() => { onClose(); onPalette(); }}><Icon name="search" />Search</button>
     </div>
   </Layer>;
@@ -205,13 +203,13 @@ export function Shell() {
   }, []);
 
   return <div className="app app-frame" data-connection-status={runtime.connection}>
-    <TopBar onMenu={() => setMenu(true)} onPalette={() => setPalette(true)} onTask={() => setTask(true)} />
+    <TopBar onMenu={() => setMenu(true)} onPalette={() => setPalette(true)} />
     {onRun ? <><StatusMessages /><MainState /></> : <main className="page scroll" tabIndex={-1} data-column="main">
       <StatusMessages />
       {runtime.versionLoading && !runtime.authRequired && <div className="pin"><p className="help" role="status">Checking API version…</p></div>}
       <MainState />
     </main>}
-    {menu && <MenuSheet onClose={() => setMenu(false)} onPalette={() => setPalette(true)} onTask={() => setTask(true)} />}
+    {menu && <MenuSheet onClose={() => setMenu(false)} onPalette={() => setPalette(true)} />}
     {task && <NewTaskSheet onClose={() => setTask(false)} />}
     {palette && <Palette onClose={() => setPalette(false)} onTask={() => { setPalette(false); setTask(true); }} navigate={navigate} />}
   </div>;

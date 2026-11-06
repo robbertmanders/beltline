@@ -1,6 +1,16 @@
 /* The run page, drawn the other way round over the whole window (two-inks.css: .runv, .rtop, .rin, .rmeta, .rh,
-   .rlinks, .rctl, .route, .rgrid, .chr, .here-c, .sess). These rules fit the daemon's run view into them. */
-.runv { z-index: 40; }
+   .rlinks, .rctl, .route, .rgrid, .here-c, .sess). These rules fit the daemon's run view into them. */
+/* The run page scrolls on its own beside the Sessions sidebar, which runs the window's full height on the right. */
+.runv { z-index: 40; display: flex; overflow: hidden; }
+/* The run page is drawn the other way round, where light text on the dark paper reads fainter than the reverse, so its
+   secondary text and hairlines are a step stronger than the page's. */
+.runv.inv { --soft: color-mix(in srgb, var(--I) 80%, var(--P)); --muted: color-mix(in srgb, var(--I) 80%, var(--P)); --faint: color-mix(in srgb, var(--I) 26%, var(--P)); }
+.run-scroll { flex: 1 1 auto; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; }
+/* The heading scales with the run's own column, which the Sessions sidebar narrows. */
+.run-scroll { container-type: inline-size; }
+.run-scroll .rh { font-size: clamp(38px, 6.6cqi, 100px); }
+.run-top-actions { display: inline-flex; gap: 16px; align-items: center; }
+.rgrid.run-chapters { grid-template-columns: minmax(0, 1fr); }
 .rtop .crumb span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rtop nav.crumb { min-width: 0; }
 .run-back { display: inline-flex; gap: 8px; align-items: center; padding: 0; border: 0; background: none; color: var(--soft); cursor: pointer; font: inherit; }
@@ -27,13 +37,39 @@
 .run-legs .side { list-style: none; padding: 0; }
 .route-note { margin: 6px 0 0; }
 
-/* The belt line (RunBoxes): the daemon's grid of stage boxes on their tracks. */
+/* The belt line (RunBoxes), drawn as the Floor draws a belt: dots on hairlines, joined by tracks that turn on round corners. */
 .run-line { min-width: 0; }
-.run-line-header { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 18px; font-size: 13px; color: var(--soft); }
-.run-line .paper-caps { font-size: 13px; }
+.run-line-scroll { overflow-x: auto; overflow-y: hidden; padding: 30px 0 8px; }
+.run-map { position: relative; }
+.run-map-tracks { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.run-track { fill: none; stroke-width: 1px; stroke-linecap: round; stroke-linejoin: round; transition: stroke .35s var(--ease); }
+.run-track.is-done { stroke: var(--ink); }
+.run-track.is-todo { stroke: var(--faint); }
+.run-track.is-skip { stroke: var(--faint); stroke-dasharray: 3 4; }
+/* A route's name on its lead of track, as the Floor names its lanes. */
+.run-map-route { position: absolute; z-index: 1; transform: translate(-50%, -50%); padding: 0 6px; background: var(--bg); color: var(--soft); font-size: 11.5px; white-space: nowrap; }
+.run-map-route.is-taken { color: var(--ink); }
+.run-map-route.is-off { text-decoration: line-through; text-decoration-thickness: 1px; }
+/* A stage on the run's line: the Floor's cell, in ink where the run has been and where it is now. */
+.run-node .fh { color: var(--ink2); }
+.run-node .fh .n { flex: none; font: 300 12px/1 var(--font-display), sans-serif; font-variant-numeric: tabular-nums; }
+.run-node.is-done .ln.h, .run-node.is-here .ln.h, .run-node.is-trigger .ln.h { background: var(--ink); }
+.run-node.is-done .dot, .run-node.is-here .dot, .run-node.is-trigger .dot { border-color: var(--ink); background: var(--ink); }
+.run-node.is-done .fh b, .run-node.is-here .fh b, .run-node.is-trigger .fh b { color: var(--ink); font-weight: 600; }
+.run-node.is-here .fstatus { color: var(--ink); }
+.run-node.is-waiting .fstatus { font-weight: 600; }
+.run-node.is-skip { opacity: .7; }
+.run-node.is-skip .fh b { text-decoration: line-through; text-decoration-thickness: 1px; }
+.run-node.is-selected .fh b { padding-bottom: 4px; margin-bottom: -4px; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.run-node .fh:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
+.run-node.is-trigger .fh { cursor: default; }
+.run-node.is-trigger .fh b:hover { text-decoration: none; }
+.run-line-header { justify-content: flex-start; }
+.run-line-caption { margin-left: auto; }
 
-/* The run so far: a chapter per stage; the chosen one opens as the panel. */
-.ch .chr { font: inherit; color: inherit; background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
+/* The selected stage, opened under the line; the line is how you move between stages. */
+.run-stage { border-top: 1px solid var(--faint); border-bottom: 0; }
+.run-stage .ct { margin: 0; }
 .here-c .bd { margin-left: 60px; max-width: none; }
 .stage-panel { display: grid; gap: 16px; min-width: 0; container-type: inline-size; }
 .stage-panel-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
@@ -108,10 +144,24 @@
 .run-watch-reference { font: 12px var(--font-mono), monospace; }
 .preserve-whitespace { white-space: pre-wrap; }
 
-/* Sessions: the attempts, then the selected one's screen. */
+/* Sessions: a sidebar with the attempts, then the selected one's screen filling the rest of the height. */
+.runv > .sessions-panel { position: relative; top: auto; flex: none; height: 100%; display: flex; flex-direction: column; gap: 0; padding: 22px 24px 20px 28px; border-left: 1px solid var(--faint); overflow: hidden; }
+.sessions-divider { position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; cursor: col-resize; z-index: 2; touch-action: none; }
+.sessions-divider:hover, .sessions-divider:focus-visible { background: linear-gradient(90deg, transparent 3px, var(--ink) 3px, var(--ink) 5px, transparent 5px); outline: none; }
+.sess .sess-h { flex-wrap: nowrap; align-items: baseline; }
+.sess .sess-h .h2 { font-size: clamp(22px, 1.9vw, 28px); }
+.sess .sess-h > .soft { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sessions-hide { margin: 0; flex: none; background: none; border: 0; padding: 0; font: inherit; font-size: 13.5px; cursor: pointer; }
+/* The list shows six rows, then scrolls; the rest of the metadata scrolls in its own budget above the screen. */
+.sess { --sess-row: 40px; }
+.sessions-meta { flex: none; max-height: 45%; overflow-y: auto; }
+.sess .atts { max-height: calc(6 * var(--sess-row) + 1px); overflow: auto; }
+.sess .att { height: var(--sess-row); padding: 0; align-items: center; }
+.sess .session-detail { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.sess .session-detail .term { flex: 1 1 0; height: auto; min-height: 160px; }
 .sess .atts { list-style: none; padding: 0; margin: 14px 0 0; }
 .sess .att { font: inherit; background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; grid-template-columns: minmax(0, 1fr) auto; }
-.sess .session-caption { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.sess .session-caption { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
 .sess .session-status { display: inline-block; width: 14px; }
 .sess .session-bar-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1 1 auto; }
 .sess .session-actions { display: inline-flex; gap: 14px; flex-wrap: wrap; }

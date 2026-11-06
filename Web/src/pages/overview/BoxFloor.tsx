@@ -5,6 +5,7 @@ import { useElementWidth } from "../../components/useElementWidth";
 import { focusOpacity } from "./focus";
 import { FactoryTracks } from "./FactoryTracks";
 import { floorBoxFrame, floorMetrics, placeFloor, planFloor, type FloorPlaced } from "./floorLayout";
+import "../../theme/stages/stages.css";
 
 export interface BoxFloorProps {
   track: FloorTrack;

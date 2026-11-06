@@ -1,10 +1,11 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders, AppRoutes } from "../../app/App";
 import type { AttemptOutputResponse, AttemptOutputSection, MarkdownBlock, RunViewResponse } from "../../api/wire.gen";
 import { runDraftStore } from "../../state/runDrafts";
+import { defaultPreferences, preferencesStorageKey } from "../../state/preferences";
 import { outputFoldsStorageKey } from "../../state/outputFolds";
 import { json } from "../../test/response";
 import { goldenText } from "../../test/golden";
@@ -46,6 +47,25 @@ function renderRun(search = "") {
   return render(<AppProviders><MemoryRouter initialEntries={[`/runs/${encodeURIComponent(runId)}${search}`]}><AppRoutes /></MemoryRouter></AppProviders>);
 }
 
+
+/** Measured bounds for the workspace and the main column, and a ResizeObserver a test can fire by hand. */
+function measureLayout(bounds: { workspace: number }) {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+    const width = this.classList.contains("runv") ? bounds.workspace : 800;
+    return { x: 0, y: 0, top: 0, left: 0, right: width, bottom: 0, width, height: 0, toJSON: () => ({}) } as DOMRect;
+  });
+  const observers: Array<() => void> = [];
+  class FakeResizeObserver {
+    constructor(callback: () => void) { observers.push(callback); }
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  }
+  vi.stubGlobal("ResizeObserver", FakeResizeObserver);
+  return { fireResize: () => observers.forEach(callback => callback()) };
+}
+
+const sidebarWidth = () => document.querySelector<HTMLElement>('[data-column="sessions"]')!.style.width;
 const heading = () => screen.findByRole("heading", { level: 1, name: title });
 
 beforeEach(() => {
@@ -99,8 +119,8 @@ describe("Run page", () => {
     await heading();
     expect(screen.getByText("Belt v1 · 11 stages")).toBeTruthy();
     expect(screen.getByText("Cost $0.11 · partial")).toBeTruthy();
-    expect(container.querySelectorAll(".stage-box").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: /^Plan the epic/ }).getAttribute("data-stage")).toBe("plan-epic");
+    expect(container.querySelectorAll(".run-map .run-node").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /^Plan the epic/ }).closest("[data-stage]")?.getAttribute("data-stage")).toBe("plan-epic");
     const panel = await screen.findByRole("region", { name: "Stage 1: Plan the epic" });
     expect(within(panel).getByText("Contract stage output")).toBeTruthy();
     expect(within(panel).getByText("contract.html")).toBeTruthy();
@@ -220,12 +240,21 @@ describe("Run page", () => {
 });
 
 describe("Run page Sessions sidebar", () => {
-  it("reads the sessions for the selected stage and attempt, and follows a new selection", async () => {
+  it("toggles open and hidden, keeping the selection, and reopens on the same daemon selection", async () => {
+    const user = userEvent.setup();
     const daemon = stubDaemon();
     renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const toggle = await screen.findByRole("button", { name: "Sessions" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    await user.click(toggle);
     await waitFor(() => expect(document.querySelector('[data-column="sessions"][data-ready="true"]')).not.toBeNull());
     expect(daemon.requests.some(request => request.path.startsWith(`${viewPath}/sessions?`) && request.path.includes("stage=plan-epic") && request.path.includes("attempt=plan-epic-1"))).toBe(true);
+    await user.click(screen.getByRole("button", { name: "Hide ›" }));
+    expect(document.querySelector('[data-column="sessions"]')).toBeNull();
     expect(screen.getByRole("region", { name: "Stage 1: Plan the epic" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Sessions" }));
+    await waitFor(() => expect(document.querySelector('[data-column="sessions"][data-ready="true"]')).not.toBeNull());
+    expect(daemon.requests.filter(request => request.path.startsWith(`${viewPath}/sessions?`)).every(request => request.path.includes("attempt=plan-epic-1"))).toBe(true);
   });
 
   it("selects a session's stage and attempt through the same URL selection the stage line uses", async () => {
@@ -242,12 +271,46 @@ describe("Run page Sessions sidebar", () => {
     };
     const daemon = stubDaemon({ [`${viewPath}/sessions*`]: () => json(sessions) });
     renderRun("?stage=plan-epic&attempt=plan-epic-1");
-    const sessionsPanel = await waitFor(() => { const element = document.querySelector<HTMLElement>('[data-column="sessions"][data-ready="true"]'); expect(element).not.toBeNull(); return element!; });
-    await user.click(await within(sessionsPanel).findByRole("button", { name: /03 Open the feature branch/ }));
+    await user.click(await screen.findByRole("button", { name: "Sessions" }));
+    await user.click(await screen.findByRole("button", { name: /03 Open the feature branch/ }));
     await waitFor(() => expect(daemon.requests.some(request => request.path.includes("stage=open-branches") && request.path.includes("attempt=open-branches-1"))).toBe(true));
     expect(await screen.findByRole("region", { name: "Stage 3: Open the feature branch" })).toBeTruthy();
   });
 
+  it("restores a chosen width after reload and shrinks it to keep a 420 px main column, without overwriting the choice", async () => {
+    localStorage.setItem(preferencesStorageKey, JSON.stringify({ ...defaultPreferences, sessionsOpen: true, sessionsWidth: 800 }));
+    const layout = measureLayout({ workspace: 1000 });
+    stubDaemon();
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    await waitFor(() => expect(sidebarWidth()).toBe("580px"));
+    expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).sessionsWidth).toBe(800);
+    vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockRestore();
+    measureLayout({ workspace: 1400 });
+    layout.fireResize();
+    await waitFor(() => expect(sidebarWidth()).toBe("800px"));
+    expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).sessionsWidth).toBe(800);
+  });
+
+  it("drags the divider to save a clamped width, and double-clicking resets to half the workspace", async () => {
+    localStorage.setItem(preferencesStorageKey, JSON.stringify({ ...defaultPreferences, sessionsOpen: true }));
+    measureLayout({ workspace: 1200 });
+    stubDaemon();
+    renderRun("?stage=plan-epic&attempt=plan-epic-1");
+    const divider = await screen.findByRole("separator", { name: "Resize Sessions" });
+    expect(sidebarWidth()).toBe("600px");
+    fireEvent.pointerDown(divider, { clientX: 600, pointerId: 1 });
+    fireEvent.pointerMove(divider, { clientX: 500, pointerId: 1 });
+    fireEvent.pointerUp(divider, { clientX: 500, pointerId: 1 });
+    await waitFor(() => expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).sessionsWidth).toBe(700));
+    expect(sidebarWidth()).toBe("700px");
+    fireEvent.pointerDown(divider, { clientX: 500, pointerId: 1 });
+    fireEvent.pointerMove(divider, { clientX: 0, pointerId: 1 });
+    fireEvent.pointerUp(divider, { clientX: 0, pointerId: 1 });
+    expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).sessionsWidth).toBe(900);
+    fireEvent.doubleClick(divider);
+    await waitFor(() => expect(JSON.parse(localStorage.getItem(preferencesStorageKey)!).sessionsWidth).toBeNull());
+    expect(sidebarWidth()).toBe("600px");
+  });
 });
 
 /** The agent output the daemon sends for a section test: a title, a preamble, and sections of every shape. */

@@ -36,12 +36,11 @@ export function workRunHref(row: WorkRowPresentation): string {
   return row.openStage ? `${run}?stage=${encodeURIComponent(row.openStage)}` : run;
 }
 
-/** One run: its title over its repository, number and belt, where it is, what it waits for, and when it last moved; a hairline under it fills as it goes. */
+/** One run: its title over its repository, number and belt, where it is, what it waits for, and when it last moved, over one hairline. */
 function RunRow({ row }: { row: WorkRowPresentation }) {
   const held = row.chip === "Answer";
   const pauseWord = row.pauseWord && !row.location.text.includes(row.pauseWord) ? row.pauseWord : null;
   const href = workRunHref(row);
-  const active = row.run.state !== "done" && row.run.state !== "parked";
   const tone = row.needsYou ? (held ? "held" : "needs") : "passive";
   return <li className={`row wr work-row work-row-${tone} ${row.needsYou ? "wait" : ""}`} data-run-id={row.run.id}>
     <Link className="row-hit" to={href} aria-label={`${row.reference} ${row.run.issue.title}, ${row.location.text}`} />
@@ -51,7 +50,6 @@ function RunRow({ row }: { row: WorkRowPresentation }) {
     <div className="c at work-location" style={{ whiteSpace: "normal" }}>{row.location.text}{pauseWord && <> {pauseWord}</>}</div>
     <div className="c">{row.chip && <span className={`flag ${held ? "o" : ""} work-chip`}>{row.chip}</span>}</div>
     <div className="c r work-updated"><time dateTime={row.run.updatedAt}>{row.updatedAgo}</time></div>
-    {active && <span className="pr"><i style={{ "--p": row.progress } as React.CSSProperties} /></span>}
   </li>;
 }
 
