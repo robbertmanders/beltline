@@ -15,7 +15,7 @@
 .stage-block-wrap.shadow-diff { position: relative; }
 .stage-block-wrap.shadow-diff .stage-block { outline: 2px solid var(--shadow-ink); outline-offset: 2px; }
 .stage-block-wrap.shadow-diff--added .stage-block { border-style: dashed; background: color-mix(in srgb, var(--shadow-wash) 55%, var(--card)); }
-.shadow-diff__tag { position: absolute; z-index: 1; right: 10px; bottom: 9px; color: var(--shadow-ink); font: 600 10px var(--font-mono), monospace; letter-spacing: 0.1em; text-transform: uppercase; pointer-events: none; }
+.shadow-diff__tag { position: absolute; z-index: 1; right: 10px; bottom: 9px; color: var(--shadow-ink); font: 600 12px var(--font-body), sans-serif; pointer-events: none; }
 .shadow-removed { margin: 0; color: var(--shadow-ink); font-size: 12.5px; }
 .shadow-locked { margin: 0; color: var(--shadow-ink); }
 .shadow-locked-fields { display: contents; }

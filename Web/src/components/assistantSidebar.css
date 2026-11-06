@@ -5,18 +5,18 @@
 .assistant-divider:focus-visible { box-shadow: inset 2px 0 0 var(--slate-text); }
 .assistant-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 .assistant-tag { font-weight: 600; }
-.assistant-header h2 { margin: 0; font-family: Archivo, sans-serif; font-size: 16px; font-weight: 650; }
-.assistant-status { margin-right: auto; color: var(--muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+.assistant-header h2 { margin: 0; font-family: var(--font-display), sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+.assistant-status { margin-right: auto; color: var(--muted); font-family: var(--font-mono); font-size: 12px; }
 .assistant-status.is-running { color: var(--green); }
 .assistant-status.is-busy { color: var(--gold); }
 .assistant-configuration { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .assistant-configuration fieldset { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; font-size: 13px; }
 .assistant-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .assistant-compact { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-size: 13px; }
-.assistant-compact select { padding: 4px 26px 4px 9px; border: 1px solid var(--rule); border-radius: 7px; background-color: var(--segment, #ebe8e2); color: var(--ink); font: inherit; }
+.assistant-compact select { padding: 4px 26px 4px 9px; border: 1px solid var(--rule); border-radius: 7px; background-color: transparent; color: var(--ink); font: inherit; }
 .assistant-configuration fieldset:disabled { opacity: 0.72; }
 .assistant-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; color: var(--muted); }
-.assistant-field > span { font: 10.5px/1.3 var(--font-mono), monospace; letter-spacing: 1.47px; text-transform: uppercase; }
+.assistant-field > span { font: 12px/1.3 var(--font-body), sans-serif; }
 .assistant-field select, .assistant-field textarea { width: 100%; min-width: 0; max-width: 100%; padding: 7px 9px; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; font-size: 13px; }
 .assistant-field textarea { resize: vertical; line-height: 1.45; }
 .assistant-field > span { color: var(--muted); }
@@ -30,7 +30,7 @@
 .assistant-dirty-note { margin: 0; padding: 7px 9px; border-radius: 7px; background: var(--gold-wash); color: var(--gold-text); font-size: 12px; line-height: 1.4; }
 .assistant-demo { margin: 0; padding: 12px; border-radius: 8px; background: var(--card); color: var(--ink2); font-size: 12.5px; line-height: 1.5; }
 .assistant-problems { padding-top: 10px; border-top: 1px solid var(--rule); }
-.assistant-problems h3, .assistant-read-error h3 { margin: 0; font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; }
+.assistant-problems h3, .assistant-read-error h3 { margin: 0; font-family: var(--font-mono); font-size: 12px; font-weight: 500; }
 .assistant-problems ul { display: flex; flex-direction: column; gap: 5px; margin: 0; padding-left: 18px; color: var(--red); font-family: var(--font-mono); font-size: 11px; line-height: 1.45; }
 .assistant-problems > p { margin: 0; color: var(--ink2); font-size: 12px; line-height: 1.45; }
 .assistant-error, .assistant-read-error { color: var(--red); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }

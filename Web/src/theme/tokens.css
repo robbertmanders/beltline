@@ -1,39 +1,54 @@
 @font-face {
-  font-family: Archivo;
-  src: url("./fonts/Archivo.woff2") format("woff2");
+  font-family: "Funnel Display";
+  src: url("./fonts/FunnelDisplay-Latin.woff2") format("woff2");
+  font-weight: 300 800;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Funnel Display";
+  src: url("./fonts/FunnelDisplay-LatinExt.woff2") format("woff2");
+  font-weight: 300 800;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Funnel Sans";
+  src: url("./fonts/FunnelSans-Latin.woff2") format("woff2");
+  font-weight: 300 800;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Funnel Sans";
+  src: url("./fonts/FunnelSans-LatinExt.woff2") format("woff2");
+  font-weight: 300 800;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("./fonts/GeistMono-Latin.woff2") format("woff2");
   font-weight: 100 900;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-  font-family: "Inter Tight";
-  src: url("./fonts/InterTight.woff2") format("woff2");
+  font-family: "Geist Mono";
+  src: url("./fonts/GeistMono-LatinExt.woff2") format("woff2");
   font-weight: 100 900;
   font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-@font-face {
-  font-family: "IBM Plex Mono";
-  src: url("./fonts/IBMPlexMono-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "IBM Plex Mono";
-  src: url("./fonts/IBMPlexMono-Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "IBM Plex Mono";
-  src: url("./fonts/IBMPlexMono-SemiBold.woff2") format("woff2");
-  font-weight: 600;
-  font-display: swap;
-}
-
-/* Light is the default in every browser. Dark is the attribute the page root takes from the Appearance setting (state/theme.ts). */
+/* Two Inks: one paper and one ink. Every colour is one of the two, or the ink at a fixed strength over the paper.
+   Light is the default in every browser; Dark is the attribute the page root takes from the Appearance setting (state/theme.ts).
+   --A and --B are the pair; --P and --I are the paper and ink the roles below are mixed from. */
 :root {
   color-scheme: light;
   font-family: var(--font-body), sans-serif;
@@ -42,324 +57,228 @@
   background: var(--desk);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 
-  /* Palette. This app stays paper colored in dark OS mode; Dark is chosen in Settings, never from the OS. */
-  --desk: #E9E6E0;
-  --paper: #F4F2EE;
-  --side: #EEEBE5;
-  --card: #FFFFFF;
-  --ink: #1B2A3E;
-  --ink2: #4A5566;
-  --ink-soft: var(--ink2);
-  --muted: #8C8779;
-  --rule: #E2DED6;
-  --slate: #7599C9;
-  --slate-deep: #4E72A6;
-  --slate-wash: #E6EDF6;
-  --green: #4F8A63;
-  --green-wash: #E5EFE7;
-  --gold: #A57E22;
-  --gold-wash: #F4EBD6;
-  --gold-lamp: #E0B040;
-  --red: #B85A4E;
-  --red-wash: #F5E3E0;
-  --screen: #17243A;
-  --screen-text: #BFD0EA;
-  --screen-bar: #111C2E;
-  --grey-wash: #EFEDE8;
-  --segment: #E9E6DF;
-  --track: #E4DED2;
-  --bar: #ECE8E0;
-  --hover: #F7F6F3;
+  --A: #ECE4DF;
+  --B: #420C12;
+  --P: var(--A);
+  --I: var(--B);
+  /* The terminal and code: the light ink, in both appearances. */
+  --screen: #420C12;
+  --screen-text: #ECE4DF;
+  --screen-bar: #36090E;
+  --screen-dim: #B89A9C;
 
-  --series-0: #4F6FA5;
-  --series-1: #3E7A52;
-  --series-2: #A88228;
-  --series-3: #7B5EA7;
-  --series-4: #B5523F;
-  --series-5: #2E7F7C;
-  --series-6: #9C4A78;
-  --series-7: #56657A;
-  --series-8: #8A5F3A;
-  --series-9: #6B7F35;
-
-  --tint-blue: #CFDDF0;
-  --tint-sand: #F5E0BE;
-  --tint-gold: #F3D98A;
-  --tint-green: #C6E1C5;
-  --tint-violet: #DDD2F0;
-  --tint-rose: #F6CFDB;
-  --tint-teal: #D5E8EE;
-  --tint-coral: #F5C3B4;
-  --tint-grey: #E4E0D8;
-
-  /* A belt's shadow version and its runs: violet, series colour 3 on its tint. */
-  --shadow-ink: var(--series-3);
-  --shadow-wash: var(--tint-violet);
-
-  --tone-good-fg: var(--green);
-  --tone-good-bg: var(--green-wash);
-  --tone-you-fg: var(--slate-deep);
-  --tone-you-bg: var(--slate-wash);
-  --tone-problem-fg: var(--red);
-  --tone-problem-bg: var(--red-wash);
-  --tone-neutral-fg: var(--muted);
-  --tone-neutral-bg: var(--grey-wash);
-  --status-done-fg: var(--green);
-  --status-done-bg: var(--green-wash);
-  --status-running-fg: var(--gold);
-  --status-running-bg: var(--gold-wash);
-  --status-waiting-fg: #FFFFFF;
-  --status-waiting-bg: var(--slate);
-  --status-held-fg: var(--red);
-  --status-held-bg: var(--red-wash);
-  --status-plain-fg: var(--muted);
-  --status-plain-bg: var(--grey-wash);
-
-  /* Roles split out of ink, slate and white so that Dark can change each one on its own. */
-  --on-accent: #FFFFFF;
-  /* Slate as text, focus rings and selected outlines; slate-deep stays for fills that carry --on-slate-deep text. */
-  --slate-text: var(--slate-deep);
-  --slate-hover: var(--slate);
-  --on-slate-deep: var(--on-accent);
-  --on-red: var(--on-accent);
-  --trigger-fill: #1B2A3E;
-  --trigger-fill-selected: #25385A;
-  --trigger-caption: #9FB0C8;
-  --trigger-detail: #C9D6EA;
-  --outline-soft: #CFC8BA;
-  --fork-wash: rgba(230, 237, 246, 0.5);
-  --gold-text: #6B5314;
-  --red-text: #8B3C34;
-  --red-line: #E9C4BF;
-  --error-wash: #FFFAFA;
-  --code-wash: #F4F5F6;
-  --code-text: #455263;
-  --heat-0: #EDF1F7;
-  --heat-1: #C9D6EA;
-  --heat-2: #A8BEDD;
-  --heat-4: var(--slate-deep);
-  --scrim: #1b2a3e52;
-  --ink-wash: #1b2a3e14;
-  --ink-wash-faint: #1b2a3e0f;
-  --gold-text-strong: #785b18;
-  --red-edge: #d69c94;
-  --control-edge: #c9c5bc;
-  /* A checked checkbox's fill; the tick drawn on it in fields.css must stay legible on this. */
-  --control-on: #ecebe8;
-  --row-hover: #F9F8F5;
-  --row-needs: #EEF3FA;
-  --row-held: #FBEFEC;
-  --sheet-scrim: rgba(24, 26, 30, 0.24);
-  --sheet-glass: rgba(248, 248, 248, 0.88);
-  --sheet-ink: #252527;
-  --sheet-body-ink: #29292b;
-  --sheet-button: #dedee0;
-  --sheet-button-hover: #d4d4d6;
-  --sheet-button-ink: #242426;
-  --sheet-destructive: #f6c4c4;
-  --sheet-destructive-hover: #f2baba;
-  --sheet-destructive-ink: #ff3b40;
-  --sheet-focus: #1476e5;
-  /* Upcoming rails stay quiet; the outline of a route that is not taken must stay visible. Light draws both in the track colour. */
-  --track-edge: var(--track);
-  /* Button roles, so Dark can lift a button off the card it sits on without changing Light. */
-  --button-fill: var(--card);
-  --button-edge: var(--rule);
-  --button-hover: var(--hover);
-  --button-primary-fill: var(--ink);
-  --button-primary-hover: var(--ink2);
-  --on-button-primary: var(--on-accent);
-  --button-slate-fill: var(--slate-deep);
-  --button-slate-hover: var(--slate-hover);
-  --on-button-slate: var(--on-slate-deep);
-  /* A segmented control's selected option, raised above its track. */
-  --segment-on: var(--card);
-  /* Run chip edges, which the chip's wash carries in Dark rather than a bright border. */
-  --gold-line: var(--gold-lamp);
-  --running-line: var(--gold);
-  --held-line: var(--red);
-  /* The bright top edge on the glass menus. */
-  --sheet-highlight: rgba(255, 255, 255, 0.72);
-
-  --font-display: "Archivo";
-  --font-body: "Inter Tight";
-  --font-mono: "IBM Plex Mono";
+  --font-display: "Funnel Display";
+  --font-body: "Funnel Sans";
+  --font-mono: "Geist Mono";
   --font-size-body: 14px;
   --font-size-mono: 12px;
-  --font-size-tag: 11px;
-  --font-size-caps: 10.5px;
-  --font-size-chip: 10.5px;
-  --font-size-field: 13.5px;
+  --font-size-tag: 12px;
+  --font-size-caps: 12px;
+  --font-size-chip: 11.5px;
+  --font-size-field: 14px;
   --font-size-button: 13px;
   --font-size-button-small: 12px;
-  --font-size-segment: 12.5px;
-  --font-size-select: 13.5px;
+  --font-size-segment: 13px;
+  --font-size-select: 14px;
   --font-size-select-compact: 13px;
-  --font-size-status: 10px;
-  --font-size-status-compact: 9px;
-  --font-weight-display: 800;
+  --font-size-status: 11.5px;
+  --font-size-status-compact: 10.5px;
+  --font-weight-display: 650;
   --font-weight-medium: 500;
-  --tracking-tag: 1.54px;
-  --tracking-caps: 1.68px;
-  --tracking-chip: 0.63px;
-  --tracking-status: 0.6px;
-  --tracking-status-compact: 0.54px;
+  --tracking-display: -0.03em;
+  --tracking-tag: 0;
+  --tracking-caps: 0;
+  --tracking-chip: 0.03em;
+  --tracking-status: 0.03em;
+  --tracking-status-compact: 0.03em;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
   --hairline-width: 1px;
-  --focus-width: 3px;
-  --focus-offset: 2px;
-  --field-radius: 8px;
+  --focus-width: 2px;
+  --focus-offset: 3px;
+  --field-radius: 10px;
   --field-padding-inline: 10px;
   --field-padding-block: 7px;
-  --select-radius: 8px;
-  --select-radius-compact: 6px;
-  --select-radius-pill: 99px;
-  --select-padding-inline: 10px;
-  --select-padding-inline-compact: 8px;
-  --select-padding-inline-pill: 12px;
+  --select-radius: 999px;
+  --select-radius-compact: 999px;
+  --select-radius-pill: 999px;
+  --select-padding-inline: 14px;
+  --select-padding-inline-compact: 11px;
+  --select-padding-inline-pill: 13px;
   --select-padding-block: 7px;
   --select-padding-block-compact: 5px;
   --select-padding-block-pill: 5px;
   --select-accent-width: 4px;
   --select-chevron-size: 9px;
-  --button-padding-inline: 14px;
-  --button-padding-block: 6px;
+  --button-padding-inline: 15px;
+  --button-padding-block: 7px;
   --button-small-padding-inline: 11px;
   --button-small-padding-block: 4px;
   --button-border-width: 1px;
-  --button-opacity-disabled: 0.4;
+  --button-opacity-disabled: 0.38;
   --button-opacity-pressed: 0.85;
   --segment-track-padding: 3px;
   --segment-gap: 2px;
-  --segment-padding-inline: 14px;
+  --segment-padding-inline: 13px;
   --segment-padding-block: 5px;
   --tag-padding-inline: 8px;
   --chip-padding-inline: 8px;
-  --chip-padding-inline-need: 9px;
-  --chip-padding-block: 3px;
+  --chip-padding-inline-need: 8px;
+  --chip-padding-block: 2px;
   --chip-padding-block-need: 2px;
   --card-padding: 18px;
-  --card-radius: 12px;
-  --status-height: 24px;
-  --status-padding-inline: 9px;
+  --card-radius: 14px;
+  --status-height: 22px;
+  --status-padding-inline: 8px;
   --status-padding-inline-compact: 6px;
-  /* Theme.surface: a hairline shadow from the shape, and the raised posts' soft drop. */
-  --lift: 0 1px 2px rgba(27, 42, 62, 0.06);
-  --lift-selected: 0 1px 2px rgba(27, 42, 62, 0.08);
-  --raise: 0 8px 20px rgba(27, 42, 62, 0.09);
 }
 
-/* The Dark appearance: the same roles with dark surfaces, light ink and the slate accent kept. Contrast is checked in tokens.test.ts. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --desk: #141B25;
-  --paper: #1B2431;
-  --side: #18212D;
-  --card: #243142;
-  --ink: #E6EDF5;
-  --ink2: #B8C5D5;
+  --A: #22070A;
+  --B: #EFE2DC;
+}
+
+/* The roles, from the pair. */
+:root {
+  /* Surfaces: one paper. Cards are the paper itself, set apart by a hairline (--lift). */
+  --desk: var(--P);
+  --paper: var(--P);
+  --side: var(--P);
+  --card: var(--P);
+  /* Ink, and the ink at fixed strengths over the paper. */
+  --ink: var(--I);
+  --ink2: color-mix(in srgb, var(--I) 82%, var(--P));
   --ink-soft: var(--ink2);
-  --muted: #9AAABF;
-  --rule: #44566F;
-  --slate: #9DBBE4;
-  --slate-deep: #4E72A6;
-  --slate-wash: #26364E;
-  --green: #7DBB8F;
-  --green-wash: #1E3327;
-  --gold: #E3B95E;
-  --gold-wash: #3A3019;
-  --red: #E8877B;
-  --red-wash: #3E2622;
-  --grey-wash: #2A3547;
-  --segment: #161E29;
-  --track: #3A4759;
-  --bar: #2D3A4E;
-  --hover: #232F40;
-
-  --series-0: #7FA3D6;
-  --series-1: #6DBB8A;
-  --series-2: #E0B95A;
-  --series-3: #B09AE0;
-  --series-4: #E88E79;
-  --series-5: #5FC2BE;
-  --series-6: #D98CBA;
-  --series-7: #9AAABF;
-  --series-8: #C49A6C;
-  --series-9: #A8C160;
-
-  --on-accent: #101A27;
-  --slate-text: var(--slate);
-  --slate-hover: #3D5C8C;
-  --on-slate-deep: #FFFFFF;
-  --status-waiting-fg: var(--on-accent);
-  --tone-you-fg: var(--slate-text);
-  --trigger-fill: #2B3B53;
-  --trigger-fill-selected: #34476A;
-  --trigger-caption: #B8C5D5;
-  --trigger-detail: #D5E0EE;
-  --outline-soft: #6F7F98;
-  --fork-wash: rgba(157, 187, 228, 0.1);
-  --gold-text: #F0D58A;
-  --red-text: #F0A597;
-  --red-line: #6E3C36;
-  --error-wash: #2F201F;
-  --code-wash: #111A26;
-  --code-text: #B8C5D5;
-  --heat-0: #1F2B3D;
-  --heat-1: #3A4F72;
-  --heat-2: #53709C;
-  --heat-4: #C7DAF2;
-  --scrim: #05090f99;
-  --ink-wash: #e6edf514;
-  --ink-wash-faint: #e6edf50f;
-  --gold-text-strong: #F0D58A;
-  --red-edge: #7A4540;
-  --control-edge: #7D8BA1;
-  --control-on: #9DBBE4;
-  --row-hover: #202B3B;
-  --row-needs: #1F2D42;
-  --row-held: #33221F;
-  --sheet-scrim: rgba(0, 0, 0, 0.45);
-  --sheet-glass: rgba(36, 49, 66, 0.88);
-  --sheet-ink: #E6EDF5;
-  --sheet-body-ink: #D5E0EE;
-  --sheet-button: #33415A;
-  --sheet-button-hover: #3D4D68;
-  --sheet-button-ink: #E6EDF5;
-  --sheet-destructive: #5A2A28;
-  --sheet-destructive-hover: #6A3431;
-  --sheet-destructive-ink: #FF8A84;
-  --sheet-focus: #9DBBE4;
-  --track-edge: #6B7F9E;
-  --button-fill: #2F3D52;
-  --button-edge: #5A6E8C;
-  --button-hover: #37475F;
-  --button-primary-fill: #C9D6E8;
-  --button-primary-hover: #B3C2D6;
-  --button-slate-fill: #9DBBE4;
-  --button-slate-hover: #B5CCEC;
-  --on-button-slate: #101A27;
-  --segment-on: #3A4B64;
-  --gold-line: #7A6630;
-  --running-line: #7A6630;
-  --held-line: #8A4A42;
-  --sheet-highlight: rgba(255, 255, 255, 0.08);
-
-  /* Deep washes under stage glyphs, so light ink and outlines read on them. */
-  --tint-blue: #2C4468;
-  --tint-sand: #4A3B24;
-  --tint-gold: #4A3E17;
-  --tint-green: #24432F;
-  --tint-violet: #3A3161;
-  --tint-rose: #4E2B3B;
-  --tint-teal: #1F434A;
-  --tint-coral: #52302A;
-  --tint-grey: #353F4E;
-
-  --lift: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 0 1px rgba(255, 255, 255, 0.035), 0 1px 2px rgba(0, 0, 0, 0.35);
-  --lift-selected: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.45);
-  --raise: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 20px rgba(0, 0, 0, 0.4);
+  --muted: color-mix(in srgb, var(--I) 68%, var(--P));
+  --rule: color-mix(in srgb, var(--I) 15%, var(--P));
+  /* The accent is the ink. The old hues name roles: slate is what needs you, gold is moving, green is done, red is a problem. */
+  --slate: var(--I);
+  --slate-deep: var(--I);
+  --slate-wash: color-mix(in srgb, var(--I) 9%, var(--P));
+  --green: color-mix(in srgb, var(--I) 68%, var(--P));
+  --green-wash: color-mix(in srgb, var(--I) 5%, var(--P));
+  --gold: var(--I);
+  --gold-wash: color-mix(in srgb, var(--I) 9%, var(--P));
+  --gold-lamp: var(--I);
+  --red: var(--I);
+  --red-wash: color-mix(in srgb, var(--I) 13%, var(--P));
+  --grey-wash: color-mix(in srgb, var(--I) 6%, var(--P));
+  --segment: color-mix(in srgb, var(--I) 9%, var(--P));
+  --track: color-mix(in srgb, var(--I) 15%, var(--P));
+  --bar: color-mix(in srgb, var(--I) 9%, var(--P));
+  --hover: color-mix(in srgb, var(--I) 5%, var(--P));
+  /* Chart series: the ink at strengths that alternate, so neighbouring series differ. */
+  --series-0: var(--I);
+  --series-1: color-mix(in srgb, var(--I) 58%, var(--P));
+  --series-2: color-mix(in srgb, var(--I) 84%, var(--P));
+  --series-3: color-mix(in srgb, var(--I) 50%, var(--P));
+  --series-4: color-mix(in srgb, var(--I) 92%, var(--P));
+  --series-5: color-mix(in srgb, var(--I) 66%, var(--P));
+  --series-6: color-mix(in srgb, var(--I) 76%, var(--P));
+  --series-7: color-mix(in srgb, var(--I) 54%, var(--P));
+  --series-8: color-mix(in srgb, var(--I) 88%, var(--P));
+  --series-9: color-mix(in srgb, var(--I) 70%, var(--P));
+  /* Stage icon washes, told apart by strength. */
+  --tint-blue: color-mix(in srgb, var(--I) 11%, var(--P));
+  --tint-sand: color-mix(in srgb, var(--I) 6%, var(--P));
+  --tint-gold: color-mix(in srgb, var(--I) 13%, var(--P));
+  --tint-green: color-mix(in srgb, var(--I) 8%, var(--P));
+  --tint-violet: color-mix(in srgb, var(--I) 15%, var(--P));
+  --tint-rose: color-mix(in srgb, var(--I) 7%, var(--P));
+  --tint-teal: color-mix(in srgb, var(--I) 10%, var(--P));
+  --tint-coral: color-mix(in srgb, var(--I) 12%, var(--P));
+  --tint-grey: color-mix(in srgb, var(--I) 5%, var(--P));
+  /* A belt's shadow version and its runs. */
+  --shadow-ink: var(--ink2);
+  --shadow-wash: color-mix(in srgb, var(--I) 9%, var(--P));
+  /* Tones and statuses: what needs you is filled with ink, a problem is ink on a strong wash, the rest is quieter. */
+  --tone-good-fg: var(--green);
+  --tone-good-bg: var(--green-wash);
+  --tone-you-fg: var(--P);
+  --tone-you-bg: var(--I);
+  --tone-problem-fg: var(--I);
+  --tone-problem-bg: var(--red-wash);
+  --tone-neutral-fg: var(--muted);
+  --tone-neutral-bg: var(--grey-wash);
+  --status-done-fg: var(--green);
+  --status-done-bg: var(--green-wash);
+  --status-running-fg: var(--I);
+  --status-running-bg: var(--gold-wash);
+  --status-waiting-fg: var(--P);
+  --status-waiting-bg: var(--I);
+  --status-held-fg: var(--I);
+  --status-held-bg: var(--red-wash);
+  --status-plain-fg: var(--muted);
+  --status-plain-bg: var(--grey-wash);
+  /* Roles drawn on the ink: the paper. */
+  --on-accent: var(--P);
+  --slate-text: var(--I);
+  --slate-hover: color-mix(in srgb, var(--I) 86%, var(--P));
+  --on-slate-deep: var(--P);
+  --on-red: var(--P);
+  --trigger-fill: var(--I);
+  --trigger-fill-selected: color-mix(in srgb, var(--I) 86%, var(--P));
+  --trigger-caption: color-mix(in srgb, var(--P) 72%, var(--I));
+  --trigger-detail: color-mix(in srgb, var(--P) 88%, var(--I));
+  --outline-soft: color-mix(in srgb, var(--I) 50%, var(--P));
+  --fork-wash: color-mix(in srgb, var(--I) 4%, var(--P));
+  --gold-text: var(--I);
+  --red-text: var(--I);
+  --red-line: color-mix(in srgb, var(--I) 30%, var(--P));
+  --error-wash: color-mix(in srgb, var(--I) 5%, var(--P));
+  --code-wash: color-mix(in srgb, var(--I) 7%, var(--P));
+  --code-text: color-mix(in srgb, var(--I) 86%, var(--P));
+  --heat-0: color-mix(in srgb, var(--I) 6%, var(--P));
+  --heat-1: color-mix(in srgb, var(--I) 24%, var(--P));
+  --heat-2: color-mix(in srgb, var(--I) 48%, var(--P));
+  --heat-4: var(--I);
+  --scrim: color-mix(in srgb, var(--I) 30%, transparent);
+  --ink-wash: color-mix(in srgb, var(--I) 8%, transparent);
+  --ink-wash-faint: color-mix(in srgb, var(--I) 6%, transparent);
+  --gold-text-strong: var(--I);
+  --red-edge: color-mix(in srgb, var(--I) 36%, var(--P));
+  --control-edge: color-mix(in srgb, var(--I) 50%, var(--P));
+  /* A checked checkbox: the ink, with a ring of paper inside its edge (fields.css). */
+  --control-on: var(--I);
+  --row-hover: color-mix(in srgb, var(--I) 4%, var(--P));
+  --row-needs: color-mix(in srgb, var(--I) 6%, var(--P));
+  --row-held: color-mix(in srgb, var(--I) 10%, var(--P));
+  /* Sheets and menus: the paper, nearly opaque. */
+  --sheet-scrim: color-mix(in srgb, var(--I) 24%, transparent);
+  --sheet-glass: color-mix(in srgb, var(--P) 94%, transparent);
+  --sheet-ink: var(--I);
+  --sheet-body-ink: color-mix(in srgb, var(--I) 88%, var(--P));
+  --sheet-button: color-mix(in srgb, var(--I) 9%, var(--P));
+  --sheet-button-hover: color-mix(in srgb, var(--I) 15%, var(--P));
+  --sheet-button-ink: var(--I);
+  --sheet-destructive: var(--I);
+  --sheet-destructive-hover: color-mix(in srgb, var(--I) 86%, var(--P));
+  --sheet-destructive-ink: var(--P);
+  --sheet-focus: var(--I);
+  /* Upcoming rails stay quiet; the outline of a route that is not taken stays visible. */
+  --track-edge: color-mix(in srgb, var(--I) 50%, var(--P));
+  /* Buttons: an outline on the paper, or filled with the ink. */
+  --button-fill: var(--P);
+  --button-edge: color-mix(in srgb, var(--I) 46%, var(--P));
+  --button-hover: color-mix(in srgb, var(--I) 7%, var(--P));
+  --button-primary-fill: var(--I);
+  --button-primary-hover: color-mix(in srgb, var(--I) 84%, var(--P));
+  --on-button-primary: var(--P);
+  --button-slate-fill: var(--I);
+  --button-slate-hover: color-mix(in srgb, var(--I) 84%, var(--P));
+  --on-button-slate: var(--P);
+  --segment-on: var(--I);
+  --gold-line: var(--I);
+  --running-line: var(--I);
+  --held-line: var(--I);
+  --sheet-highlight: color-mix(in srgb, var(--I) 0%, transparent);
+  /* A hairline from the shape instead of a shadow, and a soft drop for what floats. */
+  --lift: 0 0 0 1px var(--rule);
+  --lift-selected: 0 0 0 1px var(--rule);
+  --raise: 0 18px 40px -22px color-mix(in srgb, var(--I) 45%, transparent);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -371,3 +290,5 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline-offset: var(--focus-offset);
 }
 a { color: inherit; text-decoration: none; }
+::selection { background: var(--ink); color: var(--paper); }
+* { scrollbar-color: var(--rule) transparent; }

@@ -6,44 +6,43 @@
 .work-heading { display: flex; margin: 22px 0 10px; }
 .work-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 10px; }
 .work-toolbar-controls { display: flex; align-items: center; gap: 10px; }
-.work-table { width: 100%; table-layout: fixed; border-collapse: collapse; border-radius: 12px; overflow: hidden; background: var(--card); box-shadow: var(--lift); }
-.work-table th, .work-table td { padding: 11px 0; text-align: left; vertical-align: middle; }
-.work-table th:first-child, .work-table td:first-child { padding-left: 14px; }
-.work-table th:last-child, .work-table td:last-child { padding-right: 14px; }
-.work-table thead th { padding-top: 12px; padding-bottom: 8px; font-weight: 400; }
+/* Rows between hairlines on the paper; what needs you is told by its flag and a thin ink edge, not a fill. */
+.work-table { width: 100%; table-layout: fixed; border-collapse: collapse; border-bottom: 1px solid var(--rule); }
+.work-table th, .work-table td { padding: 13px 0; text-align: left; vertical-align: middle; }
+.work-table th:first-child, .work-table td:first-child { padding-left: 12px; }
+.work-table th:last-child, .work-table td:last-child { padding-right: 4px; }
+.work-table thead th { padding-top: 4px; padding-bottom: 8px; font-weight: 400; }
 .work-table td.empty-state { padding: 18px 14px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 13px; }
-.work-group-heading th { padding: 0 !important; background: var(--paper); border-bottom: 1px solid var(--rule); }
-.work-fold { display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 14px; border: 0; background: none; color: var(--muted); cursor: pointer; text-align: left; }
+.work-group-heading th { padding: 0 !important; border-top: 1px solid var(--rule); }
+.work-fold { display: flex; align-items: center; gap: 8px; width: 100%; padding: 20px 12px 8px; border: 0; background: none; color: var(--muted); cursor: pointer; text-align: left; }
 .work-fold-chevron { width: 12px; font: 11px/1 var(--font-mono), monospace; text-align: center; }
-.work-fold-label { font-weight: 600; }
+.work-fold-label { color: var(--ink); font-size: 14px; font-weight: 600; }
 .work-row { cursor: pointer; }
 .work-row td { border-top: 1px solid var(--rule); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.work-row td { transition: background-color 0.3s; }
 .work-row:hover td { background: var(--row-hover); }
-.work-row-needs td { background: var(--row-needs) !important; }
-.work-row-held td { background: var(--row-held) !important; }
-.work-row-needs td:first-child { box-shadow: inset 4px 0 0 var(--slate); }
-.work-row-held td:first-child { box-shadow: inset 4px 0 0 var(--red); }
+.work-row-needs td:first-child { box-shadow: inset 2px 0 0 var(--slate); }
+.work-row-held td:first-child { box-shadow: inset 2px 0 0 var(--red); }
 .work-issue a { display: flex; align-items: baseline; gap: 6px; min-width: 0; padding-right: 14px; color: inherit; }
 .work-issue .issue-number { font-weight: 500; }
-.work-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 500; }
-.work-row-needs .work-title, .work-row-held .work-title { font-weight: 600; }
+.work-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 500; }
+
 .work-repository, .work-updated { color: var(--muted); font: 12px/1.3 var(--font-mono), monospace; }
 .work-belt { font-size: 13.5px; }
 .work-stage-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.work-progress { flex: none; width: 72px; height: 5px; border-radius: 3px; background: var(--bar); overflow: hidden; }
-.work-progress > span { display: block; height: 100%; border-radius: 3px; background: var(--slate); }
-.work-progress-shipped > span { background: var(--green); }
+.work-progress { flex: none; width: 72px; height: 2px; border-radius: 2px; background: var(--rule); overflow: hidden; }
+.work-progress > span { display: block; height: 100%; border-radius: 2px; background: var(--slate); }
+.work-progress-shipped > span { background: var(--muted); }
 .work-progress-held > span { background: var(--red); }
 .work-progress-running > span { background: var(--gold-lamp); }
 .work-location { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; }
 .work-stage .paper-chip { flex: none; }
-.work-waiting { list-style: none; margin: 0; padding: 0; border-radius: 12px; background: var(--card); box-shadow: var(--lift); }
-.work-waiting-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--rule); }
-.work-waiting-row:first-child { border-top: 0; }
+.work-waiting { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--rule); }
+.work-waiting-row { display: flex; align-items: baseline; gap: 12px; padding: 12px 4px 12px 12px; border-top: 1px solid var(--rule); }
 .work-waiting-ref { color: var(--slate-text); font: 12.5px var(--font-mono), monospace; }
 .work-waiting-row .work-title { flex: 1; font-weight: 400; }
 .work-reason { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
-.work-page .stale-error { color: var(--gold); }
+
 .work-runs-tag { margin: 0; }
 
 .work-shadow-chip { flex: none; margin-left: 4px; }

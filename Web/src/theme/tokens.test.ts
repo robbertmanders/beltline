@@ -4,48 +4,59 @@ import { describe, expect, it } from "vitest";
 
 const css = readFileSync(resolve(process.cwd(), "src/theme/tokens.css"), "utf8");
 
-/** The declarations inside one rule, by its selector. Light is `:root`; Dark is the `data-theme` attribute's rule. */
+/** The declarations of every rule with exactly this selector, merged. Light is `:root`; Dark is the `data-theme` attribute's rule. */
 function ruleDeclarations(selector: string): Record<string, string> {
-  const start = css.indexOf(`${selector} {`);
-  if (start < 0) throw new Error(`Missing rule ${selector}`);
-  const body = css.slice(start + selector.length + 2, css.indexOf("}", start));
-  return Object.fromEntries([...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((match) => [match[1]!, match[2]!.trim()]));
+  const merged: Record<string, string> = {};
+  for (let start = css.indexOf(`\n${selector} {`); start >= 0; start = css.indexOf(`\n${selector} {`, start + 1)) {
+    const body = css.slice(start + selector.length + 3, css.indexOf("}", start));
+    for (const match of body.matchAll(/(--[\w-]+):\s*([^;]+);/g)) merged[match[1]!] = match[2]!.trim();
+  }
+  if (!Object.keys(merged).length) throw new Error(`Missing rule ${selector}`);
+  return merged;
 }
 
 const declarations = ruleDeclarations(":root");
 const darkDeclarations = ruleDeclarations(':root[data-theme="dark"]');
-
-// Reviewed against the shared controls the palette serves. Keep this inventory independent of tokens.css.
-const sharedAcrossAppearances = new Set(["--screen", "--screen-text", "--screen-bar", "--gold-lamp"]);
+// The roles are mixed from the pair in one rule; Light's own rule is the first `:root {`, which also holds them.
+const roles = Object.keys(declarations).filter(name => !["--A", "--B", "--P", "--I"].includes(name) && /^(var|color-mix|#)/.test(declarations[name]!));
 const tints = Object.keys(declarations).filter(name => name.startsWith("--tint-"));
 const isLiteralColour = (value: string) => /^#|^rgba?\(/.test(value);
 
-/** Parses a hex or rgb() colour into 0–255 channels and an alpha. */
-function parseColour(value: string): { r: number; g: number; b: number; a: number } {
+type Colour = { r: number; g: number; b: number; a: number };
+
+function parseColour(value: string): Colour {
   const hex = /^#([0-9a-f]{3,8})$/i.exec(value);
   if (hex) {
     const digits = hex[1]!.length <= 4 ? [...hex[1]!].map(digit => digit + digit).join("") : hex[1]!;
     const channel = (at: number) => parseInt(digits.slice(at, at + 2), 16);
     return { r: channel(0), g: channel(2), b: channel(4), a: digits.length === 8 ? channel(6) / 255 : 1 };
   }
-  const rgb = /^rgba?\(([^)]+)\)$/.exec(value);
-  if (rgb) {
-    const [r, g, b, a = "1"] = rgb[1]!.split(",").map(part => part.trim());
-    return { r: Number(r), g: Number(g), b: Number(b), a: Number(a) };
-  }
   throw new Error(`Not a literal colour: ${value}`);
 }
 
-/** The colour a token takes in a theme, following var() aliases and falling back to Light where Dark does not redeclare it. */
-function resolveToken(name: string, theme: "light" | "dark"): { r: number; g: number; b: number; a: number } {
+/** The colour a token takes in a theme: Dark only redeclares the pair, so every role follows it. Handles var() and color-mix in srgb. */
+function resolveToken(name: string, theme: "light" | "dark"): Colour {
   const value = (theme === "dark" && darkDeclarations[name]) || declarations[name];
   if (!value) throw new Error(`Missing token ${name}`);
-  const alias = /^var\((--[\w-]+)/.exec(value);
-  return alias ? resolveToken(alias[1]!, theme) : parseColour(value);
+  return resolveValue(value, theme);
 }
 
-/** The colour a surface shows once a translucent colour is laid over it. */
-function composite(top: { r: number; g: number; b: number; a: number }, below: { r: number; g: number; b: number; a: number }) {
+function resolveValue(value: string, theme: "light" | "dark"): Colour {
+  if (value === "transparent") return { r: 0, g: 0, b: 0, a: 0 };
+  const alias = /^var\((--[\w-]+)\)$/.exec(value);
+  if (alias) return resolveToken(alias[1]!, theme);
+  const mix = /^color-mix\(in srgb, (.+?) (\d+(?:\.\d+)?)%, (.+)\)$/.exec(value);
+  if (mix) {
+    const first = resolveValue(mix[1]!, theme), second = resolveValue(mix[3]!, theme), share = Number(mix[2]) / 100;
+    // A mix with transparent keeps the colour and scales its alpha, as the browser's premultiplied mix does.
+    if (second.a === 0) return { ...first, a: first.a * share };
+    const blend = (x: number, y: number) => x * share + y * (1 - share);
+    return { r: blend(first.r, second.r), g: blend(first.g, second.g), b: blend(first.b, second.b), a: blend(first.a, second.a) };
+  }
+  return parseColour(value);
+}
+
+function composite(top: Colour, below: Colour): Colour {
   const mix = (over: number, under: number) => over * top.a + under * (1 - top.a);
   return { r: mix(top.r, below.r), g: mix(top.g, below.g), b: mix(top.b, below.b), a: 1 };
 }
@@ -58,47 +69,35 @@ function luminance(colour: { r: number; g: number; b: number }): number {
   return 0.2126 * linear(colour.r) + 0.7152 * linear(colour.g) + 0.0722 * linear(colour.b);
 }
 
-/** WCAG contrast of a foreground against a background token in one theme, compositing translucent colours. The foreground may also be a literal colour. */
+/** WCAG contrast of a foreground token against a background token in one theme, compositing translucent colours over the paper. */
 function contrast(foreground: string, background: string, theme: "light" | "dark"): number {
-  // A translucent surface is seen over the paper beneath it.
   const surface = composite(resolveToken(background, theme), resolveToken("--paper", theme));
-  const ink = composite(foreground.startsWith("--") ? resolveToken(foreground, theme) : parseColour(foreground), surface);
+  const ink = composite(resolveToken(foreground, theme), surface);
   const [light, dark] = [luminance(ink), luminance(surface)].sort((a, b) => b - a) as [number, number];
   return (light + 0.05) / (dark + 0.05);
 }
 
-describe("Theme CSS token port", () => {
+describe("Two Inks tokens", () => {
   it("keeps Light as the default and Dark only behind the appearance attribute", () => {
     expect(css).toContain(":root {\n  color-scheme: light;");
     expect(css).toContain(':root[data-theme="dark"] {\n  color-scheme: dark;');
     expect(css).not.toMatch(/prefers-color-scheme\s*:\s*dark/);
     expect(declarations["--font-size-body"]).toBe("14px");
-    expect(declarations["--font-size-mono"]).toBe("12px");
-    expect(declarations["--font-size-tag"]).toBe("11px");
-    expect(declarations["--font-size-caps"]).toBe("10.5px");
-    expect(declarations["--font-size-chip"]).toBe("10.5px");
-    expect(declarations["--font-size-field"]).toBe("13.5px");
-    expect(declarations["--card-padding"]).toBe("18px");
-    expect(declarations["--card-radius"]).toBe("12px");
     expect(declarations["--hairline-width"]).toBe("1px");
   });
 
-  it("redeclares every literal colour role in Dark, and nothing Dark declares is unknown to Light", () => {
-    const literalLight = Object.keys(declarations).filter(name => isLiteralColour(declarations[name]!) && !sharedAcrossAppearances.has(name));
-    expect(literalLight.filter(name => darkDeclarations[name] === undefined)).toEqual([]);
-    expect(Object.keys(darkDeclarations).filter(name => declarations[name] === undefined)).toEqual([]);
-    expect(Object.keys(darkDeclarations).filter(name => !(name in declarations) || !(name in declarations))).toEqual([]);
-  });
-
-  it("matches Light's own surfaces with Dark's colour-scheme and keeps shared colours shared", () => {
-    expect(darkDeclarations["--desk"]).toBe("#141B25");
-    expect(darkDeclarations["--paper"]).toBe("#1B2431");
-    expect(darkDeclarations["--card"]).toBe("#243142");
-    expect(darkDeclarations["--ink"]).toBe("#E6EDF5");
-    expect(darkDeclarations["--slate"]).toBe("#9DBBE4");
-    for (const name of sharedAcrossAppearances) {
-      expect(darkDeclarations[name], name).toBeUndefined();
-    }
+  it("draws every colour from one paper and one ink", () => {
+    expect(declarations["--A"]).toBe("#ECE4DF");
+    expect(declarations["--B"]).toBe("#420C12");
+    expect(darkDeclarations["--A"]).toBe("#22070A");
+    expect(darkDeclarations["--B"]).toBe("#EFE2DC");
+    // Dark swaps the pair and nothing else, so it cannot drift from Light.
+    expect(Object.keys(darkDeclarations).sort()).toEqual(["--A", "--B"]);
+    // The only literal colours are the pair and the screen, which is the light ink in both appearances.
+    const literal = Object.keys(declarations).filter(name => isLiteralColour(declarations[name]!));
+    expect(literal.sort()).toEqual(["--A", "--B", "--screen", "--screen-bar", "--screen-dim", "--screen-text"]);
+    expect(roles.length).toBeGreaterThan(100);
+    for (const name of roles) resolveToken(name, "dark");
   });
 
   const textPairs: Array<[string, string, number]> = [
@@ -130,7 +129,7 @@ describe("Theme CSS token port", () => {
     // Buttons: their label on each fill, and the default button's label on its hover.
     ["--ink", "--button-fill", 4.5], ["--ink", "--button-hover", 4.5], ["--on-button-primary", "--button-primary-fill", 4.5],
     ["--on-button-primary", "--button-primary-hover", 4.5], ["--on-button-slate", "--button-slate-fill", 4.5], ["--on-button-slate", "--button-slate-hover", 4.5],
-    ["--ink", "--segment-on", 4.5],
+    ["--on-accent", "--segment-on", 4.5],
     // A stage icon's glyph is drawn in ink on its tint.
     ...tints.map((tint): [string, string, number] => ["--ink", tint, 4.5])
   ];
@@ -146,29 +145,31 @@ describe("Theme CSS token port", () => {
     ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((line): [string, string, number] => [`--series-${line}`, "--paper", 3])
   ];
 
-  it("keeps Dark's text at 4.5:1 or better on every surface it is drawn on", () => {
-    const failing = textPairs.map(([fg, bg, min]) => [fg, bg, contrast(fg, bg, "dark"), min] as const).filter(([, , ratio, min]) => ratio < min);
-    expect(failing).toEqual([]);
-  });
+  for (const theme of ["light", "dark"] as const) {
+    it(`keeps ${theme} text at 4.5:1 or better on every surface it is drawn on`, () => {
+      const failing = textPairs.map(([fg, bg, min]) => [fg, bg, contrast(fg, bg, theme).toFixed(2), min] as const).filter(([, , ratio, min]) => Number(ratio) < min);
+      expect(failing).toEqual([]);
+    });
 
-  it("keeps Dark's focus, control and diagram outlines at 3:1 or better against their surfaces", () => {
-    const failing = outlinePairs.map(([fg, bg, min]) => [fg, bg, contrast(fg, bg, "dark"), min] as const).filter(([, , ratio, min]) => ratio < min);
-    expect(failing).toEqual([]);
-  });
+    it(`keeps ${theme} focus, control and diagram outlines at 3:1 or better against their surfaces`, () => {
+      const failing = outlinePairs.map(([fg, bg, min]) => [fg, bg, contrast(fg, bg, theme).toFixed(2), min] as const).filter(([, , ratio, min]) => Number(ratio) < min);
+      expect(failing).toEqual([]);
+    });
 
-  it("raises Dark's selected segment above its track and keeps rails quieter than the travelled path", () => {
-    expect(contrast("--segment-on", "--segment", "dark")).toBeGreaterThanOrEqual(1.8);
-    // An upcoming rail is a quiet line, as Light's beige one is; the not-taken outline carries the 3:1.
-    expect(contrast("--track", "--card", "dark")).toBeLessThan(2);
-  });
+    it(`keeps ${theme} rails quieter than the travelled path`, () => {
+      expect(contrast("--track", "--card", theme)).toBeLessThan(2);
+      expect(contrast("--slate", "--card", theme)).toBeGreaterThan(contrast("--track", "--card", theme));
+    });
 
-  it("keeps the checkbox tick at 3:1 against a checked box's fill in both appearances", () => {
-    // The tick is an SVG data URI in the checked rule, so its colour is written there rather than as a token.
+    it(`keeps the terminal screen readable in ${theme}`, () => {
+      expect(contrast("--screen-text", "--screen", theme)).toBeGreaterThanOrEqual(7);
+      expect(contrast("--screen-dim", "--screen", theme)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+
+  it("draws a checked checkbox as the ink inside a ring of paper", () => {
     const fieldsCss = readFileSync(resolve(process.cwd(), "src/theme/fields.css"), "utf8");
-    const tick = /input\[type="checkbox"\]:checked[\s\S]*?stroke='%23([0-9A-Fa-f]{6})'/.exec(fieldsCss)?.[1];
-    expect(tick).toBeDefined();
-    expect(contrast(`#${tick}`, "--control-on", "dark")).toBeGreaterThanOrEqual(3);
-    expect(contrast(`#${tick}`, "--control-on", "light")).toBeGreaterThanOrEqual(3);
+    expect(fieldsCss).toMatch(/input\[type="checkbox"\]:checked \{[^}]*background-color: var\(--control-on\);[^}]*box-shadow: inset 0 0 0 [\d.]+px var\(--paper\)/);
   });
 
   it("draws the needs badge's ! in on-accent ink, as the held badge already does", () => {
@@ -177,12 +178,15 @@ describe("Theme CSS token port", () => {
     expect(stagesCss).toMatch(/\.stage-box__dot--needs \{ background: var\(--slate-text\);/);
   });
 
-  it("keeps all eight local font files with their licences", () => {
+  it("keeps the three local font families, each in two subsets, with their licences", () => {
     const webFonts = resolve(process.cwd(), "src/theme/fonts");
-    for (const file of ["Archivo.woff2", "InterTight.woff2", "IBMPlexMono-Regular.woff2", "IBMPlexMono-Medium.woff2", "IBMPlexMono-SemiBold.woff2", "OFL-Archivo.txt", "OFL-IBMPlexMono.txt", "OFL-InterTight.txt"]) {
+    for (const file of ["FunnelDisplay-Latin.woff2", "FunnelDisplay-LatinExt.woff2", "FunnelSans-Latin.woff2", "FunnelSans-LatinExt.woff2",
+      "GeistMono-Latin.woff2", "GeistMono-LatinExt.woff2", "OFL-FunnelDisplay.txt", "OFL-FunnelSans.txt", "OFL-GeistMono.txt"]) {
       expect(readFileSync(resolve(webFonts, file)).length, file).toBeGreaterThan(0);
     }
-    expect(css.match(/@font-face\s*\{/g)).toHaveLength(5);
-    expect(css).toContain('font-weight: 600;');
+    expect(css.match(/@font-face\s*\{/g)).toHaveLength(6);
+    expect(declarations["--font-display"]).toBe('"Funnel Display"');
+    expect(declarations["--font-body"]).toBe('"Funnel Sans"');
+    expect(declarations["--font-mono"]).toBe('"Geist Mono"');
   });
 });

@@ -22,7 +22,7 @@
 .form-heading { display: flex; flex-direction: column; gap: 2px; }
 .form-heading h3 { margin: 0; font: 700 20px/1.2 var(--font-display), sans-serif; letter-spacing: -0.4px; }
 .belt-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; max-width: 100%; }
-.belt-field > span:first-child { font: 10.5px/1.3 var(--font-mono), monospace; letter-spacing: 1.47px; text-transform: uppercase; color: var(--muted); }
+.belt-field > span:first-child { font: 12px/1.3 var(--font-body), sans-serif; color: var(--muted); }
 .belt-field input, .belt-field .paper-field { width: 100%; }
 /* The repository base branch fields under the shared card: one labelled field per repository. */
 .belt-repository-bases { display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 0; border: 0; min-width: 0; }
@@ -42,10 +42,10 @@
 .stage-block { display: flex; flex-direction: column; gap: 8px; width: 100%; height: 100px; padding: 12px; border: 1.5px solid var(--rule); border-radius: 12px; background: var(--paper); color: var(--ink); text-align: left; cursor: pointer; overflow: hidden; }
 .stage-block:hover { border-color: var(--slate); }
 .stage-block.is-selected { border-color: var(--slate-text); background: var(--slate-wash); box-shadow: 0 0 0 3px color-mix(in srgb, var(--slate) 25%, transparent); }
-.stage-block-trigger { flex: 0 0 132px; width: 132px; margin: 8px 0; border-color: var(--trigger-fill); background: var(--trigger-fill); color: #fff; }
+.stage-block-trigger { flex: 0 0 132px; width: 132px; margin: 8px 0; border-color: var(--trigger-fill); background: var(--trigger-fill); color: var(--on-accent); }
 .stage-block-trigger:hover { border-color: var(--ink); }
 .stage-block-trigger.is-selected { border-color: var(--trigger-fill); background: var(--trigger-fill-selected); }
-.stage-block-kind { font: 9.5px/1 var(--font-mono), monospace; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stage-block-kind { font: 12px/1 var(--font-body), sans-serif; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stage-block-trigger .stage-block-kind { color: var(--trigger-caption); }
 .stage-block-title { font: 600 15px/1.2 var(--font-body), sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stage-block-lines { display: flex; flex-direction: column; gap: 3px; font: 10.5px/1.25 var(--font-mono), monospace; color: var(--ink2); }
@@ -58,11 +58,11 @@
 .add-menu-track { position: absolute; left: 0; right: 0; top: 50%; border-top: 3px dashed var(--outline-soft); transform: translateY(-50%); }
 .add-menu-plus { position: relative; width: 18px; height: 18px; padding: 0; border: 1.5px solid var(--outline-soft); border-radius: 50%; background: var(--card); color: var(--muted); font: 13px/1 var(--font-body), sans-serif; cursor: pointer; }
 /* Fixed to the viewport (its left, top and max-height come from StageLine's placeMenu), so the stage line's scroll box doesn't clip it. The list scrolls inside the card and the wheel stops at its ends. */
-.add-menu-card { position: fixed; z-index: 20; display: flex; flex-direction: column; min-width: 180px; padding: 6px; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); box-shadow: 0 7px 28px rgba(27, 42, 62, 0.14); transform: translateX(-50%); overflow-y: auto; overscroll-behavior: contain; }
+.add-menu-card { position: fixed; z-index: 20; display: flex; flex-direction: column; min-width: 180px; padding: 6px; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); box-shadow: var(--raise); transform: translateX(-50%); overflow-y: auto; overscroll-behavior: contain; }
 .add-menu-card > * { flex: 0 0 auto; }
 .add-menu-card button { padding: 6px 10px; border: 0; border-radius: 6px; background: none; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer; }
 .add-menu-card button:hover { background: var(--slate-wash); }
-.add-menu-section { margin: 6px 10px 2px; color: var(--muted); font: 600 10px/1.3 var(--font-mono), monospace; letter-spacing: 1px; text-transform: uppercase; }
+.add-menu-section { margin: 6px 10px 2px; color: var(--muted); font: 600 12px/1.3 var(--font-body), sans-serif; }
 .fork-box { flex: 0 0 auto; display: flex; flex-direction: column; padding: 8px 12px; border: 1.5px dashed var(--slate); border-radius: 14px; background: color-mix(in srgb, var(--slate-wash) 50%, transparent); }
 .fork-box-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 20px; }
 .fork-box-heading { font: 9.5px/1 var(--font-mono), monospace; letter-spacing: 1.2px; color: var(--slate-text); }
@@ -76,7 +76,7 @@
 .fork-route-empty { padding-left: 6px; color: var(--muted); font-size: 12.5px; white-space: nowrap; }
 
 /* Fields (BeltForms.Field): mono caps labels, white paper inputs, grey pop-ups with a chevron. */
-.belt-field > span:first-child, .field-label, .alternate-row .model-label { font: 10.5px/1.3 var(--font-mono), monospace; letter-spacing: 1.47px; text-transform: uppercase; color: var(--muted); }
+.belt-field > span:first-child, .field-label, .alternate-row .model-label { font: 12px/1.3 var(--font-body), sans-serif; color: var(--muted); }
 .belt-field input:not([type="checkbox"]):not([type="radio"]), .belt-field textarea, .outcomes-table input:not([type="checkbox"]), .outcomes-table textarea, .route-name input, .agent-field input:not([type="checkbox"]), .agent-field textarea, .paper-field {
   padding: 7px 10px; border: 1px solid var(--rule); border-radius: 8px; font: 13.5px/1.3 var(--font-body), sans-serif; color: var(--ink); background: var(--card); min-width: 0; max-width: 100%; box-sizing: border-box;
 }
@@ -101,7 +101,7 @@
 
 /* Triggers and policies, each a card as in the native editor. */
 .belt-policies { display: flex; flex-direction: column; gap: 6px; }
-.belt-policies h3 { margin: 0; font: 10.5px/1.3 var(--font-mono), monospace; letter-spacing: 1.47px; text-transform: uppercase; color: var(--muted); }
+.belt-policies h3 { margin: 0; font: 12px/1.3 var(--font-body), sans-serif; color: var(--muted); }
 .policy-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
 .policy-detail { display: none; }
 .schedule-summary { grid-column: 1 / -1; margin: 0; color: var(--ink2); font-size: 12.5px; }
@@ -120,15 +120,15 @@
 @container (max-width: 600px) {
   .stage-model-list .agent-model-heading { display: none; }
   .stage-model-list .stage-model-row { grid-template-columns: minmax(0, 1fr); }
-  .stage-model-list .model-cell::before { content: attr(data-heading); display: block; margin-bottom: 6px; font: 10.5px/1.3 var(--font-mono), monospace; letter-spacing: 1.47px; text-transform: uppercase; color: var(--muted); }
+  .stage-model-list .model-cell::before { content: attr(data-heading); display: block; margin-bottom: 6px; font: 12px/1.3 var(--font-body), sans-serif; color: var(--muted); }
 }
 .placeholder-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .placeholder-chips li { padding: 3px 10px; border-radius: 999px; background: var(--slate-wash); color: var(--slate-text); font-family: var(--font-mono); font-size: 12px; }
 .outcomes-editor { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .outcomes-scroll { overflow-x: auto; max-width: 100%; }
 .outcomes-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px; }
-.outcomes-table caption { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); padding-bottom: 6px; }
-.outcomes-table th { text-align: left; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 4px 6px; }
+.outcomes-table caption { text-align: left; font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-bottom: 6px; }
+.outcomes-table th { text-align: left; font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 500; padding: 4px 6px; }
 .outcomes-table td { padding: 7px 6px; border-top: 1px solid var(--rule); vertical-align: top; }
 .outcomes-table textarea { width: 100%; resize: vertical; }
 
@@ -196,7 +196,7 @@
 .toggle-menu-button span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .toggle-menu-button.is-empty { color: var(--muted); }
 .toggle-menu-button:disabled { background-image: none; cursor: default; }
-.toggle-menu-card { position: absolute; top: calc(100% + 4px); left: 0; z-index: 20; display: flex; flex-direction: column; min-width: 200px; max-height: 280px; overflow-y: auto; padding: 6px; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); box-shadow: 0 7px 28px rgba(27, 42, 62, 0.14); }
+.toggle-menu-card { position: absolute; top: calc(100% + 4px); left: 0; z-index: 20; display: flex; flex-direction: column; min-width: 200px; max-height: 280px; overflow-y: auto; padding: 6px; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); box-shadow: var(--raise); }
 .toggle-menu-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 6px; color: var(--ink); font-size: 13px; cursor: pointer; }
 .toggle-menu-item:hover { background: var(--slate-wash); }
 .toggle-menu-item input { margin: 0; }

@@ -62,7 +62,7 @@ export function AppRoutes() {
 function InsightsRoute() {
   const settings = useSettingsQuery();
   if (settings.data?.showInsights === false) {
-    return <article className="page-content"><header className="page-heading"><div><p className="eyebrow">INSIGHTS</p><h1>Insights</h1></div></header>
+    return <article className="page-content"><header className="page-heading"><div><p className="eyebrow">Insights</p><h1>Insights</h1></div></header>
       <section className="empty-panel"><h2>Insights is turned off</h2><p>Turn it on under <Link to="/settings">Settings → Experimental</Link>.</p></section></article>;
   }
   return <Suspense fallback={pageFallback}><InsightsPage /></Suspense>;

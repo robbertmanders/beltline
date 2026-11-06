@@ -117,7 +117,7 @@ describe("Run page", () => {
     const { container } = renderRun("?stage=plan-epic&attempt=plan-epic-1");
     await heading();
     expect(screen.getByText("Belt v1 · 11 stages")).toBeTruthy();
-    expect(screen.getByText("COST $0.11 · partial")).toBeTruthy();
+    expect(screen.getByText("Cost $0.11 · partial")).toBeTruthy();
     expect(container.querySelectorAll(".stage-box").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /^Plan the epic/ }).getAttribute("data-stage")).toBe("plan-epic");
     const panel = await screen.findByRole("region", { name: "Stage 1: Plan the epic" });

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { tintValues } from "../api/wire.gen";
 import "../theme/gallery.css";
-import archivoLicense from "../theme/fonts/OFL-Archivo.txt?url";
-import interLicense from "../theme/fonts/OFL-InterTight.txt?url";
-import plexLicense from "../theme/fonts/OFL-IBMPlexMono.txt?url";
+import displayLicense from "../theme/fonts/OFL-FunnelDisplay.txt?url";
+import sansLicense from "../theme/fonts/OFL-FunnelSans.txt?url";
+import monoLicense from "../theme/fonts/OFL-GeistMono.txt?url";
 import { GallerySharedComponents } from "./GallerySharedComponents";
 
 const paletteNames = [
@@ -48,7 +48,7 @@ export default function Gallery() {
 
   return <main id="top" data-column="gallery" className="theme-gallery">
     <header className="gallery-header">
-      <div><p className="gallery-eyebrow">BELTLINE / DESIGN REVIEW</p><h1>Theme gallery</h1><p className="gallery-intro">Paper-and-slate tokens, fonts and shared controls. This development route works without a daemon.</p></div>
+      <div><p className="gallery-eyebrow">BELTLINE / DESIGN REVIEW</p><h1>Theme gallery</h1><p className="gallery-intro">Two Inks tokens, fonts and shared controls. This development route works without a daemon.</p></div>
       <nav className="gallery-jumps" aria-label="Gallery sections"><a href="#tokens">Tokens</a><a href="#fonts">Fonts</a><a href="#fields">Fields</a><a href="#components">Components</a></nav>
     </header>
 
@@ -60,13 +60,13 @@ export default function Gallery() {
     </section>
 
     <section className="gallery-section" id="fonts">
-      <SectionTitle number="02" title="Fonts" note="Every face is bundled with the web app and loaded from same-origin TTF files." />
+      <SectionTitle number="02" title="Fonts" note="Every face is bundled with the web app and loaded from same-origin WOFF2 files." />
       <div className="gallery-font-grid">
-        <article className="gallery-font-sample"><span className="paper-caps">Archivo · variable 100–900</span><p className="gallery-font-display">Belts move work forward</p><span>Archivo display sample · regular, bold and heavy weights</span><div className="gallery-font-weights" style={{ fontFamily: "var(--font-display)" }}><b style={{ fontWeight: 400 }}>Regular</b><b style={{ fontWeight: 700 }}>Bold</b><b style={{ fontWeight: 800 }}>Heavy</b></div></article>
-        <article className="gallery-font-sample"><span className="paper-caps">Inter Tight · variable 100–900</span><p className="gallery-font-body">A clear text face for pages, fields and longer descriptions.</p><span>Inter Tight body sample · 14px default</span><div className="gallery-font-weights" style={{ fontFamily: "var(--font-body)" }}><b style={{ fontWeight: 400 }}>Regular</b><b style={{ fontWeight: 600 }}>Semibold</b><b style={{ fontWeight: 700 }}>Bold</b></div></article>
-        <article className="gallery-font-sample"><span className="paper-caps">IBM Plex Mono · local weights</span><p className="gallery-font-mono">[ REVIEW ] 0123456789</p><span>Plex Mono regular, medium and semibold</span><div className="gallery-font-weights" style={{ fontFamily: "var(--font-mono)" }}><b style={{ fontWeight: 400 }}>Regular</b><b style={{ fontWeight: 500 }}>Medium</b><b style={{ fontWeight: 600 }}>Semibold</b></div></article>
+        <article className="gallery-font-sample"><span className="paper-caps">Funnel Display · variable 300–800</span><p className="gallery-font-display">Belts move work forward</p><span>Funnel Display sample · light, semibold and bold</span><div className="gallery-font-weights" style={{ fontFamily: "var(--font-display)" }}><b style={{ fontWeight: 300 }}>Light</b><b style={{ fontWeight: 600 }}>Semibold</b><b style={{ fontWeight: 700 }}>Bold</b></div></article>
+        <article className="gallery-font-sample"><span className="paper-caps">Funnel Sans · variable 300–800</span><p className="gallery-font-body">A clear text face for pages, fields and longer descriptions.</p><span>Funnel Sans body sample · 14px default</span><div className="gallery-font-weights" style={{ fontFamily: "var(--font-body)" }}><b style={{ fontWeight: 400 }}>Regular</b><b style={{ fontWeight: 500 }}>Medium</b><b style={{ fontWeight: 600 }}>Semibold</b></div></article>
+        <article className="gallery-font-sample"><span className="paper-caps">Geist Mono · variable 100–900</span><p className="gallery-font-mono">#147 · 0123456789</p><span>Geist Mono for references, code and terminals</span><div className="gallery-font-weights" style={{ fontFamily: "var(--font-mono)" }}><b style={{ fontWeight: 400 }}>Regular</b><b style={{ fontWeight: 500 }}>Medium</b><b style={{ fontWeight: 600 }}>Semibold</b></div></article>
       </div>
-      <div className="gallery-licences"><span className="paper-caps">Open Font License texts</span><a href={archivoLicense}>Archivo OFL</a><a href={interLicense}>Inter Tight OFL</a><a href={plexLicense}>IBM Plex Mono OFL</a></div>
+      <div className="gallery-licences"><span className="paper-caps">Open Font License texts</span><a href={displayLicense}>Funnel Display OFL</a><a href={sansLicense}>Funnel Sans OFL</a><a href={monoLicense}>Geist Mono OFL</a></div>
     </section>
 
     <section className="gallery-section" id="fields">

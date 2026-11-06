@@ -51,9 +51,9 @@ function useMinute(): Date {
 }
 
 export function dateLabel(now: Date): string {
-  const day = now.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
-  const month = now.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-  return `${day} · ${month} ${now.getDate()}`;
+  const day = now.toLocaleDateString("en-US", { weekday: "long" });
+  const month = now.toLocaleDateString("en-US", { month: "long" });
+  return `${day}, ${month} ${now.getDate()}`;
 }
 
 /** The lamp and time at the foot of the navigation: green when live, gold while checking or paused. The daemon writes the label and hover text. */
@@ -123,7 +123,7 @@ function Navigation() {
   if (!preferences.navigationOpen) {
     return <aside data-column="navigation" className="navigation navigation-collapsed">
       <button type="button" className="rail-show" onClick={() => update({ navigationOpen: true })} aria-label="Show navigation" title="Show navigation">«</button>
-      <span className="rail-vertical rail-workspace" aria-hidden="true">WORKSPACE</span>
+      <span className="rail-vertical rail-workspace" aria-hidden="true">Workspace</span>
       <nav aria-label="Primary navigation" className="nav-rail">
         {items.map(item => <Link key={item.to} to={item.to} aria-label={item.label} title={item.label} aria-current={current === item.to ? "page" : undefined}
           className={`rail-link ${current === item.to ? "selected" : ""}`}><NavIcon kind={item.icon} /></Link>)}
@@ -139,8 +139,8 @@ function Navigation() {
   }
   return <><aside data-column="navigation" className="navigation" style={{ width: preferences.navigationWidth }}>
     <div className="window-space" aria-hidden="true" />
-    <Link className="brand" to="/overview">Beltline</Link>
-    <p className="date-label">[ {dateLabel(now)} ]</p>
+    <Link className="brand" to="/overview"><span className="brand-mark" aria-hidden="true" />Beltline</Link>
+    <p className="date-label">{dateLabel(now)}</p>
     <div className="nav-section-title"><span className="paper-caps">Workspace</span>
       <button type="button" className="quiet-button" onClick={() => update({ navigationOpen: false })} aria-label="Hide navigation" title="Fold navigation away">« Hide</button></div>
     <nav aria-label="Primary navigation" className="nav-links">
@@ -155,7 +155,7 @@ function Navigation() {
       <NavItem destination={settingsDestination} selected={current === "/settings"} state={state} />
       <div className="nav-clock">
         <LiveClock state={state} />
-        {settings.data?.demo && <Chip tone="gold">DEMO</Chip>}
+        {settings.data?.demo && <Chip tone="gold">Demo</Chip>}
       </div>
     </div>
   </aside>
@@ -247,7 +247,7 @@ function StatusMessages() {
 
 function MainState() {
   const runtime = useRuntime();
-  if (runtime.authRequired) return <article className="page-content"><header className="page-heading"><div><p className="eyebrow">LOCAL DAEMON</p><h1>Sign in required</h1></div></header><section className="resource-card"><h2>Open the daemon sign-in link</h2><p>Open the daemon’s <code>/auth?token=…</code> link in this browser to exchange the token for its local session cookie, then return to the app.</p><p className="muted-copy">Credentials are kept in the daemon’s HttpOnly cookie and are not stored in browser preferences.</p></section></article>;
+  if (runtime.authRequired) return <article className="page-content"><header className="page-heading"><div><p className="eyebrow">Local daemon</p><h1>Sign in required</h1></div></header><section className="resource-card"><h2>Open the daemon sign-in link</h2><p>Open the daemon’s <code>/auth?token=…</code> link in this browser to exchange the token for its local session cookie, then return to the app.</p><p className="muted-copy">Credentials are kept in the daemon’s HttpOnly cookie and are not stored in browser preferences.</p></section></article>;
   if (runtime.incompatible) return <article className="page-content"><header className="page-heading"><h1>API compatibility</h1></header><section className="resource-card"><p>Reload this page to use a client that supports API version {runtime.apiVersion}.</p></section></article>;
   return <Outlet />;
 }

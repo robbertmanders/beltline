@@ -40,7 +40,7 @@ Write the commands you ran and their results in the pull request.
 - New flow behaviour in the engine starts with an engine test. The engine (`core.EngineAdvance`) stays pure.
 - Match the code around you: its comment density, its naming and the file naming in AGENTS.md. Keep files roughly 200–450 lines.
 - Don't add a dependency without a stated reason. AGENTS.md lists the current ones and why each is there.
-- UI changes use the tokens in `Web/src/theme/tokens.css`. A new colour needs both a Light and a Dark value.
+- UI changes use the tokens in `Web/src/theme/tokens.css`. Every colour is the one ink at some strength over the one paper, so a new colour is a new `color-mix` strength of the pair rather than a new literal; Dark follows by swapping the pair.
 
 ## Pull requests
 

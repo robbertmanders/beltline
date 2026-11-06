@@ -17,7 +17,7 @@ describe("startup appearance", () => {
     document.documentElement.removeAttribute("data-theme");
     meta = document.createElement("meta");
     meta.name = "theme-color";
-    meta.content = "#f4f2ee";
+    meta.content = "#ece4df";
     document.head.append(meta);
   });
   afterEach(() => {
@@ -31,7 +31,7 @@ describe("startup appearance", () => {
     expect(applyStoredAppearance(storage)).toBe("dark");
     expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
     expect(pageAppearance()).toBe("dark");
-    expect(themeColor()).toBe("#1b2431");
+    expect(themeColor()).toBe("#22070a");
   });
 
   it("selects Light when nothing is stored, the stored value is invalid, or storage cannot be read", () => {
@@ -45,7 +45,7 @@ describe("startup appearance", () => {
     document.documentElement.setAttribute("data-theme", "dark");
     expect(applyStoredAppearance(blocked)).toBe("light");
     expect(document.documentElement.getAttribute("data-theme")).toBe("light");
-    expect(themeColor()).toBe("#f4f2ee");
+    expect(themeColor()).toBe("#ece4df");
   });
 
   it("lets Light override a Dark root that was already set", () => {

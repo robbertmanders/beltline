@@ -15,7 +15,7 @@
 /* Each row is one line tall (30px, gap 2px), and the list shows at most six rows, so the session keeps the height. */
 .session-list { display: flex; flex-direction: column; gap: 2px; margin: 0 8px 10px; padding: 0; list-style: none; max-height: calc(6 * 30px + 5 * 2px); overflow-y: auto; flex: 0 0 auto; }
 .session-entry { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 30px; padding: 6px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
-.session-entry[aria-pressed="true"] { background: var(--card); box-shadow: 0 1px 1px #1b2a3e14; }
+.session-entry[aria-pressed="true"] { background: var(--card); box-shadow: none; }
 .session-status { flex: 0 0 16px; text-align: center; font-size: 12px; font-weight: 700; color: var(--green); }
 .session-status[data-status="live"] { color: var(--gold); }
 .session-status[data-status="problem"] { color: var(--red); }
@@ -32,19 +32,20 @@
 .session-detail { display: flex; flex-direction: column; min-width: 0; min-height: 260px; flex: 1 1 0; padding: 12px; }
 .session-fallback { margin: 0 2px 10px; color: var(--muted); font-size: 13.5px; }
 .session-screen { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; border-radius: 10px; background: var(--screen); overflow: hidden; }
-.session-bar { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; background: var(--screen-bar); color: #8193AF; font: 11px/1.4 var(--font-mono), monospace; letter-spacing: 0.04em; }
+.session-bar { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; background: var(--screen-bar); color: var(--screen-dim); font: 11px/1.4 var(--font-mono), monospace; }
 .session-bar-name { flex: 1 1 auto; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .session-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
-.session-reason { color: #8193AF; font-family: var(--font-body, inherit); font-size: 12.5px; letter-spacing: 0; }
-.session-error { margin: 0; padding: 8px 14px 0; color: #F0A597; font-size: 12.5px; overflow-wrap: anywhere; }
+.session-reason { color: var(--screen-dim); font-family: var(--font-body, inherit); font-size: 12.5px; letter-spacing: 0; }
+.session-error { margin: 0; padding: 8px 14px 0; color: var(--screen-text); font-weight: 600; font-size: 12.5px; overflow-wrap: anywhere; }
 .session-log { flex: 1 1 auto; min-height: 0; margin: 0; padding: 12px 14px; overflow: auto; background: var(--screen); color: var(--screen-text); font: 12px/1.6 var(--font-mono), monospace; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
-.terminal-action { padding: 2px 8px; border: 1px solid #33445C; border-radius: 6px; background: transparent; color: var(--screen-text); font: 11px/1.3 var(--font-mono), monospace; cursor: pointer; }
-.terminal-action:active { background: #1F2E47; }
+.terminal-action { padding: 2px 8px; border: 1px solid color-mix(in srgb, var(--screen-text) 30%, transparent); border-radius: 999px; background: transparent; color: var(--screen-text); font: 11px/1.3 var(--font-mono), monospace; cursor: pointer; }
+.terminal-action:hover:not(:disabled) { border-color: var(--screen-text); }
+.terminal-action:active { background: color-mix(in srgb, var(--screen-text) 12%, transparent); }
 .terminal-action:disabled { opacity: 0.5; cursor: not-allowed; }
 .terminal { position: relative; display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; min-height: 220px; }
-.terminal-status { position: absolute; right: 12px; bottom: 8px; z-index: 1; color: #8193AF; font: 11px var(--font-mono), monospace; pointer-events: none; }
+.terminal-status { position: absolute; right: 12px; bottom: 8px; z-index: 1; color: var(--screen-dim); font: 11px var(--font-mono), monospace; pointer-events: none; }
 .terminal[data-status="live"] .terminal-status { display: none; }
-.terminal[data-status="offline"] .terminal-status { color: #F0A597; }
+.terminal[data-status="offline"] .terminal-status { color: var(--screen-text); }
 .terminal-screen { flex: 1 1 auto; min-height: 200px; padding: 6px; background: var(--screen); overflow: hidden; }
 .terminal-screen .xterm { height: 100%; }
 /* In the Sessions sidebar the terminal fits the screen the sidebar allots, as a saved log does; the minimums above stay for other consumers. */
@@ -57,9 +58,9 @@
 .command-failure { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: 300px; }
 .command-failure ol { margin: 0; padding-left: 18px; }
 
-/* Markdown blocks: h1 in Archivo, other headings as mono caps, items with a right-aligned marker, code on the screen. */
+/* Markdown blocks: h1 in the display face, other headings as small soft labels, items with a right-aligned marker, code on the screen. */
 .markdown-blocks { display: flex; flex-direction: column; gap: 6px; min-width: 0; color: var(--ink); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
-.markdown-heading { margin: 0; font: 600 11px/1.4 var(--font-mono), monospace; letter-spacing: 1.54px; text-transform: uppercase; color: var(--muted); padding-top: 8px; }
+.markdown-heading { margin: 0; font: 600 12px/1.4 var(--font-body), sans-serif; color: var(--muted); padding-top: 8px; }
 h1.markdown-heading { padding-top: 0; font: 700 18px/1.3 var(--font-display), sans-serif; letter-spacing: -0.18px; text-transform: none; color: var(--ink); }
 .markdown-paragraph { margin: 0; white-space: pre-wrap; }
 .markdown-item { display: flex; gap: 6px; min-width: 0; padding-left: 4px; }
@@ -70,9 +71,9 @@ h1.markdown-heading { padding-top: 0; font: 700 18px/1.3 var(--font-display), sa
 .markdown-blocks a { color: var(--slate-text); text-decoration: underline; }
 
 .sheet-layer { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--scrim); }
-.sheet { display: flex; flex-direction: column; width: min(560px, 100%); max-height: calc(100vh - 48px); border-radius: 12px; background: var(--card); color: var(--ink); box-shadow: 0 12px 40px #1b2a3e33; outline: none; }
+.sheet { display: flex; flex-direction: column; width: min(560px, 100%); max-height: calc(100vh - 48px); border-radius: 12px; background: var(--card); color: var(--ink); box-shadow: var(--raise); outline: none; }
 .sheet-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--rule); }
-.sheet-header h2 { margin: 0; font-family: Archivo, sans-serif; font-size: 18px; font-weight: 650; }
+.sheet-header h2 { margin: 0; font-family: var(--font-display), sans-serif; font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
 .sheet-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 18px 20px; }
 .sheet-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--rule); }
 /* The app's form sheets: paper, 24 px all round, a tag over the title, and the buttons at the bottom right. */
@@ -82,7 +83,7 @@ h1.markdown-heading { padding-top: 0; font: 700 18px/1.3 var(--font-display), sa
 .sheet.is-form .sheet-body { display: flex; flex-direction: column; gap: 16px; padding: 16px 24px 0; }
 .sheet.is-form .sheet-footer { padding: 16px 24px 24px; border-top: 0; }
 .sheet-field { display: flex; flex-direction: column; gap: 6px; }
-.sheet-field > label:first-child { color: var(--muted); font: 10.5px/1.3 var(--font-mono), monospace; letter-spacing: 1.47px; text-transform: uppercase; }
+.sheet-field > label:first-child { color: var(--muted); font: 12px/1.3 var(--font-body), sans-serif; }
 .sheet-field textarea { min-height: 160px; }
 .sheet-help { margin: 0; color: var(--muted); font-size: 13px; }
 .sheet-field .sheet-help { font-size: 12px; }
@@ -95,7 +96,7 @@ h1.markdown-heading { padding-top: 0; font: 700 18px/1.3 var(--font-display), sa
 .model-note { margin: 0; color: var(--muted); font-size: 12px; }
 .model-error, .model-picker[data-model-state="failed"] .model-note { color: var(--red); }
 .model-stale { color: var(--gold); font-weight: 600; }
-.model-readonly-id { font-family: "IBM Plex Mono", monospace; font-size: 12px; overflow-wrap: anywhere; }
+.model-readonly-id { font-family: var(--font-mono), monospace; font-size: 12px; overflow-wrap: anywhere; }
 .model-context { color: var(--muted); font-size: 12px; }
 
 /* The Belts and Agents library list: a full-height card that scrolls on its own. */
@@ -155,7 +156,7 @@ h1.markdown-heading { padding-top: 0; font: 700 18px/1.3 var(--font-display), sa
 .agent-model-heading { margin-bottom: 2px; }
 .agent-form-remove { justify-self: start; align-self: start; }
 .agent-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.agent-field-label, .model-label { font: 10.5px/1.3 var(--font-mono), monospace; letter-spacing: 1.47px; text-transform: uppercase; color: var(--muted); }
+.agent-field-label, .model-label { font: 12px/1.3 var(--font-body), sans-serif; color: var(--muted); }
 .agent-readonly { display: block; background: var(--grey-wash) !important; border-color: var(--grey-wash) !important; color: var(--ink2) !important; font-family: var(--font-mono), monospace !important; font-size: 12.5px !important; }
 .agent-tint select { box-shadow: inset 4px 0 0 var(--agent-tint); }
 .agent-folder { gap: 6px; }
@@ -267,7 +268,7 @@ h1.markdown-heading { padding-top: 0; font: 700 18px/1.3 var(--font-display), sa
 .afk-unavailable { margin: 0; color: var(--muted); font-size: 12px; }
 .overrule-title { margin: 0; font-size: 15px; font-weight: 600; }
 .overrule-facts { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 6px 8px; margin: 0; align-items: baseline; }
-.overrule-facts dt { color: var(--muted); font: 10.5px/1.3 var(--font-mono), monospace; letter-spacing: 1.2px; text-transform: uppercase; }
+.overrule-facts dt { color: var(--muted); font: 12px/1.3 var(--font-body), sans-serif; }
 .overrule-facts dd { margin: 0; font-size: 13.5px; overflow-wrap: anywhere; }
 .overrule-choice { display: flex; gap: 8px; }
 .overrule-comments { min-height: 120px; resize: vertical; font: 13px/1.45 var(--font-body), sans-serif; }

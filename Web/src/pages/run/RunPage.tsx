@@ -198,7 +198,7 @@ export function RunPage() {
       {view && <header className="page-heading run-heading">
         <Tag>{view.heading}</Tag>
         <h1 className="run-title"><span className="run-title-ref">{view.reference} </span>{view.run.issue.title}</h1>
-        {view.cost.line && <Caps className="run-cost" >COST {view.cost.line}</Caps>}
+        {view.cost.line && <Caps className="run-cost">Cost {view.cost.line}</Caps>}
         {view.pauseCopy && <p className="run-pause" role="status">{view.pauseCopy}</p>}
         {(view.run.issue.labels.length > 0 || view.firstVerdict || view.shadow) && <ul className="run-label-list" aria-label="Labels">
           {view.shadow && <li data-shadow><Chip tone="shadow" title="This run started on the shadow version and keeps it to the end">{view.shadow}</Chip></li>}

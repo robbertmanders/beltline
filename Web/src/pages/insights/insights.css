@@ -17,7 +17,7 @@
 .insights-kpi h2 { margin: 0; font: 600 13px/1.2 var(--font-body), sans-serif; }
 .insights-kpi-value { display: flex; align-items: baseline; gap: 10px; margin: 0; font: 700 30px/1.05 var(--font-display), sans-serif; letter-spacing: -0.8px; color: var(--slate); font-variant-numeric: tabular-nums; }
 .insights-wide-spark { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.insights-axis { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font: 9.5px var(--font-mono), monospace; letter-spacing: 0.6px; text-transform: uppercase; }
+.insights-axis { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font: 12px var(--font-body), sans-serif; }
 
 /* Tables */
 .insights-table th { white-space: nowrap; }
