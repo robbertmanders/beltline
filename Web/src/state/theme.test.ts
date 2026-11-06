@@ -17,7 +17,7 @@ describe("startup appearance", () => {
     document.documentElement.removeAttribute("data-theme");
     meta = document.createElement("meta");
     meta.name = "theme-color";
-    meta.content = "#ece4df";
+    meta.content = "#efe2dc";
     document.head.append(meta);
   });
   afterEach(() => {
@@ -45,7 +45,7 @@ describe("startup appearance", () => {
     document.documentElement.setAttribute("data-theme", "dark");
     expect(applyStoredAppearance(blocked)).toBe("light");
     expect(document.documentElement.getAttribute("data-theme")).toBe("light");
-    expect(themeColor()).toBe("#ece4df");
+    expect(themeColor()).toBe("#efe2dc");
   });
 
   it("lets Light override a Dark root that was already set", () => {

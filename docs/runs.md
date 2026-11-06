@@ -12,7 +12,7 @@ nav_order: 4
 
 ## The run page
 
-A run's page opens over the whole window, drawn the other way round, and shows its belt with the path it took: each stage's state, the route it took at each fork and the routes it didn't. Select a stage to see its attempts: the brief the agent got, its output, the outcome and what that outcome did next. **Sessions** at the top opens a sidebar down the right of the window that lists every agent session of the run and shows the selected one live, in a read-only terminal. Drag its edge to resize it, double-click the edge for half the window, and **Hide ›** folds it away; this browser remembers both.
+A run's page opens over the whole window and shows its belt with the path it took: each stage's state, the route it took at each fork and the routes it didn't. Select a stage to see its attempts: the brief the agent got, its output, the outcome and what that outcome did next. **Sessions** at the top opens a sidebar down the right of the window that lists every agent session of the run and shows the selected one live, in a read-only terminal. Drag its edge to resize it, double-click the edge for half the window, and **Hide ›** folds it away; this browser remembers both.
 
 Runs that need you are listed under **Needs you** on the Overview and on Work, and Settings can send a browser notification when one arrives.
 

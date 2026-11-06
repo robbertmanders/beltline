@@ -128,8 +128,8 @@ a{color:inherit}
 /* ---------- rows ---------- */
 .rows{list-style:none;margin:0;padding:0;border-top:1px solid var(--faint)}
 .row{position:relative;display:grid;gap:8px 24px;align-items:center;padding:18px 0;border-bottom:1px solid var(--faint);cursor:pointer}
-.row::before{content:"";position:absolute;left:calc(var(--gut) * -.5);right:calc(var(--gut) * -.5);top:0;bottom:-1px;background:var(--wash);border-radius:4px;transform:scaleY(0);transform-origin:bottom;transition:transform .5s var(--ease);z-index:0}
-.row:hover::before{transform:scaleY(1)}
+.row::before{content:"";position:absolute;left:calc(var(--gut) * -.5);right:calc(var(--gut) * -.5);top:0;bottom:-1px;background:var(--wash);border-radius:4px;opacity:0;transition:opacity .25s ease;z-index:0}
+.row:hover::before{opacity:1}
 .row>*{position:relative;z-index:1;min-width:0}
 .row .t{font-family:var(--font-display),system-ui,sans-serif;font-weight:500;font-size:clamp(19px,1.8vw,26px);letter-spacing:-.025em;line-height:1.15;transition:transform .5s var(--ease);overflow-wrap:anywhere}
 .row:hover .t{transform:translateX(8px)}
@@ -339,7 +339,7 @@ button.chr:hover .ct{text-decoration:underline;text-decoration-thickness:1px;tex
 .ir{grid-template-columns:minmax(0,1.3fr) 60px 110px 70px 90px 90px 180px}
 .ir .big{font-family:var(--font-display),system-ui,sans-serif;font-weight:700;font-size:28px;letter-spacing:-.04em;color:var(--ink)}
 .ir.sel{cursor:default}
-.ir.sel::before{transform:scaleY(1);background:var(--wash2)}
+.ir.sel::before{opacity:1;background:var(--wash2)}
 .spark{width:100%;height:34px;overflow:visible}
 .spark path{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
 .spark .a{fill:var(--wash2);stroke:none}

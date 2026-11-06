@@ -58,31 +58,27 @@ describe("Overview page", () => {
     expect(document.querySelector(".overview-floor")).not.toBeNull();
   });
 
-  it("renders all six Summary sections with the daemon's limits and order", async () => {
+  it("renders today's figures and the runs that need you, with the daemon's limits and order", async () => {
     stubOverview(() => json(goldenText("views-overview.json")));
     renderOverview();
     await answered();
-    for (const name of ["Spend", "Sessions", "Running now", "Shipped", "In progress", "Needs you"]) {
+    for (const name of ["Spend", "Sessions", "Shipped", "Needs you"]) {
       expect(screen.getByRole("region", { name })).toBeTruthy();
     }
     const body = overviewGolden();
-    const inProgress = within(screen.getByRole("region", { name: "In progress" })).queryAllByRole("button");
-    expect(inProgress.length).toBe(Math.min(body.today.inProgress.rows.length, 6));
     const needs = within(screen.getByRole("region", { name: "Needs you" })).queryAllByRole("button");
     expect(needs.length).toBe(body.today.needsYou.rows.length);
     expect(within(screen.getByRole("region", { name: "Sessions" })).getByTestId("session-grid").children.length).toBe(56);
   });
 
-  it("shows the daemon's empty copy for Running, In progress and Needs you", async () => {
+  it("shows the daemon's empty copy for Needs you", async () => {
     stubOverview(() => json(goldenText("views-overview-empty.json")));
     renderOverview();
     await answered();
-    expect(screen.getByText("Nothing is running.")).toBeTruthy();
-    expect(screen.getByText("Nothing in progress.")).toBeTruthy();
     expect(screen.getByText("Nothing needs you.")).toBeTruthy();
   });
 
-  it("draws the floor under the summary from one request, and pins a belt from its chip or shows every belt again", async () => {
+  it("draws the floor under the runs that need you from one request, and pins a belt from its chip or shows every belt again", async () => {
     storePin("issues");
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const overview = stubOverview(() => json(goldenText("views-overview.json")));

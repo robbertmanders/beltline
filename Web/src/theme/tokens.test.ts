@@ -87,8 +87,8 @@ describe("Two Inks tokens", () => {
   });
 
   it("draws every colour from one paper and one ink", () => {
-    expect(declarations["--A"]).toBe("#ECE4DF");
-    expect(declarations["--B"]).toBe("#420C12");
+    expect(declarations["--A"]).toBe("#EFE2DC");
+    expect(declarations["--B"]).toBe("#22070A");
     expect(darkDeclarations["--A"]).toBe("#22070A");
     expect(darkDeclarations["--B"]).toBe("#EFE2DC");
     // Dark swaps the pair and nothing else, so it cannot drift from Light.

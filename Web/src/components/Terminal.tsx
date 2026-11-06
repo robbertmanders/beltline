@@ -36,14 +36,14 @@ function screenColour(token: string, fallback: string): string {
 }
 
 function defaultTerminal(): TerminalLike {
-  const foreground = screenColour("--screen-text", "#ECE4DF");
+  const foreground = screenColour("--screen-text", "#EFE2DC");
   return new XTerm({
     convertEol: false,
     cursorBlink: false,
     fontFamily: "\"Geist Mono\", monospace",
     fontSize: 12,
     scrollback: 5000,
-    theme: { background: screenColour("--screen", "#420C12"), foreground, cursor: foreground, selectionBackground: screenColour("--screen-dim", "#B89A9C") }
+    theme: { background: screenColour("--screen", "#22070A"), foreground, cursor: foreground, selectionBackground: screenColour("--screen-dim", "#B89A9C") }
   });
 }
 

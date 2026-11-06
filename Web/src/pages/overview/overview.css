@@ -10,7 +10,8 @@
 .row > .row-hit:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .row > .acts, .row > .acts * , .row a:not(.row-hit), .row button:not(.row-hit) { position: relative; z-index: 3; }
 
-/* Today's figures. */
+/* Today's figures, first on the page. */
+.pin.overview-page > .overview-today { margin-top: 0; }
 .overview-today .fig { display: grid; gap: 8px; align-content: start; min-width: 0; }
 .overview-today .fig .l { margin-top: 0; }
 .overview-grid { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 3px; max-width: 280px; margin-top: 8px; }
@@ -26,7 +27,6 @@
 .overview-chart-area { fill: var(--wash2); }
 .overview-chart-line { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .overview-chart-dot { fill: var(--ink); }
-.overview-running .rows { margin-top: 4px; }
 
 /* The floor. */
 .overview-floor .fchips { margin-bottom: 22px; }
