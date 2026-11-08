@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 )
@@ -374,6 +375,13 @@ func (l *Library) NewAgent() core.Agent {
 	agent.Name = "New agent"
 	agent.Key = "agent" + strconv.Itoa(n)
 	return agent
+}
+
+// savedAgentID is the id an agent's first save gives it.
+// Lock: runs with c.mu held.
+func (l *Library) savedAgentID(agent core.Agent) string {
+	return core.LibrarySavedID(agent.ID, agent.Name, agent.Version, l.c.clock.Now().Format(time.RFC3339Nano),
+		func(candidate string) bool { return l.agentIndex(candidate) >= 0 })
 }
 
 // agentIndex is the index of the agent record with id, or -1.

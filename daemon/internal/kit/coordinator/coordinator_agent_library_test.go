@@ -54,7 +54,10 @@ func TestANewAgentWithVersionZeroStillSaves(t *testing.T) {
 	if saved.Agent.Version != 1 {
 		t.Errorf("saved version = %d, want 1", saved.Agent.Version)
 	}
-	if record := c.LatestAgent(draft.ID); record == nil || record.Agent.Version != 1 {
+	if !strings.HasPrefix(saved.Agent.ID, "new-agent-") {
+		t.Errorf("saved id = %q, want one from the name", saved.Agent.ID)
+	}
+	if record := c.LatestAgent(saved.Agent.ID); record == nil || record.Agent.Version != 1 {
 		t.Errorf("latest agent = %+v", record)
 	}
 }

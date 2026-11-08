@@ -109,6 +109,7 @@ func (c *Coordinator) SaveBeltCommand(belt core.Belt) (store.BeltRecord, error) 
 	if problems := core.BeltStructureRefusals(belt); len(problems) > 0 {
 		return store.BeltRecord{}, core.ValidationFailureLocated(problems)
 	}
+	belt.ID = c.library.savedBeltID(belt)
 	if _, err := c.saveBelt(belt); err != nil {
 		return store.BeltRecord{}, err
 	}

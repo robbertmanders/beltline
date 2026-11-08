@@ -22,6 +22,7 @@ func (c *Coordinator) NewAgentDraft() core.Agent {
 func (c *Coordinator) SaveAgentCommand(agent core.Agent) (core.AgentRecord, error) {
 	c.Lock()
 	defer c.EndTurn()
+	agent.ID = c.library.savedAgentID(agent)
 	saved, err := c.library.SaveAgent(agent)
 	if err != nil {
 		return core.AgentRecord{}, err

@@ -376,12 +376,13 @@ func (c *Coordinator) InstallLibraryItem(ctx context.Context, origin core.Librar
 	if err != nil {
 		return nil, err
 	}
-	isNewBelt := kind == "belt" && c.library.Belt(id) == nil
+	localID := core.LibraryLocalID(origin, kind, id, repoFiles, store.LibraryFilesRead(c.paths))
+	isNewBelt := kind == "belt" && c.library.Belt(localID) == nil
 	if err := c.storage.LibraryWriteFiles(files); err != nil {
 		return nil, err
 	}
 	if isNewBelt && len(files) > 0 {
-		if err := c.storage.SetPaused(id, true); err != nil {
+		if err := c.storage.SetPaused(localID, true); err != nil {
 			return nil, err
 		}
 	}
@@ -513,7 +514,7 @@ func (c *Coordinator) LibraryItemCompare(origin core.LibraryOrigin, kind, id str
 			s := string(text)
 			file.Repo = &s
 		}
-		if text, ok := local[path]; ok {
+		if text, ok := local[core.LibraryLocalPath(origin, path, repoFiles, local)]; ok {
 			s := string(text)
 			file.Local = &s
 		}

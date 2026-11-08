@@ -138,11 +138,9 @@ export function AgentEditor(props: AgentEditorProps) {
       <fieldset className="editor-fields" disabled={readOnly}>
       <div className="agent-form">
         <div className="agent-form-row agent-form-row--pair">
-          <label className="agent-field"><span className="agent-field-label">Id</span>
-            {isNew
-              ? <input className="paper-field" aria-label="Id" placeholder="lowercase-id" value={agent.id} onChange={event => change({ id: event.currentTarget.value })} />
-              : <output className="paper-field agent-readonly" aria-label="Id" title="The id names the agent's folder and never changes. Rename it with Name.">{agent.id}</output>}
-          </label>
+          {!isNew && <label className="agent-field"><span className="agent-field-label">Id</span>
+            <output className="paper-field agent-readonly" aria-label="Id" title="The id names the agent's folder and never changes. Rename it with Name.">{agent.id}</output>
+          </label>}
           <label className="agent-field"><span className="agent-field-label">Name</span>
             <input className="paper-field" aria-label="Name" placeholder="Name" value={agent.name} onChange={event => change({ name: event.currentTarget.value })} />
           </label>

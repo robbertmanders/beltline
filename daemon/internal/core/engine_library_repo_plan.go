@@ -33,11 +33,11 @@ func LibraryInstallFiles(origin LibraryOrigin, kind, id string, repoFiles, local
 		return nil, nil
 	}
 	repoBelts, repoAgents, _ := libraryCheckRead(repoFiles)
-	_, localAgents, _ := libraryCheckRead(localFiles)
+	localBelts, localAgents, _ := libraryCheckRead(localFiles)
+	mapping := libraryMapIDs(origin, repoBelts, repoAgents, localBelts, localAgents)
 	if kind == "agent" {
-		agent := repoAgents[id][item.Version]
-		agent.Origin = &origin
-		return []LibraryFile{{Path: libraryVersionPath("agents", id, item.Version, "md"), Data: []byte(AgentFileWrite(agent))}}, nil
+		agent := libraryAgentInLibrary(repoAgents[id][item.Version], origin, mapping.agents.of(id), mapping.agents)
+		return []LibraryFile{{Path: libraryVersionPath("agents", agent.ID, item.Version, "md"), Data: []byte(AgentFileWrite(agent))}}, nil
 	}
 	belt := repoBelts[id][item.Version]
 	var files []LibraryFile
@@ -46,22 +46,29 @@ func LibraryInstallFiles(origin LibraryOrigin, kind, id string, repoFiles, local
 			continue
 		}
 		ref := *stage.Agent
-		if _, have := localAgents[ref.ID][ref.Version]; have {
+		localID := mapping.agents.of(ref.ID)
+		if _, have := localAgents[localID][ref.Version]; have {
 			continue
 		}
 		agent, ok := repoAgents[ref.ID][ref.Version]
 		if !ok {
 			return nil, NewFailure(fmt.Sprintf("%s v%d uses %s v%d, which %s does not hold.", id, item.Version, ref.ID, ref.Version, origin.Repository))
 		}
-		agent.Origin = &origin
-		files = append(files, LibraryFile{Path: libraryVersionPath("agents", ref.ID, ref.Version, "md"), Data: []byte(AgentFileWrite(agent))})
+		agent = libraryAgentInLibrary(agent, origin, localID, mapping.agents)
+		files = append(files, LibraryFile{Path: libraryVersionPath("agents", localID, ref.Version, "md"), Data: []byte(AgentFileWrite(agent))})
 	}
-	belt.Origin = &origin
+	localID := mapping.belts.of(id)
+	belt.OriginID = ""
+	if localID != id {
+		belt.OriginID = id
+	}
+	belt.ID, belt.Origin = localID, &origin
+	belt.Stages = libraryMapPins(belt.Stages, mapping.agents)
 	data, err := jsonx.MarshalStorage(belt)
 	if err != nil {
 		return nil, err
 	}
-	return append(files, LibraryFile{Path: libraryVersionPath("belts", id, item.Version, "json"), Data: data}), nil
+	return append(files, LibraryFile{Path: libraryVersionPath("belts", localID, item.Version, "json"), Data: data}), nil
 }
 
 // LibraryShareFiles are the files sharing item kind and id from this library to
@@ -73,13 +80,14 @@ func LibraryInstallFiles(origin LibraryOrigin, kind, id string, repoFiles, local
 func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFiles map[string][]byte) ([]LibraryFile, error) {
 	localBelts, localAgents, _ := libraryCheckRead(localFiles)
 	repoBelts, repoAgents, _ := libraryCheckRead(repoFiles)
+	agentsToRepo := libraryMapIDs(origin, nil, nil, nil, localAgents).agentsToRepo
 	var files []LibraryFile
 	if kind == "agent" {
 		versions := localAgents[id]
 		if len(versions) == 0 {
 			return nil, NewFailure(fmt.Sprintf("%s is not in your library.", id))
 		}
-		agent := versions[libraryNewest(versions)]
+		agent := libraryAgentInRepo(versions[libraryNewest(versions)], origin, agentsToRepo)
 		agent.Origin = nil
 		return libraryShareAgents(files, origin, []Agent{agent}, repoAgents)
 	}
@@ -88,6 +96,8 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 		return nil, NewFailure(fmt.Sprintf("%s is not in your library.", id))
 	}
 	belt := versions[libraryNewest(versions)]
+	pinned := belt.Stages
+	belt = libraryBeltInRepo(belt, origin, agentsToRepo)
 	belt.Origin = nil
 	belt.Base = ""
 	belt.RepositoryBases = nil
@@ -96,7 +106,7 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 		belt.Triggers[index].Repos = nil
 	}
 	var pins []Agent
-	for _, stage := range belt.Stages {
+	for _, stage := range pinned {
 		if stage.Agent == nil {
 			continue
 		}
@@ -105,6 +115,7 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 		if !ok {
 			return nil, NewFailure(fmt.Sprintf("%s v%d uses %s v%d, which is not in your library.", id, belt.Version, ref.ID, ref.Version))
 		}
+		agent = libraryAgentInRepo(agent, origin, agentsToRepo)
 		agent.Origin = nil
 		pins = append(pins, agent)
 	}

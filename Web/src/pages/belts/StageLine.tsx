@@ -185,7 +185,7 @@ function AddMenu({ line, at, route, disabled }: { line: StageLinePresentation; a
       onClick={() => { if (open) setPlacement(null); else if (plus.current) setPlacement(placeMenu(plus.current)); }}>+</button>}
     {placement && <div className="add-menu-card" role="menu" style={{ left: placement.left, top: placement.top, bottom: placement.bottom, maxHeight: placement.maxHeight }}>
       <p className="add-menu-section">Agent</p>
-      {line.agents.map(agent => <button key={`${agent.id}@${agent.version}`} type="button" role="menuitem" onClick={() => add({ type: "agent", agent: { id: agent.id, version: agent.version } })}>{agent.name}</button>)}
+      {line.agents.map(agent => <button key={`${agent.id}@${agent.version}`} type="button" role="menuitem" onClick={() => add({ type: "agent", agent: { id: agent.id, version: agent.version } })}>{agent.detail ? `${agent.name} · ${agent.detail}` : agent.name}</button>)}
       <p className="add-menu-section">Waits for you</p>
       <button type="button" role="menuitem" onClick={() => add({ type: "approve" })}>Approval</button>
       <button type="button" role="menuitem" onClick={() => add({ type: "prompt" })}>Prompt</button>

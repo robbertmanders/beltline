@@ -254,7 +254,7 @@ describe("saving a draft", () => {
     stubAgents();
     renderAgents(undefined, "/agents");
     await user.click(await screen.findByRole("button", { name: /New agent/ }));
-    await screen.findByLabelText("Id");
+    await screen.findByLabelText("Name");
     await user.click(screen.getByRole("button", { name: "Discard" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Agents" })).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Unsent drafts" })).toBeNull();

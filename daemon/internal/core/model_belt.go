@@ -42,6 +42,8 @@ type Belt struct {
 	Afk AfkMode `json:"afk"`
 	// Origin is the library repository this belt was installed from; nil for your own.
 	Origin *LibraryOrigin `json:"origin,omitzero"`
+	// OriginID is the id Origin's repository has for this belt, when its id here had to differ.
+	OriginID string `json:"originId,omitzero"`
 }
 
 // MarshalJSON writes the belt with its struct tags, its repository overrides cleaned.
