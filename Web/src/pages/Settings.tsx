@@ -28,13 +28,21 @@ function AppearanceControl() {
   </div>;
 }
 
-/** Notify me is the daemon's confirmed setting; the checkbox shows it and saves each change through the settings patch. */
+/** An on/off setting as the app's pill switch, the sidebar's Global AFK look, with its name beside it. */
+function PillToggle({ label, checked, disabled, onChange }: { label: string; checked: boolean; disabled?: boolean; onChange: (checked: boolean) => void }) {
+  return <button type="button" role="switch" className="action-switch settings-toggle" aria-checked={checked} disabled={disabled} onClick={() => onChange(!checked)}>
+    <span className="action-switch-track" aria-hidden="true"><span className="action-switch-thumb" /></span>
+    <span>{label}</span>
+  </button>;
+}
+
+/** Notify me is the daemon's confirmed setting; the toggle shows it and saves each change through the settings patch. */
 function GeneralCard({ settings }: { settings: SettingsResponse }) {
   const command = useCommand();
   return <section className="settings-card" aria-label="General">
     <p className="paper-tag paper-tag--strong">General</p>
     <AppearanceControl />
-    <label className="afk-toggle"><input type="checkbox" checked={settings.notifications} onChange={event => command.submit(settingsPatchRequest({ notifications: event.currentTarget.checked }))} />Notify me when a run needs me</label>
+    <PillToggle label="Notify me when a run needs me" checked={settings.notifications} onChange={notifications => command.submit(settingsPatchRequest({ notifications }))} />
     <p className="muted-line">Send macOS notifications when a run needs you.</p>
     {command.error ? <ErrorProblems error={command.error} /> : null}
   </section>;
@@ -51,10 +59,10 @@ function ExperimentalCard({ settings }: { settings: SettingsResponse }) {
   return <section className="settings-card" aria-label="Experimental">
     <p className="paper-tag paper-tag--strong">Experimental</p>
     <p className="muted-line">Both features are experimental: their figures, layout and controls may still change.</p>
-    <label className="afk-toggle"><input type="checkbox" checked={settings.showInsights} onChange={event => command.submit(settingsPatchRequest({ showInsights: event.currentTarget.checked }))} />Show the Insights page</label>
+    <PillToggle label="Show the Insights page" checked={settings.showInsights} onChange={showInsights => command.submit(settingsPatchRequest({ showInsights }))} />
     <p className="muted-line">List Insights in the navigation, with each belt's first-try rate, time and cost.</p>
-    <label className="afk-toggle"><input type="checkbox" checked={settings.enableShadowTests} disabled={command.pending || shadowLocked}
-      onChange={event => command.submit(settingsPatchRequest({ enableShadowTests: event.currentTarget.checked }))} />Enable shadow tests</label>
+    <PillToggle label="Enable shadow tests" checked={settings.enableShadowTests} disabled={command.pending || shadowLocked}
+      onChange={enableShadowTests => command.submit(settingsPatchRequest({ enableShadowTests }))} />
     <p className="muted-line">Try a changed belt beside its live version. Accept or discard every running shadow test before turning this off.</p>
     {shadowLocked && settings.shadowTestsToggle.reason ? <p className="muted-line" role="note">{settings.shadowTestsToggle.reason}</p> : null}
     {command.error ? <ErrorProblems error={command.error} /> : null}
@@ -131,13 +139,13 @@ export function SettingsPage() {
     {settings.isPending && !settings.data && <section className="settings-card"><p className="loading-state" role="status">Loading settings…</p></section>}
     {settings.error && !settings.data && <section className="error-panel"><h2>Unable to load this page</h2><ErrorProblems error={settings.error} /></section>}
     {settings.data && <>
-      <AllowedModelsCard />
       <GeneralCard settings={settings.data} />
-      <ExperimentalCard settings={settings.data} />
+      <AllowedModelsCard />
       <DataCard settings={settings.data} />
-      <QuitCard />
       <LibraryRepositoriesCard settings={settings.data} />
       <ToolsCard />
+      <ExperimentalCard settings={settings.data} />
+      <QuitCard />
       <p className="loaded-state screen-reader-only" role="status">Settings loaded</p>
     </>}
     {settings.isError && settings.data && <p className="stale-error" role="status">Showing the last loaded settings; refresh failed.</p>}
