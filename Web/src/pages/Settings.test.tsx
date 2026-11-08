@@ -26,7 +26,13 @@ async function renderSettings(routes: Record<string, Handler> = {}) {
   return daemon;
 }
 
-const notifyCheckbox = () => screen.getByRole("checkbox", { name: "Notify me when a run needs me" }) as HTMLInputElement;
+/** A pill switch's state, and `flip`, the control that changes it. */
+function pillToggle(name: string) {
+  const flip = screen.getByRole("switch", { name }) as HTMLButtonElement;
+  return { checked: flip.getAttribute("aria-checked") === "true", disabled: flip.disabled, flip };
+}
+
+const notifyToggle = () => pillToggle("Notify me when a run needs me");
 const settingsWithNotifications = (notifications: boolean) => JSON.stringify({ ...JSON.parse(goldenText("settings.json")) as Record<string, unknown>, notifications });
 
 /** Settings whose save is kept by the daemon, so the next read confirms it; `rejected` refuses the save instead. */
@@ -115,26 +121,26 @@ describe("Settings cards", () => {
     expect(screen.getByText("Send macOS notifications when a run needs you.")).toBeTruthy();
     expect(screen.queryByText(/Permission:/)).toBeNull();
     expect(screen.queryByRole("button", { name: "Allow notifications" })).toBeNull();
-    await userEvent.setup().click(notifyCheckbox());
+    await userEvent.setup().click(notifyToggle().flip);
     await waitFor(() => expect(daemon.posts("/settings/patch")).toHaveLength(1));
     expect(requestPermission).not.toHaveBeenCalled();
     expect(construct).not.toHaveBeenCalled();
   });
 
-  it("saves a notification change as an exact patch and shows the confirmed value, or the refusal with the checkbox kept", async () => {
+  it("saves a notification change as an exact patch and shows the confirmed value, or the refusal with the toggle kept", async () => {
     const user = userEvent.setup();
     const saved = await renderSettings(notificationRoutes(false));
-    expect(notifyCheckbox().checked).toBe(false);
-    await user.click(notifyCheckbox());
-    await waitFor(() => expect(notifyCheckbox().checked).toBe(true));
+    expect(notifyToggle().checked).toBe(false);
+    await user.click(notifyToggle().flip);
+    await waitFor(() => expect(notifyToggle().checked).toBe(true));
     expect(saved.posts("/settings/patch")[0]!.body).toEqual({ notifications: true });
     cleanup();
 
     await renderSettings(notificationRoutes(true, true));
-    await user.click(notifyCheckbox());
+    await user.click(notifyToggle().flip);
     expect(await screen.findByText("Settings rejected")).toBeTruthy();
     expect(screen.getByText("Choose an allowed model")).toBeTruthy();
-    expect(notifyCheckbox().checked).toBe(true);
+    expect(notifyToggle().checked).toBe(true);
   });
 });
 
@@ -195,8 +201,8 @@ describe("Appearance in General", () => {
   });
 });
 
-const insightsCheckbox = () => screen.getByRole("checkbox", { name: "Show the Insights page" }) as HTMLInputElement;
-const shadowCheckbox = () => screen.getByRole("checkbox", { name: "Enable shadow tests" }) as HTMLInputElement;
+const insightsToggle = () => pillToggle("Show the Insights page");
+const shadowToggle = () => pillToggle("Enable shadow tests");
 const lockedReason = "Accept or discard all running shadow tests before turning this off.";
 const experimentalSettings = (overrides: Record<string, unknown>) => JSON.stringify({ ...JSON.parse(goldenText("settings.json")) as Record<string, unknown>, ...overrides });
 
@@ -214,16 +220,22 @@ function switchRoutes(initial: Record<string, unknown>, rejected: Handler | null
 }
 
 describe("Experimental settings", () => {
-  it("places an Experimental card after General, with both switches and their explanations", async () => {
+  it("orders the cards with Allowed models under General, and Experimental then Quit last", async () => {
+    await renderSettings();
+    const page = screen.getByRole("heading", { level: 1, name: "Settings" }).closest("article")!;
+    expect(Array.from(page.querySelectorAll(":scope > section")).map(card => card.getAttribute("aria-label")))
+      .toEqual(["General", "Allowed models", "Data", "Library repositories", "Tools", "Experimental", "Quit card"]);
+  });
+
+  it("shows an Experimental card with both switches and their explanations", async () => {
     await renderSettings();
     const general = screen.getByRole("region", { name: "General" });
     const experimental = screen.getByRole("region", { name: "Experimental" });
-    expect(general.compareDocumentPosition(experimental) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(within(general).queryByRole("checkbox", { name: "Show the Insights page" })).toBeNull();
-    expect(within(general).getByRole("checkbox", { name: "Notify me when a run needs me" })).toBeTruthy();
+    expect(within(general).queryByRole("switch", { name: "Show the Insights page" })).toBeNull();
+    expect(within(general).getByRole("switch", { name: "Notify me when a run needs me" })).toBeTruthy();
     expect(within(general).getByRole("group", { name: "Appearance" })).toBeTruthy();
-    expect(within(experimental).getByRole("checkbox", { name: "Show the Insights page" })).toBeTruthy();
-    expect(within(experimental).getByRole("checkbox", { name: "Enable shadow tests" })).toBeTruthy();
+    expect(within(experimental).getByRole("switch", { name: "Show the Insights page" })).toBeTruthy();
+    expect(within(experimental).getByRole("switch", { name: "Enable shadow tests" })).toBeTruthy();
     expect(within(experimental).getByText("Both features are experimental: their figures, layout and controls may still change.")).toBeTruthy();
     expect(within(experimental).getByText("List Insights in the navigation, with each belt's first-try rate, time and cost.")).toBeTruthy();
     expect(within(experimental).getByText("Try a changed belt beside its live version. Accept or discard every running shadow test before turning this off.")).toBeTruthy();
@@ -232,11 +244,11 @@ describe("Experimental settings", () => {
   it("keeps Enable shadow tests checked and disabled with the daemon's reason while a test runs, and Insights usable", async () => {
     const user = userEvent.setup();
     const daemon = await renderSettings({ "/api/v1/settings/patch": fixtureRoute("settings.json") });
-    expect(shadowCheckbox().checked).toBe(true);
-    expect(shadowCheckbox().disabled).toBe(true);
+    expect(shadowToggle().checked).toBe(true);
+    expect(shadowToggle().disabled).toBe(true);
     expect(screen.getByText(lockedReason)).toBeTruthy();
-    expect(insightsCheckbox().disabled).toBe(false);
-    await user.click(insightsCheckbox());
+    expect(insightsToggle().disabled).toBe(false);
+    await user.click(insightsToggle().flip);
     await waitFor(() => expect(daemon.posts("/settings/patch")).toHaveLength(1));
     expect(daemon.posts("/settings/patch")[0]!.body).toEqual({ showInsights: false });
   });
@@ -245,24 +257,24 @@ describe("Experimental settings", () => {
     const user = userEvent.setup();
     const routes = switchRoutes({ showInsights: false, enableShadowTests: false, shadowTestsToggle: { enabled: true } });
     const daemon = await renderSettings(routes);
-    expect(insightsCheckbox().checked).toBe(false);
-    expect(shadowCheckbox().checked).toBe(false);
-    expect(shadowCheckbox().disabled).toBe(false);
+    expect(insightsToggle().checked).toBe(false);
+    expect(shadowToggle().checked).toBe(false);
+    expect(shadowToggle().disabled).toBe(false);
 
-    await user.click(insightsCheckbox());
-    await waitFor(() => expect(insightsCheckbox().checked).toBe(true));
+    await user.click(insightsToggle().flip);
+    await waitFor(() => expect(insightsToggle().checked).toBe(true));
     expect(daemon.posts("/settings/patch")[0]!.body).toEqual({ showInsights: true });
-    expect(shadowCheckbox().checked).toBe(false);
+    expect(shadowToggle().checked).toBe(false);
 
-    await user.click(shadowCheckbox());
-    await waitFor(() => expect(shadowCheckbox().checked).toBe(true));
+    await user.click(shadowToggle().flip);
+    await waitFor(() => expect(shadowToggle().checked).toBe(true));
     expect(daemon.posts("/settings/patch")[1]!.body).toEqual({ enableShadowTests: true });
-    expect(insightsCheckbox().checked).toBe(true);
+    expect(insightsToggle().checked).toBe(true);
     cleanup();
 
     const reloaded = await renderSettings(routes);
-    expect(insightsCheckbox().checked).toBe(true);
-    expect(shadowCheckbox().checked).toBe(true);
+    expect(insightsToggle().checked).toBe(true);
+    expect(shadowToggle().checked).toBe(true);
     expect(reloaded.posts("/settings/patch")).toHaveLength(0);
   });
 
@@ -271,17 +283,17 @@ describe("Experimental settings", () => {
     const initial = { showInsights: false, enableShadowTests: false, shadowTestsToggle: { enabled: true } };
     const daemon = await renderSettings(switchRoutes(initial,
       () => json({ message: "Insights could not be saved.", problems: ["The daemon refused the Insights switch."] }, 422)));
-    await user.click(insightsCheckbox());
+    await user.click(insightsToggle().flip);
     expect(await screen.findByText("Insights could not be saved.")).toBeTruthy();
     expect(screen.getByText("The daemon refused the Insights switch.")).toBeTruthy();
     expect(daemon.posts("/settings/patch")[0]!.body).toEqual({ showInsights: true });
-    expect(insightsCheckbox().checked).toBe(false);
-    expect(shadowCheckbox().checked).toBe(false);
+    expect(insightsToggle().checked).toBe(false);
+    expect(shadowToggle().checked).toBe(false);
     cleanup();
 
     await renderSettings(switchRoutes(initial));
-    expect(insightsCheckbox().checked).toBe(false);
-    expect(shadowCheckbox().checked).toBe(false);
+    expect(insightsToggle().checked).toBe(false);
+    expect(shadowToggle().checked).toBe(false);
   });
 
   it("shows a refused shadow-switch turn-off inline, keeps the switch on, and keeps it on after a reload", async () => {
@@ -289,28 +301,28 @@ describe("Experimental settings", () => {
     const initial = { showInsights: false, enableShadowTests: true, shadowTestsToggle: { enabled: true } };
     const daemon = await renderSettings(switchRoutes(initial,
       () => json({ message: "Shadow tests cannot start.", problems: [lockedReason] }, 422)));
-    await user.click(shadowCheckbox());
+    await user.click(shadowToggle().flip);
     expect(await screen.findByText("Shadow tests cannot start.")).toBeTruthy();
     expect(screen.getByText(lockedReason)).toBeTruthy();
     expect(daemon.posts("/settings/patch")[0]!.body).toEqual({ enableShadowTests: false });
-    expect(shadowCheckbox().checked).toBe(true);
-    expect(insightsCheckbox().checked).toBe(false);
+    expect(shadowToggle().checked).toBe(true);
+    expect(insightsToggle().checked).toBe(false);
     cleanup();
 
     await renderSettings(switchRoutes(initial));
-    expect(shadowCheckbox().checked).toBe(true);
-    expect(insightsCheckbox().checked).toBe(false);
+    expect(shadowToggle().checked).toBe(true);
+    expect(insightsToggle().checked).toBe(false);
   });
 
   it("unlocks Enable shadow tests when the last test ends, leaving it checked", async () => {
     const state = { enableShadowTests: true, shadowTestsToggle: { enabled: false, reason: lockedReason } };
     let saved: Record<string, unknown> = state;
     const daemon = await renderSettings({ "/api/v1/settings": () => json(experimentalSettings(saved)) });
-    expect(shadowCheckbox().disabled).toBe(true);
+    expect(shadowToggle().disabled).toBe(true);
     saved = { ...state, shadowTestsToggle: { enabled: true } };
     libraryChanged(2);
-    await waitFor(() => expect(shadowCheckbox().disabled).toBe(false));
-    expect(shadowCheckbox().checked).toBe(true);
+    await waitFor(() => expect(shadowToggle().disabled).toBe(false));
+    expect(shadowToggle().checked).toBe(true);
     expect(screen.queryByText(lockedReason)).toBeNull();
     expect(daemon.posts()).toEqual([]);
   });
