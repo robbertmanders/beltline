@@ -48,6 +48,12 @@ func libraryMapIDs(origin LibraryOrigin, repoBelts libraryBelts, repoAgents libr
 		func(local, repo Agent) bool {
 			return libraryAgentText(libraryAgentInRepo(local, origin, toRepo)) == libraryAgentText(repo)
 		})
+	// An agent can go to a repository agent that isn't installed yet, under the id that agent will have here.
+	for repoID, localID := range agents {
+		if localID != repoID {
+			toRepo[localID] = repoID
+		}
+	}
 	belts := libraryMapKind(origin, repoBelts, localBelts,
 		func(belt Belt) (*LibraryOrigin, string) { return belt.Origin, belt.OriginID },
 		nil,
@@ -68,7 +74,9 @@ func libraryOtherOriginTargets(origin LibraryOrigin, localAgents libraryAgents) 
 		}
 		for _, outcome := range agent.Outcomes {
 			for _, target := range outcome.To {
-				targets[target] = struct{}{}
+				if !libraryTargetIsStage(target) {
+					targets[target] = struct{}{}
+				}
 			}
 		}
 	}
@@ -125,6 +133,36 @@ func libraryMapKind[T any](origin LibraryOrigin, repo, local map[string]map[int]
 		used[localID] = struct{}{}
 	}
 	return ids
+}
+
+// libraryInheritOrigins gives each version that doesn't say where it came from what the version before it
+// says, so one newer file written without them doesn't cut a copy off from its repository.
+func libraryInheritOrigins[T any](items map[string]map[int]T, read func(T) (*LibraryOrigin, string), write func(*T, *LibraryOrigin, string)) {
+	for _, versions := range items {
+		var from *LibraryOrigin
+		var originID string
+		for _, version := range slices.Sorted(maps.Keys(versions)) {
+			item := versions[version]
+			own, ownID := read(item)
+			sameOrigin := own != nil && from != nil && *own == *from
+			if ownID == "" && (own == nil || sameOrigin) {
+				write(&item, from, originID)
+				versions[version] = item
+				continue
+			}
+			from, originID = own, ownID
+		}
+	}
+}
+
+// libraryLocalOnly says a version from has no claim to be the repository's: it didn't come from origin,
+// and the repository's version of that number is missing or differs.
+func libraryLocalOnly[T any](origin LibraryOrigin, from *LibraryOrigin, local T, version int, repo map[int]T, same func(local, repo T) bool) bool {
+	if from != nil && *from == origin {
+		return false
+	}
+	held, ok := repo[version]
+	return !ok || !same(local, held)
 }
 
 // librarySharesAVersion says whether some version local has is the same as repo's of that number.
@@ -200,11 +238,18 @@ func libraryMapOutcomes(outcomes []AgentOutcome, ids libraryIDs) []AgentOutcome 
 	for index := range mapped {
 		to := slices.Clone(mapped[index].To)
 		for at := range to {
-			to[at] = ids.of(to[at])
+			if !libraryTargetIsStage(to[at]) {
+				to[at] = ids.of(to[at])
+			}
 		}
 		mapped[index].To = to
 	}
 	return mapped
+}
+
+// libraryTargetIsStage says an outcome's target names the watch stage by its type, not an agent by its id.
+func libraryTargetIsStage(target string) bool {
+	return target == string(StageTypeWatch)
 }
 
 // libraryMapPins is stages with the agents they pin mapped by ids.

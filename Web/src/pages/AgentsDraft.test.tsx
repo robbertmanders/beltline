@@ -45,6 +45,24 @@ describe("saving a draft", () => {
     expect(await screen.findByText(draftGolden().presentation.status as string)).toBeTruthy();
   });
 
+  it("moves edits made during a save that gives the agent its id onto that id", async () => {
+    const user = userEvent.setup();
+    let finishSave!: (response: Response) => void;
+    const { requests } = stubAgents({ save: () => new Promise(resolve => { finishSave = resolve; }) });
+    renderAgents();
+    const name = await screen.findByLabelText("Name") as HTMLInputElement;
+    fireEvent.change(name, { target: { value: "Submitted name" } });
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Newer unsaved edit" } });
+    await waitFor(() => expect(finishSave).toBeTypeOf("function"));
+    const submitted = posts(requests).find(request => request.path === "/api/v1/agents/save")!.body!.agent as Record<string, unknown>;
+    finishSave(json({ agent: { ...submitted, id: "submitted-name-ab12", version: 1 }, archived: false, glyph: "funnel", detail: "v1" }));
+    await waitFor(() => {
+      const previews = posts(requests).filter(request => request.path === "/api/v1/agents/draft/presentation");
+      expect((previews.at(-1)!.body!.agent as Record<string, unknown>).id).toBe("submitted-name-ab12");
+    });
+  });
+
   it("applies only the most recently requested runner switch", async () => {
     const replies: Array<() => void> = [];
     stubAgents({ switchRunner: body => new Promise(resolve => {

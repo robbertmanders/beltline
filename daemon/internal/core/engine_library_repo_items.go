@@ -52,21 +52,22 @@ func LibraryRepoItems(origin LibraryOrigin, repoFiles, localFiles map[string][]b
 	for _, id := range slices.Sorted(maps.Keys(repoBelts)) {
 		latest := libraryNewest(repoBelts[id])
 		belt := repoBelts[id][latest]
-		state, reason := libraryBeltStanding(origin, belt, latest, localBelts, localAgents, repoAgents, mapping)
-		items = append(items, libraryItem("belt", belt.ID, mapping.belts.of(id), belt.Name, latest, localBelts[mapping.belts.of(id)], state, reason))
+		state, reason := libraryBeltStanding(origin, belt, latest, localBelts, localAgents, repoAgents, repoBelts[id], mapping)
+		items = append(items, libraryItem("belt", belt.ID, mapping.belts.of(id), belt.Name, latest, localBelts[mapping.belts.of(id)], len(localBelts[id]) > 0, state, reason))
 	}
 	for _, id := range slices.Sorted(maps.Keys(repoAgents)) {
 		latest := libraryNewest(repoAgents[id])
 		agent := repoAgents[id][latest]
-		state, reason := libraryAgentStanding(origin, agent, latest, localAgents[mapping.agents.of(id)], mapping)
-		items = append(items, libraryItem("agent", agent.ID, mapping.agents.of(id), agent.Name, latest, localAgents[mapping.agents.of(id)], state, reason))
+		state, reason := libraryAgentStanding(origin, agent, latest, localAgents[mapping.agents.of(id)], repoAgents[id], mapping)
+		items = append(items, libraryItem("agent", agent.ID, mapping.agents.of(id), agent.Name, latest, localAgents[mapping.agents.of(id)], len(localAgents[id]) > 0, state, reason))
 	}
 	return items, problems
 }
 
 // libraryBeltStanding is where a belt stands. The agent versions it pins must not
-// have changed here, and then its own versions decide.
-func libraryBeltStanding(origin LibraryOrigin, belt Belt, latest int, localBelts libraryBelts, localAgents libraryAgents, repoAgents libraryAgents, mapping libraryIDMapping) (LibraryItemState, string) {
+// have changed here, and then its own versions decide. repoVersions are the
+// repository's versions of the belt, by number.
+func libraryBeltStanding(origin LibraryOrigin, belt Belt, latest int, localBelts libraryBelts, localAgents libraryAgents, repoAgents libraryAgents, repoVersions map[int]Belt, mapping libraryIDMapping) (LibraryItemState, string) {
 	for _, stage := range belt.Stages {
 		if stage.Agent == nil {
 			continue
@@ -85,7 +86,12 @@ func libraryBeltStanding(origin LibraryOrigin, belt Belt, latest int, localBelts
 	}
 	newest := libraryNewest(versions)
 	localBelt := versions[newest]
+	same := func(local, repo Belt) bool {
+		return libraryBeltShared(libraryBeltInRepo(local, origin, mapping.agentsToRepo)) == libraryBeltShared(repo)
+	}
 	switch {
+	case newest < latest && libraryLocalOnly(origin, localBelt.Origin, localBelt, newest, repoVersions, same):
+		return LibraryItemConflict, libraryChangedReason(localBelt.ID, newest)
 	case newest < latest:
 		return LibraryItemUpdate, ""
 	case newest == latest && libraryBeltShared(libraryBeltInRepo(localBelt, origin, mapping.agentsToRepo)) != libraryBeltShared(belt):
@@ -94,14 +100,19 @@ func libraryBeltStanding(origin LibraryOrigin, belt Belt, latest int, localBelts
 	return LibraryItemInstalled, ""
 }
 
-// libraryAgentStanding is where an agent stands, from this library's versions of it.
-func libraryAgentStanding(origin LibraryOrigin, agent Agent, latest int, versions map[int]Agent, mapping libraryIDMapping) (LibraryItemState, string) {
+// libraryAgentStanding is where an agent stands, from this library's versions of it and the repository's.
+func libraryAgentStanding(origin LibraryOrigin, agent Agent, latest int, versions, repoVersions map[int]Agent, mapping libraryIDMapping) (LibraryItemState, string) {
 	if len(versions) == 0 {
 		return LibraryItemAvailable, ""
 	}
 	newest := libraryNewest(versions)
 	localAgent := versions[newest]
+	same := func(local, repo Agent) bool {
+		return libraryAgentText(libraryAgentInRepo(local, origin, mapping.agentsToRepo)) == libraryAgentText(repo)
+	}
 	switch {
+	case newest < latest && libraryLocalOnly(origin, localAgent.Origin, localAgent, newest, repoVersions, same):
+		return LibraryItemConflict, libraryChangedReason(localAgent.ID, newest)
 	case newest < latest:
 		return LibraryItemUpdate, ""
 	case newest == latest && libraryAgentText(libraryAgentInRepo(localAgent, origin, mapping.agentsToRepo)) != libraryAgentText(agent):
@@ -110,8 +121,9 @@ func libraryAgentStanding(origin LibraryOrigin, agent Agent, latest int, version
 	return LibraryItemInstalled, ""
 }
 
-// libraryItem is one item with its state, the local version it has and its install action.
-func libraryItem[T any](kind, id, localID, name string, version int, local map[int]T, state LibraryItemState, reason string) LibraryItem {
+// libraryItem is one item with its state, the local version it has and its install action. idInUse says
+// the library holds something under id; without that, a different localID means the id is reserved.
+func libraryItem[T any](kind, id, localID, name string, version int, local map[int]T, idInUse bool, state LibraryItemState, reason string) LibraryItem {
 	item := LibraryItem{Kind: kind, ID: id, Name: name, Version: version, State: state}
 	if len(local) > 0 {
 		newest := libraryNewest(local)
@@ -119,6 +131,9 @@ func libraryItem[T any](kind, id, localID, name string, version int, local map[i
 	}
 	if reason == "" && localID != id {
 		reason = fmt.Sprintf("Your library uses the id %s for something else, so this is kept as a separate %s, %s.", id, kind, localID)
+		if !idInUse {
+			reason = fmt.Sprintf("An agent you installed from another repository goes to the id %s, so this is kept as a separate %s, %s.", id, kind, localID)
+		}
 	}
 	action := libraryAction("install", true, "")
 	switch state {

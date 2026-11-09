@@ -126,6 +126,136 @@ func TestLibraryKeepsAnIDAnotherRepositorysAgentGoesTo(t *testing.T) {
 	}
 }
 
+func TestLibrarySharesAnotherRepositorysItemAgainAfterAnEdit(t *testing.T) {
+	t.Parallel()
+	other := LibraryOrigin{Repository: "owner/other"}
+	repo := libraryIDsFiles(libraryIDsOf("build", 1, "Build", nil))
+	local := libraryIDsFiles(libraryIDsOf("build", 1, "Build", libraryIDsFrom(other, "")))
+	if files, err := LibraryShareFiles(libraryTestOrigin, "agent", "build", local, repo); err != nil || len(files) != 0 {
+		t.Fatalf("an unchanged re-share: files %v, err %v", files, err)
+	}
+	path, data := libraryIDsAgent("build", 2, "Build, edited", libraryIDsFrom(other, ""))
+	local[path] = data
+	files, err := LibraryShareFiles(libraryTestOrigin, "agent", "build", local, repo)
+	if err != nil || len(files) != 1 || files[0].Path != path {
+		t.Fatalf("a re-share after an edit: files %v, err %v", files, err)
+	}
+}
+
+func TestLibraryLocalOnlyNewestVersionIsAConflictNotAnUpdate(t *testing.T) {
+	t.Parallel()
+	repo := libraryIDsFiles(libraryIDsOf("build", 1, "Build", nil), libraryIDsOf("build", 3, "Build three", nil))
+	local := libraryIDsFiles(libraryIDsOf("build", 1, "Build", nil), libraryIDsOf("build", 2, "Mine", nil))
+	items, _ := LibraryRepoItems(libraryTestOrigin, repo, local)
+	item := libraryTestState(t, items, "agent", "build")
+	if item.State != LibraryItemConflict || item.Reason == nil || !strings.Contains(*item.Reason, "You changed build v2") {
+		t.Fatalf("a local v2 under the repository's v3: %+v", item)
+	}
+	if _, files, err := LibraryInstallFiles(libraryTestOrigin, "agent", "build", repo, local); err == nil {
+		t.Fatalf("install wrote %v", files)
+	}
+}
+
+func TestLibraryFollowsACopyWhoseNewestVersionForgotItsOrigin(t *testing.T) {
+	t.Parallel()
+	repo := libraryIDsFiles(libraryIDsOf("build", 1, "Theirs", nil), libraryIDsOf("build", 3, "Theirs three", nil))
+	local := libraryIDsFiles(
+		libraryIDsOf("build", 5, "Mine", nil),
+		libraryIDsOf("build-7k2m", 1, "Theirs", libraryIDsFrom(libraryTestOrigin, "build")),
+		libraryIDsOf("build-7k2m", 2, "Theirs, edited", nil))
+	items, _ := LibraryRepoItems(libraryTestOrigin, repo, local)
+	item := libraryTestState(t, items, "agent", "build")
+	if item.LocalID == nil || *item.LocalID != "build-7k2m" {
+		t.Fatalf("the copy was lost: %+v", item)
+	}
+	files, err := LibraryShareFiles(LibraryOrigin{Repository: libraryTestOrigin.Repository, Path: libraryTestOrigin.Path}, "agent", "build-7k2m", local, repo)
+	if err != nil || len(files) != 1 || files[0].Path != "agents/build/v2.md" {
+		t.Fatalf("share: files %v, err %v", files, err)
+	}
+}
+
+func TestLibraryKeepsAWatchTargetWhenAnAgentIsCalledWatch(t *testing.T) {
+	t.Parallel()
+	toWatch := func(agent *Agent) {
+		agent.Outcomes = []AgentOutcome{{Name: "wait", When: "Wait.", Tone: ToneNeutral, Then: Then{Action: ThenActionGoto}, To: []string{"watch"}}}
+	}
+	repo := libraryIDsFiles(libraryIDsOf("a", 1, "A", toWatch), libraryIDsOf("watch", 1, "Theirs", nil))
+	local := libraryIDsFiles(libraryIDsOf("watch", 1, "Mine", nil))
+	_, files, err := LibraryInstallFiles(libraryTestOrigin, "agent", "a", repo, local)
+	if err != nil || len(files) != 1 || !strings.Contains(string(files[0].Data), "to: watch\n") {
+		t.Fatalf("install: files %s, err %v", files, err)
+	}
+
+	other := LibraryOrigin{Repository: "owner/other"}
+	reserving := libraryIDsFiles(libraryIDsOf("a", 1, "A", func(agent *Agent) {
+		libraryIDsFrom(other, "")(agent)
+		toWatch(agent)
+	}))
+	if localID, _, err := LibraryInstallFiles(libraryTestOrigin, "agent", "watch", repo, reserving); err != nil || localID != "watch" {
+		t.Fatalf("a watch target reserved the id: %q, err %v", localID, err)
+	}
+}
+
+func TestLibrarySeparateCopyReasonNamesAReservedID(t *testing.T) {
+	t.Parallel()
+	other := LibraryOrigin{Repository: "owner/other"}
+	local := libraryIDsFiles(libraryIDsOf("a", 1, "A", func(agent *Agent) {
+		libraryIDsFrom(other, "")(agent)
+		agent.Outcomes = []AgentOutcome{{Name: "back", When: "Go back.", Tone: ToneNeutral, Then: Then{Action: ThenActionGoto}, To: []string{"b"}}}
+	}))
+	items, _ := LibraryRepoItems(libraryTestOrigin, libraryIDsFiles(libraryIDsOf("b", 1, "B", nil)), local)
+	item := libraryTestState(t, items, "agent", "b")
+	if item.Reason == nil || !strings.Contains(*item.Reason, "another repository goes to the id b") {
+		t.Fatalf("reason: %+v", item)
+	}
+}
+
+func TestLibraryAgentGoingToAnAgentNotInstalledStaysUnchanged(t *testing.T) {
+	t.Parallel()
+	toBuild := func(agent *Agent) {
+		agent.Outcomes = []AgentOutcome{{Name: "back", When: "Go back.", Tone: ToneNeutral, Then: Then{Action: ThenActionGoto}, To: []string{"build"}}}
+	}
+	repo := libraryIDsFiles(libraryIDsOf("a", 1, "A", toBuild), libraryIDsOf("build", 1, "Theirs", nil))
+	local := libraryIDsFiles(libraryIDsOf("build", 1, "Mine", nil))
+	localID, files, err := LibraryInstallFiles(libraryTestOrigin, "agent", "a", repo, local)
+	if err != nil || localID != "a" || len(files) != 1 {
+		t.Fatalf("install: id %q, files %v, err %v", localID, files, err)
+	}
+	if strings.Contains(string(files[0].Data), "- build\n") {
+		t.Fatalf("the installed agent still goes to the local build:\n%s", files[0].Data)
+	}
+	local[files[0].Path] = files[0].Data
+	items, _ := LibraryRepoItems(libraryTestOrigin, repo, local)
+	if item := libraryTestState(t, items, "agent", "a"); item.State != LibraryItemInstalled {
+		t.Fatalf("straight after install: %+v", item)
+	}
+	if files, err := LibraryShareFiles(libraryTestOrigin, "agent", "a", local, repo); err != nil || len(files) != 0 {
+		t.Fatalf("share: files %v, err %v", files, err)
+	}
+}
+
+func TestLibraryInstallRefusesAPinTheRepositoryDoesNotHold(t *testing.T) {
+	t.Parallel()
+	belt := SampleBelt([]string{"a/b"}, "agent", SampleAgents(), true)
+	belt.ID, belt.Version = "team", 1
+	for index, stage := range belt.Stages {
+		if stage.Agent != nil {
+			belt.Stages = belt.Stages[index : index+1]
+			break
+		}
+	}
+	belt.Stages[0].Agent = &AgentRef{ID: "build", Version: 1}
+	data, err := jsonx.MarshalStorage(belt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := map[string][]byte{libraryVersionPath("belts", "team", 1, "json"): data}
+	local := libraryIDsFiles(libraryIDsOf("build", 1, "Mine", nil))
+	if _, files, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, local); err == nil || !strings.Contains(err.Error(), "does not hold") {
+		t.Fatalf("files %v, err %v", files, err)
+	}
+}
+
 func TestLibraryLocalPathsFollowTheMappedIDs(t *testing.T) {
 	t.Parallel()
 	repo := libraryIDsFiles(libraryIDsOf("build", 1, "Theirs", nil))

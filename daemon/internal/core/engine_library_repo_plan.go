@@ -48,7 +48,8 @@ func LibraryInstallFiles(origin LibraryOrigin, kind, id string, repoFiles, local
 		}
 		ref := *stage.Agent
 		localID := mapping.agents.of(ref.ID)
-		if _, have := localAgents[localID][ref.Version]; have {
+		// An id the repository doesn't hold says nothing about a local agent of that id.
+		if _, have := localAgents[localID][ref.Version]; have && len(repoAgents[ref.ID]) > 0 {
 			continue
 		}
 		agent, ok := repoAgents[ref.ID][ref.Version]
@@ -84,6 +85,9 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 	repoBelts, repoAgents, _ := libraryCheckRead(repoFiles)
 	mapping := libraryMapIDs(origin, repoBelts, repoAgents, localBelts, localAgents)
 	agentsToRepo := mapping.agentsToRepo
+	sameAgent := func(local, repo Agent) bool {
+		return libraryAgentText(libraryAgentInRepo(local, origin, agentsToRepo)) == libraryAgentText(repo)
+	}
 	var files []LibraryFile
 	if kind == "agent" {
 		versions := localAgents[id]
@@ -92,7 +96,7 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 		}
 		agent := libraryAgentInRepo(versions[libraryNewest(versions)], origin, agentsToRepo)
 		agent.Origin = nil
-		if err := libraryShareIDFree(origin, "agent", id, agent.ID, len(repoAgents[agent.ID]) > 0, mapping.agents); err != nil {
+		if err := libraryShareIDFree(origin, "agent", id, agent.ID, len(repoAgents[agent.ID]) > 0, librarySharesAVersion(versions, repoAgents[agent.ID], sameAgent), mapping.agents); err != nil {
 			return nil, err
 		}
 		return libraryShareAgents(files, origin, []Agent{agent}, repoAgents)
@@ -100,6 +104,9 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 	versions := localBelts[id]
 	if len(versions) == 0 {
 		return nil, NewFailure(fmt.Sprintf("%s is not in your library.", id))
+	}
+	sameBelt := func(local, repo Belt) bool {
+		return libraryBeltShared(libraryBeltInRepo(local, origin, agentsToRepo)) == libraryBeltShared(repo)
 	}
 	belt := versions[libraryNewest(versions)]
 	pinned := belt.Stages
@@ -111,7 +118,7 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 	for index := range belt.Triggers {
 		belt.Triggers[index].Repos = nil
 	}
-	if err := libraryShareIDFree(origin, "belt", id, belt.ID, len(repoBelts[belt.ID]) > 0, mapping.belts); err != nil {
+	if err := libraryShareIDFree(origin, "belt", id, belt.ID, len(repoBelts[belt.ID]) > 0, librarySharesAVersion(versions, repoBelts[belt.ID], sameBelt), mapping.belts); err != nil {
 		return nil, err
 	}
 	var pins []Agent
@@ -127,7 +134,7 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 		}
 		agent = libraryAgentInRepo(agent, origin, agentsToRepo)
 		agent.Origin = nil
-		if err := libraryShareIDFree(origin, "agent", ref.ID, agent.ID, len(repoAgents[agent.ID]) > 0, mapping.agents); err != nil {
+		if err := libraryShareIDFree(origin, "agent", ref.ID, agent.ID, len(repoAgents[agent.ID]) > 0, librarySharesAVersion(localAgents[ref.ID], repoAgents[agent.ID], sameAgent), mapping.agents); err != nil {
 			return nil, err
 		}
 		if other, ok := pinnedAs[agent.ID]; ok && other != ref.ID {
@@ -144,9 +151,10 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 }
 
 // libraryShareIDFree refuses to share local item localID as repoID when the repository holds repoID for
-// something unrelated, which would add a version to an item that isn't this one.
-func libraryShareIDFree(origin LibraryOrigin, kind, localID, repoID string, held bool, ids libraryIDs) error {
-	if held && ids.of(repoID) != localID {
+// something unrelated, which would add a version to an item that isn't this one. sharesVersion says the
+// repository holds one of the item's versions, as it does after an earlier share of an item from elsewhere.
+func libraryShareIDFree(origin LibraryOrigin, kind, localID, repoID string, held, sharesVersion bool, ids libraryIDs) error {
+	if held && !sharesVersion && ids.of(repoID) != localID {
 		return NewFailure(fmt.Sprintf("%s already uses the id %s for a different %s, so %s can't be shared there.", origin.Repository, repoID, kind, localID))
 	}
 	return nil
