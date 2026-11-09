@@ -38,8 +38,8 @@ export function useLibraryItem(repo: LibraryRepoRef, item: LibraryItem | undefin
   const state = itemStates[item.state];
   const install = item.actions.find(action => action.id === "install");
   const label = item.state === "update" ? `Update to v${item.version}` : "Install";
-  const openYours = () => navigate(kind === "belt" ? `/belts?belt=${encodeURIComponent(item.id)}`
-    : `/agents?agent=${encodeURIComponent(`${item.id}@${item.localVersion ?? item.version}`)}`);
+  const openYours = () => navigate(kind === "belt" ? `/belts?belt=${encodeURIComponent(item.localId ?? item.id)}`
+    : `/agents?agent=${encodeURIComponent(`${item.localId ?? item.id}@${item.localVersion ?? item.version}`)}`);
   const actions = <>
     <Chip tone={state.tone}>{state.label}</Chip>
     {item.localVersion !== null && <button type="button" className="btn" onClick={openYours}>Open yours</button>}
@@ -60,6 +60,7 @@ export function useLibraryItem(repo: LibraryRepoRef, item: LibraryItem | undefin
       <button type="button" className="link" onClick={openYours}>{kind === "belt" ? "Open it in Belts" : "Open it in Agents"}</button></p>
       : item.state === "conflict" && item.reason ? <p className="library-problem library-notice" role="alert">{item.reason}</p>
       : item.state === "update" && item.localVersion !== null ? <p className="library-notice library-notice--update">Yours is v{item.localVersion}.</p>
+      : item.reason ? <p className="library-notice">{item.reason}</p>
       : null}
   </>;
   return { actions, notice };

@@ -386,7 +386,7 @@ func (l *Library) CopyBelt(belt core.Belt) core.Belt {
 	copied.Version = 0
 	copied.Name = "Copy of " + belt.Name
 	// A copy is yours, not the repository's it was installed from.
-	copied.Origin = nil
+	copied.Origin, copied.OriginID = nil, ""
 	return copied
 }
 
@@ -403,6 +403,13 @@ func (l *Library) unusedBeltID(excluding *string) string {
 		}
 		n++
 	}
+}
+
+// savedBeltID is the id a belt's first save gives it.
+// Lock: runs with c.mu held.
+func (l *Library) savedBeltID(belt core.Belt) string {
+	return core.LibrarySavedID(belt.ID, belt.Name, belt.Version, l.c.clock.Now().Format(time.RFC3339Nano),
+		func(candidate string) bool { return l.beltIndex(candidate) >= 0 })
 }
 
 // beltIndex is the index of the belt record with id, or -1.

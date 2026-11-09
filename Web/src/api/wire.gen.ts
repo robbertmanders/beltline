@@ -296,6 +296,7 @@ export interface Agent {
   outcomes: AgentOutcome[];
   brief: string;
   origin?: LibraryOrigin;
+  originId?: string;
 }
 
 export interface AgentAction {
@@ -309,6 +310,7 @@ export interface AgentChoice {
   id: string;
   name: string;
   version: number;
+  detail?: string;
 }
 
 export interface AgentDetailResponse {
@@ -529,6 +531,7 @@ export interface Belt {
   forks: Fork[];
   afk: AfkMode;
   origin?: LibraryOrigin;
+  originId?: string;
 }
 
 export interface BeltAction {
@@ -1218,6 +1221,7 @@ export interface LibraryItem {
   id: string;
   name: string;
   version: number;
+  localId: string | null;
   localVersion: number | null;
   state: LibraryItemState;
   reason: string | null;
@@ -2194,6 +2198,7 @@ export interface StageLinePresentationAgentChoice {
   id: string;
   version: number;
   name: string;
+  detail?: string;
 }
 
 export interface StageLinePresentationBlock {

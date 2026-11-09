@@ -14,10 +14,10 @@ export const sharedRepo = {
   repository: "acme/team-library", path: "", role: "shared", publish: "pullRequest", takesShares: true, syncedAt: "2026-10-14T09:00:00Z", commit: "9c0be37",
   problem: null,
   items: [
-    { kind: "belt", id: "issue-flow", name: "Issue flow", version: 3, localVersion: 2, state: "update", reason: null, actions: [action("install")] },
-    { kind: "agent", id: "review", name: "Review", version: 1, localVersion: 1, state: "installed", reason: null, actions: [action("install", false, "This version is already in your library.")] },
+    { kind: "belt", id: "issue-flow", name: "Issue flow", version: 3, localId: "issue-flow", localVersion: 2, state: "update", reason: null, actions: [action("install")] },
+    { kind: "agent", id: "review", name: "Review", version: 1, localId: "review", localVersion: 1, state: "installed", reason: null, actions: [action("install", false, "This version is already in your library.")] },
     {
-      kind: "agent", id: "triage", name: "Triage", version: 2, localVersion: 1, state: "conflict",
+      kind: "agent", id: "triage", name: "Triage", version: 2, localId: "triage", localVersion: 1, state: "conflict",
       reason: "You changed triage v1 locally; save it under a new id before updating.", actions: [action("install", false, "You changed triage v1 locally.")]
     }
   ],

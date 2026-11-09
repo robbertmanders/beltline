@@ -104,10 +104,10 @@ func TestLibraryRepoItemsReadTheStateAgainstTheLibrary(t *testing.T) {
 		{name: "older from the repository", local: libraryTestLocal(t, repo, 1, &libraryTestOrigin), state: LibraryItemUpdate},
 		{name: "the same version from the repository", local: libraryTestLocal(t, repo, 2, &libraryTestOrigin), state: LibraryItemInstalled},
 		{name: "no origin, the repository's content", local: libraryTestLocal(t, repo, 2, nil), state: LibraryItemInstalled},
-		{name: "another origin, the repository's content", local: libraryTestLocal(t, repo, 2, &LibraryOrigin{Repository: "owner/other"}), state: LibraryItemInstalled},
+		{name: "another origin, the repository's content is a separate belt", local: libraryTestLocal(t, repo, 2, &LibraryOrigin{Repository: "owner/other"}), state: LibraryItemAvailable},
 		{name: "no origin, shared from here with its own settings", local: sharedFromHere(t, repo, 2), state: LibraryItemInstalled},
-		{name: "no origin, changed content", local: changedTeamBelt(t, repo, 2, nil), state: LibraryItemConflict, reason: "team is already in your library and didn't come from this repository."},
-		{name: "changed here at the same version", local: changedTeamBelt(t, repo, 2, &libraryTestOrigin), state: LibraryItemConflict, reason: "You changed team v2 locally; save it under a new id before updating.", changed: true},
+		{name: "no origin, changed content is a separate belt", local: changedTeamBelt(t, repo, 2, nil), state: LibraryItemAvailable},
+		{name: "changed here at the same version", local: changedTeamBelt(t, repo, 2, &libraryTestOrigin), state: LibraryItemConflict, reason: "You changed team v2 locally, so it can't be updated from this repository.", changed: true},
 	}
 	for _, c := range cases {
 		items, problems := LibraryRepoItems(libraryTestOrigin, repo, c.local)
@@ -181,7 +181,7 @@ func TestLibraryRepoItemsTakeAnUnoriginedOlderVersionAsAnUpdate(t *testing.T) {
 	if item := libraryTestState(t, items, "belt", "team"); item.State != LibraryItemUpdate {
 		t.Fatalf("an unoriginated v1 with the repository's v1: state %s (reason %v), want update", item.State, item.Reason)
 	}
-	files, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, local)
+	_, files, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, local)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,8 +216,8 @@ func TestLibraryRepoItemsCountAnUnoriginedAgentFromTheRepository(t *testing.T) {
 	}
 	edited := agent
 	edited.Name = "Edited here"
-	if item := standing(edited); item.State != LibraryItemConflict || item.Reason == nil || !strings.Contains(*item.Reason, "didn't come from this repository") {
-		t.Fatalf("an unoriginated agent changed here: state %s (reason %v), want a conflict", item.State, item.Reason)
+	if item := standing(edited); item.State != LibraryItemAvailable || item.LocalID != nil || item.Reason == nil || !strings.Contains(*item.Reason, "separate agent") {
+		t.Fatalf("an unoriginated agent changed here: state %s (reason %v), want a separate agent", item.State, item.Reason)
 	}
 }
 
@@ -239,7 +239,7 @@ func TestLibraryShareBranchNamesItsKind(t *testing.T) {
 func TestLibraryInstallWritesTheVersionAndTheMissingPins(t *testing.T) {
 	t.Parallel()
 	repo := libraryTestRepo(t, 2, &libraryTestOrigin)
-	files, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, map[string][]byte{})
+	_, files, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, map[string][]byte{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -259,11 +259,11 @@ func TestLibraryInstallWritesTheVersionAndTheMissingPins(t *testing.T) {
 
 	// Installed items write nothing; a conflict is refused with its reason.
 	installed := libraryTestLocal(t, repo, 2, &libraryTestOrigin)
-	if files, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, installed); err != nil || len(files) != 0 {
+	if _, files, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, installed); err != nil || len(files) != 0 {
 		t.Errorf("installed item: files %v, err %v", files, err)
 	}
 	conflict := changedTeamBelt(t, repo, 2, &libraryTestOrigin)
-	if _, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, conflict); err == nil || !strings.Contains(err.Error(), "You changed team v2 locally") {
+	if _, _, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, conflict); err == nil || !strings.Contains(err.Error(), "You changed team v2 locally") {
 		t.Errorf("conflict: err %v", err)
 	}
 }
@@ -359,5 +359,103 @@ func TestLibraryRepoActionsExplainWhatIsUnavailable(t *testing.T) {
 	}
 	if restore := LibraryRepoActions(LibraryRoleBackup, true, false)[2]; restore.Enabled || restore.Reason == nil {
 		t.Fatalf("restore of an empty repository: %+v", restore)
+	}
+}
+
+// libraryIDsOwnBuild is a library holding your own agent with the repository's id and other content.
+func libraryIDsOwnBuild(t *testing.T, id string, version int) map[string][]byte {
+	t.Helper()
+	own := NewAgent(AgentArgs{ID: id, Version: &version, Name: "Mine", Brief: "My own."})
+	return map[string][]byte{libraryVersionPath("agents", id, version, "md"): []byte(AgentFileWrite(own))}
+}
+
+func TestLibraryInstallKeepsAnAgentWithATakenIDSeparate(t *testing.T) {
+	t.Parallel()
+	repo := libraryTestRepo(t, 2, nil)
+	id := SampleAgents()[0].ID
+	local := libraryIDsOwnBuild(t, id, 99)
+	items, _ := LibraryRepoItems(libraryTestOrigin, repo, local)
+	item := libraryTestState(t, items, "agent", id)
+	if item.State != LibraryItemAvailable || item.LocalID != nil || item.Reason == nil {
+		t.Fatalf("a taken id: %+v", item)
+	}
+	_, files, err := LibraryInstallFiles(libraryTestOrigin, "agent", id, repo, local)
+	if err != nil || len(files) != 1 {
+		t.Fatalf("files %v, err %v", files, err)
+	}
+	if strings.HasPrefix(files[0].Path, "agents/"+id+"/") || !strings.Contains(string(files[0].Data), "originId: "+id) {
+		t.Fatalf("installed over the taken id: %s\n%s", files[0].Path, files[0].Data)
+	}
+	local[files[0].Path] = files[0].Data
+	items, _ = LibraryRepoItems(libraryTestOrigin, repo, local)
+	item = libraryTestState(t, items, "agent", id)
+	if item.State != LibraryItemInstalled || item.LocalID == nil || *item.LocalID == id {
+		t.Fatalf("once installed: %+v", item)
+	}
+	if _, again, err := LibraryInstallFiles(libraryTestOrigin, "agent", id, repo, local); err != nil || len(again) != 0 {
+		t.Fatalf("a second install: files %v, err %v", again, err)
+	}
+}
+
+func TestLibraryBeltInstallNeverAddsAVersionToAnUnrelatedAgent(t *testing.T) {
+	t.Parallel()
+	repo := libraryTestRepo(t, 2, nil)
+	belts, _, _ := libraryCheckRead(repo)
+	ref := *belts["team"][2].Stages[0].Agent
+	local := libraryIDsOwnBuild(t, ref.ID, ref.Version+50)
+	_, files, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, local)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, file := range files {
+		if strings.HasPrefix(file.Path, "agents/"+ref.ID+"/") {
+			t.Fatalf("wrote into your agent: %s", file.Path)
+		}
+		local[file.Path] = file.Data
+	}
+	installed, agents, problems := libraryCheckRead(local)
+	if len(problems) != 0 {
+		t.Fatalf("problems: %v", problems)
+	}
+	pin := *installed["team"][2].Stages[0].Agent
+	if pin.ID == ref.ID || len(agents[pin.ID]) != 1 {
+		t.Fatalf("pin %+v does not name its own copy", pin)
+	}
+	if _, got, err := LibraryInstallFiles(libraryTestOrigin, "belt", "team", repo, local); err != nil || len(got) != 0 {
+		t.Fatalf("a second install: files %v, err %v", got, err)
+	}
+}
+
+func TestLibraryShareSendsAnInstalledAgentBackUnderTheRepositoryID(t *testing.T) {
+	t.Parallel()
+	repo := libraryTestRepo(t, 2, nil)
+	id := SampleAgents()[0].ID
+	local := libraryIDsOwnBuild(t, id, 99)
+	_, files, err := LibraryInstallFiles(libraryTestOrigin, "agent", id, repo, local)
+	if err != nil {
+		t.Fatal(err)
+	}
+	local[files[0].Path] = files[0].Data
+	localID := strings.Split(files[0].Path, "/")[1]
+	shared, err := LibraryShareFiles(libraryTestOrigin, "agent", localID, local, repo)
+	if err != nil || len(shared) != 0 {
+		t.Fatalf("an unchanged copy shares nothing: files %v, err %v", shared, err)
+	}
+}
+
+func TestLibrarySavedIDComesFromTheNameOnFirstSaveOnly(t *testing.T) {
+	t.Parallel()
+	free := func(string) bool { return false }
+	if got := LibrarySavedID("agent-1", "Code Review!", 0, "seed", free); !strings.HasPrefix(got, "code-review-") || len(got) != len("code-review-")+4 || !validationLooksLikePlaceholder(got) {
+		t.Errorf("first save: %q", got)
+	}
+	if got := LibrarySavedID("agent-1", "日本語", 0, "seed", free); !strings.HasPrefix(got, "agent-") || got == "agent-1" {
+		t.Errorf("a name with no usable letters: %q", got)
+	}
+	if got := LibrarySavedID("agent-1", "Review", 3, "seed", free); got != "agent-1" {
+		t.Errorf("a saved agent changed id: %q", got)
+	}
+	if got := LibrarySavedID("chosen", "Review", 0, "seed", free); got != "chosen" {
+		t.Errorf("a chosen id changed: %q", got)
 	}
 }

@@ -141,6 +141,7 @@ func agentFileBuild(fields map[string]string, lists map[string][]map[string]stri
 	agent := NewAgent(AgentArgs{ID: id, Version: &version, Name: name})
 	if repository, ok := fields["origin"]; ok {
 		agent.Origin = &LibraryOrigin{Repository: repository, Path: fields["originPath"]}
+		agent.OriginID = fields["originId"]
 	}
 	if key, ok := fields["key"]; ok && key != "" {
 		agent.Key = key
@@ -206,6 +207,9 @@ func AgentFileWrite(agent Agent) string {
 		fmt.Fprintf(&b, "origin: %s\n", agentFileQuote(agent.Origin.Repository))
 		if agent.Origin.Path != "" {
 			fmt.Fprintf(&b, "originPath: %s\n", agentFileQuote(agent.Origin.Path))
+		}
+		if agent.OriginID != "" {
+			fmt.Fprintf(&b, "originId: %s\n", agentFileQuote(agent.OriginID))
 		}
 	}
 	if agent.Model != "" {

@@ -84,6 +84,12 @@ func libraryCheckRead(files map[string][]byte) (libraryBelts, libraryAgents, []s
 	}
 	problems = append(problems, libraryCheckPinProblems(belts, agents)...)
 	slices.Sort(problems)
+	libraryInheritOrigins(belts,
+		func(belt Belt) (*LibraryOrigin, string) { return belt.Origin, belt.OriginID },
+		func(belt *Belt, origin *LibraryOrigin, id string) { belt.Origin, belt.OriginID = origin, id })
+	libraryInheritOrigins(agents,
+		func(agent Agent) (*LibraryOrigin, string) { return agent.Origin, agent.OriginID },
+		func(agent *Agent, origin *LibraryOrigin, id string) { agent.Origin, agent.OriginID = origin, id })
 	return belts, agents, problems
 }
 
