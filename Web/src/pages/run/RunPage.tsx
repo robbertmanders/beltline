@@ -186,10 +186,6 @@ export function RunPage() {
     style={{ "--cx": `${origin.x}px`, "--cy": `${origin.y}px` } as CSSProperties}>
     <div className="run-scroll scroll" data-column="main">
     <header className="rtop">
-      <nav className="crumb" style={{ margin: 0 }} aria-label="Where you are">
-        <button type="button" className="run-back" onClick={close}><Icon name="back" /><span>Work</span></button>
-        {view && <><span>/</span><span>{view.heading}</span><span>/</span><span>{view.reference}</span></>}
-      </nav>
       <span className="run-top-actions">
         {!preferences.sessionsOpen && <button type="button" className="btn sm ghost" title="Show the sessions" aria-label="Sessions" aria-expanded={false}
           onClick={() => update({ sessionsOpen: true })}><Icon name="term" />Sessions{sessionCount > 0 ? ` · ${sessionCount}` : ""}</button>}

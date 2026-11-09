@@ -1,7 +1,7 @@
 /* Two Inks: the whole page language. One paper and one ink (tokens.css); every surface is one of the two,
    or the ink at a fixed strength over the paper. The run page, the sheets and the assistant swap them (.inv).
    Ported from the Two Inks mockup; the class names are the mockup's. */
-:root{--ease:cubic-bezier(.16,1,.3,1);--ease2:cubic-bezier(.65,0,.35,1);--gut:max(clamp(20px,4vw,56px),env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));--maxw:1360px}
+:root{--top-h:calc(76px + env(safe-area-inset-top,0px));--ease:cubic-bezier(.16,1,.3,1);--ease2:cubic-bezier(.65,0,.35,1);--gut:max(clamp(20px,4vw,56px),env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));--maxw:1360px}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);overflow:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-family:var(--font-body),system-ui,sans-serif;font-size:15px;line-height:1.5}
@@ -220,9 +220,9 @@ a{color:inherit}
 .two{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:clamp(32px,5vw,80px);align-items:start}
 
 /* ---------- run page (inverted) ---------- */
-.runv{position:absolute;inset:0;z-index:40;overflow-y:auto;overflow-x:hidden;clip-path:circle(0 at var(--cx,50%) var(--cy,50%));visibility:hidden;transition:clip-path .9s var(--ease),visibility 0s .9s}
-.runv.open{clip-path:circle(150% at var(--cx,50%) var(--cy,50%));visibility:visible;transition:clip-path .9s var(--ease),visibility 0s}
-.rtop{position:sticky;top:0;padding-top:calc(18px + env(safe-area-inset-top,0px))!important;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px var(--gut);background:linear-gradient(var(--bg) 62%,color-mix(in srgb,var(--bg) 0%,transparent))}
+.runv{position:absolute;inset:var(--top-h) 0 0;z-index:40;overflow-y:auto;overflow-x:hidden;clip-path:circle(0 at var(--cx,50%) calc(var(--cy,50%) - var(--top-h)));visibility:hidden;transition:clip-path .9s var(--ease),visibility 0s .9s}
+.runv.open{clip-path:circle(150% at var(--cx,50%) calc(var(--cy,50%) - var(--top-h)));visibility:visible;transition:clip-path .9s var(--ease),visibility 0s}
+.rtop{position:sticky;top:0;padding-top:0!important;z-index:5;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:18px var(--gut);background:linear-gradient(var(--bg) 62%,color-mix(in srgb,var(--bg) 0%,transparent))}
 .rin{max-width:var(--maxw);margin:0 auto;padding:clamp(24px,5vh,56px) var(--gut) 160px}
 .rmeta{font-size:14px;color:var(--soft);display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center}
 .rh{margin:14px 0 0;font-family:var(--font-display),system-ui,sans-serif;font-weight:700;font-size:clamp(42px,6.2vw,100px);line-height:.92;letter-spacing:-.04em;max-width:15ch;text-wrap:balance}

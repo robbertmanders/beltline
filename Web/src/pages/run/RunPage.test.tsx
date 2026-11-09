@@ -96,6 +96,13 @@ describe("Run page", () => {
     expect(screen.queryByRole("region", { name: "Stage 1: Plan the epic" })).toBeNull();
   });
 
+  it("leaves the way back to the top bar, with no path of its own", async () => {
+    renderRun();
+    expect(await screen.findByRole("region", { name: "Run" })).toBeTruthy();
+    expect(screen.queryByRole("navigation", { name: "Where you are" })).toBeNull();
+    expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeTruthy();
+  });
+
   it("does not keep the previous run on screen when navigating to another", async () => {
     const user = userEvent.setup();
     stubDaemon({ "/api/v1/views/run/another-run*": () => new Promise<Response>(() => {}) });

@@ -1,6 +1,6 @@
-/* The run page, over the whole window in the page's own colours (two-inks.css: .runv, .rtop, .rin, .rmeta, .rh,
+/* The run page, under the top bar in the page's own colours (two-inks.css: .runv, .rtop, .rin, .rmeta, .rh,
    .rlinks, .rctl, .route, .rgrid, .here-c, .sess). These rules fit the daemon's run view into them. */
-/* The run page scrolls on its own beside the Sessions sidebar, which runs the window's full height on the right. */
+/* The run page scrolls on its own beside the Sessions sidebar, which runs the page's full height on the right. */
 .runv { z-index: 40; display: flex; overflow: hidden; background: var(--bg); color: var(--ink); }
 .run-scroll { flex: 1 1 auto; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; }
 /* The heading scales with the run's own column, which the Sessions sidebar narrows. */
@@ -8,10 +8,6 @@
 .run-scroll .rh { max-width: none; font-size: clamp(38px, 6.6cqi, 100px); text-wrap: wrap; }
 .run-top-actions { display: inline-flex; gap: 16px; align-items: center; }
 .rgrid.run-chapters { grid-template-columns: minmax(0, 1fr); }
-.rtop .crumb span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rtop nav.crumb { min-width: 0; }
-.run-back { display: inline-flex; gap: 8px; align-items: center; padding: 0; border: 0; background: none; color: var(--soft); cursor: pointer; font: inherit; }
-.run-back:hover { color: var(--ink); }
 .rmeta .run-label-list { display: contents; list-style: none; }
 .rmeta .run-label-list li { display: inline-flex; }
 .run-title-ref { font-weight: 300; }
