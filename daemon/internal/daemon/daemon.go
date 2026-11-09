@@ -1,6 +1,6 @@
 // The daemon's lifecycle. Start takes the data folder's lock through the launch session, builds the
 // coordinator, starts the listener, publishes the discovery record and says it is ready. Run ticks the
-// coordinator until SIGINT or SIGTERM, then Shutdown tears everything down.
+// coordinator's lanes until SIGINT or SIGTERM, then Shutdown tears everything down.
 
 package daemon
 
@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -101,7 +102,7 @@ type Daemon struct {
 	closed         bool
 }
 
-// tickerState is the tick loop's stop signal and its completion.
+// tickerState is the tick loops' stop signal and their completion.
 type tickerState struct {
 	stop     chan struct{}
 	finished chan struct{}
@@ -156,20 +157,34 @@ func (d *Daemon) Run() error {
 	return nil
 }
 
-// startTicker runs the tick loop until Shutdown stops it.
-// Lock: none; the goroutine's ticks take the coordinator's lock.
+// startTicker runs one tick loop per lane until Shutdown stops them. A first sessions
+// pass recovers what a restart left before the other lanes begin.
+// Lock: none; the goroutines' ticks take the coordinator's lock.
 func (d *Daemon) startTicker() {
 	c := d.session.Coordinator
 	stop := make(chan struct{})
 	finished := make(chan struct{})
-	loop := TickLoop{
-		Interval: d.hooks.TickInterval,
-		Tick:     func() { c.Tick(context.Background()) },
-		Sleep:    d.hooks.TickSleep,
-	}
 	go func() {
 		defer close(finished)
-		loop.Run(stop)
+		c.TickLane(context.Background(), coordinator.LaneSessions)
+		wakes := c.StartLanes()
+		var loops sync.WaitGroup
+		for _, lane := range coordinator.AllLanes {
+			loop := TickLoop{
+				Interval: d.hooks.TickInterval,
+				Tick: timedTick(func() { c.TickLane(context.Background(), lane) }, time.Now, func(took time.Duration) {
+					d.logger.Append("tick lane " + string(lane) + " took " + took.Round(100*time.Millisecond).String())
+				}),
+				Sleep: d.hooks.TickSleep,
+				Wake:  wakes[lane],
+			}
+			loops.Add(1)
+			go func() {
+				defer loops.Done()
+				loop.Run(stop)
+			}()
+		}
+		loops.Wait()
 	}()
 	d.ticker = &tickerState{stop: stop, finished: finished}
 }

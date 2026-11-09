@@ -61,7 +61,7 @@ func (c *Coordinator) projection(r Resource) []byte {
 		key := [3]uint64{c.settingsRevision, c.book.revision, c.stateRevision}
 		return c.stateMemo.of("state", key, func() []byte {
 			rest := projectionBytes([]any{
-				c.globallyPaused, c.intake.checking, dateOrNilOf(c.intake.lastCheck), c.book.notices,
+				c.globallyPaused, c.intake.isChecking(), dateOrNilOf(c.intake.lastCheck), c.book.notices,
 				c.settings.Login, c.settings.Notifications, c.settings.Afk,
 			})
 			runs := c.book.runsProjection()
