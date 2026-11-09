@@ -78,11 +78,12 @@ export function History() {
     <button type="button" onClick={() => navigate(1)}>Forward</button>
     <button type="button" onClick={() => navigate("/settings")}>Go to settings</button>
     <button type="button" onClick={() => navigate("/agents")}>Go to agents</button>
+    <button type="button" onClick={() => navigate("/belts")}>Go to belts</button>
   </nav>;
 }
 
 /** Clicks one of the History buttons. */
-export const history = (user: ReturnType<typeof userEvent.setup>, name: "Back" | "Forward" | "Go to settings" | "Go to agents") =>
+export const history = (user: ReturnType<typeof userEvent.setup>, name: "Back" | "Forward" | "Go to settings" | "Go to agents" | "Go to belts") =>
   user.click(within(screen.getByRole("navigation", { name: "Test history" })).getByRole("button", { name }));
 
 /** A route that answers with a golden file, at `status`. */

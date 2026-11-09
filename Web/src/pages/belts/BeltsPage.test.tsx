@@ -50,7 +50,7 @@ describe("Belts list", () => {
     expect(await screen.findByRole("button", { name: `Open ${firstName}` })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: `Open ${firstName}` }));
     expect(await screen.findByRole("heading", { level: 2, name: firstName })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Back to Belts/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Back to Belts/ })).toBeNull();
     expect(daemon.requests.some(request => request.path.includes("?search=&filter=all"))).toBe(true);
   });
 
@@ -237,7 +237,6 @@ describe("Belt editor", () => {
     renderGrid();
     await user.click(await screen.findByRole("button", { name: /\+ New belt/ }));
     expect(await screen.findByLabelText("Belt name")).toBeTruthy();
-    expect(await screen.findByRole("button", { name: /Back to Belts/ })).toBeTruthy();
     await user.click(saveButton());
     await waitFor(() => expect(daemon.posts().some(request => request.path === "/api/v1/belts/save")).toBe(true));
   });

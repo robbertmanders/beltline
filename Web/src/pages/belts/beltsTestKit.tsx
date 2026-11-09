@@ -5,7 +5,7 @@ import { beltList, type BeltRecord } from "./beltRecords";
 import { placeholderStageKind } from "./StageLine";
 import { json } from "../../test/response";
 import { goldenText } from "../../test/golden";
-import { renderRoutes, stubDaemon, type DaemonRequest, type Handler } from "../../test/daemon";
+import { history, renderRoutes, stubDaemon, type DaemonRequest, type Handler } from "../../test/daemon";
 import type { Belt, BeltsResponse, StageMenu } from "../../api/wire.gen";
 
 export type { DaemonRequest, Handler };
@@ -190,8 +190,7 @@ export const nameInput = () => screen.getByLabelText("Belt name") as HTMLInputEl
 export const heading = (name: string) => screen.findByRole("heading", { level: 2, name });
 /** Opens a saved belt from the daemon-backed browser, returning to the browser when starting from detail. */
 export const selectBelt = async (user: ReturnType<typeof userEvent.setup>, name: string) => {
-  const back = screen.queryByRole("button", { name: /Back to Belts/ });
-  if (back) await user.click(back);
+  await history(user, "Go to belts");
   return user.click(await screen.findByRole("button", { name: `Open ${name}` }));
 };
 

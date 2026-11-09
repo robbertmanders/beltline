@@ -3,7 +3,7 @@ import type { BeltRecord } from "./beltRecords";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { contextFor, contextWithBases, contextRoute, firstLive, firstName, firstStage, fixture, mockDaemon, nameInput, renderAt, beltsList, type DaemonRequest } from "./beltsTestKit";
-import { libraryChanged } from "../../test/daemon";
+import { history, libraryChanged } from "../../test/daemon";
 import { json } from "../../test/response";
 import { goldenText } from "../../test/golden";
 
@@ -24,7 +24,7 @@ describe("draft lifecycle", () => {
     await user.type(nameInput(), " src");
     await user.click(screen.getByRole("button", { name: "Copy belt" }));
     expect(await screen.findByRole("heading", { level: 2, name: `${firstName} copy` })).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: /Back to Belts/ }));
+    await history(user, "Go to belts");
     await user.click(await screen.findByRole("button", { name: `${firstName} copy Draft` }));
     await screen.findByRole("heading", { level: 2, name: `${firstName} copy` });
     await user.click(screen.getByRole("button", { name: "Discard" }));
@@ -230,7 +230,7 @@ describe("saved belt refresh", () => {
     await screen.findByRole("heading", { level: 2, name: "Configured belt" });
     expect(nameInput().value).toBe("Configured belt");
     list = renamedFirstLive("Reopened belt");
-    await user.click(screen.getByRole("button", { name: /Back to Belts/ }));
+    await history(user, "Go to belts");
     await user.click(await screen.findByRole("button", { name: "Open Reopened belt" }));
     await screen.findByRole("heading", { level: 2, name: "Reopened belt" });
     expect(nameInput().value).toBe("Reopened belt");
@@ -252,7 +252,7 @@ describe("saved belt refresh", () => {
     expect(nameInput().value).toBe(`${firstName} local`);
     expect((screen.getByLabelText("Has label for trigger 1") as HTMLInputElement).value).toBe(typedTrigger);
     expect(daemon.posts("trigger-update").length).toBe(0);
-    await user.click(screen.getByRole("button", { name: /Back to Belts/ }));
+    await history(user, "Go to belts");
     await user.click(await screen.findByRole("button", { name: `${firstName} local Draft` }));
     expect(nameInput().value).toBe(`${firstName} local`);
     await user.click(screen.getByRole("button", { name: "Discard" }));
@@ -305,7 +305,7 @@ describe("saved belt refresh", () => {
     libraryChanged(2);
     await waitFor(() => expect(daemon.requests.filter(request => request.path === "/api/v1/belts").length).toBeGreaterThanOrEqual(2));
     expect((screen.getByLabelText("Brief") as HTMLTextAreaElement).value).toBe(typed);
-    await user.click(screen.getByRole("button", { name: /Back to Belts/ }));
+    await history(user, "Go to belts");
     await user.click(await screen.findByRole("button", { name: `${firstName} Draft` }));
     await screen.findByRole("region", { name: `Stage ${firstStage.name} settings` });
     expect((screen.getByLabelText("Brief") as HTMLTextAreaElement).value).toBe(typed);

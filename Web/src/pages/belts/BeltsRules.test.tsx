@@ -38,7 +38,7 @@ describe("rule 2: unsent input survives selection, pages and history", () => {
     await screen.findByRole("heading", { level: 1, name: "Agents" });
     await history(user, "Back");
     await heading(`${docs.belt.name} two`);
-    await user.click(screen.getByRole("button", { name: /Back to Belts/ }));
+    await history(user, "Go to belts");
     await selectBelt(user, firstName);
     await heading(`${firstName} one`);
     expect((screen.getByLabelText("Has label for trigger 1") as HTMLInputElement).value).toBe("typed-label");
@@ -46,7 +46,7 @@ describe("rule 2: unsent input survives selection, pages and history", () => {
     const reopened = await screen.findByRole("region", { name: `Stage ${firstStage.name} settings` });
     expect((within(reopened).getByLabelText("Name") as HTMLInputElement).value).toBe(`${firstStage.name} renamed`);
     await user.click(screen.getByRole("button", { name: "Trigger" }));
-    await user.click(screen.getByRole("button", { name: /Back to Belts/ }));
+    await history(user, "Go to belts");
     await selectBelt(user, docs.belt.name);
     await heading(`${docs.belt.name} two`);
     await history(user, "Back");

@@ -12,7 +12,7 @@ import { useCommand } from "../../api/useCommand";
 import { useRuntime } from "../../app/runtime";
 import { AssistantOpenButton, AssistantSidebar } from "../../components/AssistantSidebar";
 import { useElementWidth } from "../../components/useElementWidth";
-import { LibraryBrowser, LibraryDetailHeader } from "../../components/LibraryBrowser";
+import { LibraryBrowser } from "../../components/LibraryBrowser";
 import { ErrorProblems } from "../../components/ProblemList";
 import { beltsQueryKey, newRequest } from "./beltCommands";
 import { BeltEditor } from "./BeltEditor";
@@ -206,7 +206,6 @@ export function BeltsPage({ onShare = () => undefined }: { onShare?: (id: string
     {hasSelection && editorQuery.isError && editorQuery.data !== undefined && <div className="belts-stale">
       <p className="stale-error" role="status">Showing the last loaded belts; refresh failed.</p><ErrorProblems error={editorQuery.error} />
     </div>}
-    {hasSelection ? <LibraryDetailHeader backLabel="Back to Belts" onBack={() => select(null)} /> : null}
     {hasSelection ? renderEditor() : renderBrowser()}
   </>;
 
