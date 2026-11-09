@@ -5,7 +5,7 @@
 .run-scroll { flex: 1 1 auto; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; }
 /* The heading scales with the run's own column, which the Sessions sidebar narrows. */
 .run-scroll { container-type: inline-size; }
-.run-scroll .rh { font-size: clamp(38px, 6.6cqi, 100px); }
+.run-scroll .rh { max-width: none; font-size: clamp(38px, 6.6cqi, 100px); text-wrap: wrap; }
 .run-top-actions { display: inline-flex; gap: 16px; align-items: center; }
 .rgrid.run-chapters { grid-template-columns: minmax(0, 1fr); }
 .rtop .crumb span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

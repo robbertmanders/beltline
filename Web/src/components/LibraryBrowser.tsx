@@ -124,7 +124,7 @@ export function LibraryResourceCard({ card, kind, onOpen, source }: { card: Libr
   return <li className={`row br library-resource-card library-resource-card--${kind}`}>
     <button type="button" className="row-hit" aria-label={`Open ${card.name}`} onClick={onOpen} />
     <div><div className="t library-card-title">{card.name}</div>
-      <div className="m"><span className="library-card-version">v{card.version}</span>{card.summary && <span>{card.summary}</span>}{source && source !== card.summary && <span className="library-card-source">{source}</span>}
+      <div className="m"><span className="library-card-version">v{card.version}</span>{source && <span className="library-card-source">{source}</span>}
         {card.shadow && <span className="flag f library-card-shadow">{card.shadow}</span>}</div></div>
     <span className="c library-card-detail" style={{ whiteSpace: "normal" }}>{source === card.detail ? "" : card.detail}</span>
     {card.stages.length > 0 ? <span className="seq library-stage-strip" aria-label="Stage preview">{card.stages.map((stage, index) => <span key={index}><StageIconTile icon={stage.icon} tint={stage.tint} size={20} /></span>)}</span>
