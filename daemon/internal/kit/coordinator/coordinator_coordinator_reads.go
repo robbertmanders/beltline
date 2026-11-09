@@ -61,7 +61,7 @@ func (c *Coordinator) Agents() []core.AgentRecord {
 func (c *Coordinator) Checking() bool {
 	c.Lock()
 	defer c.EndTurn()
-	return c.intake.checking
+	return c.intake.isChecking()
 }
 
 // LastCheck is when the last trigger check finished.

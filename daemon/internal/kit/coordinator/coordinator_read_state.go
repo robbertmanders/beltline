@@ -49,7 +49,7 @@ func (c *Coordinator) ReadStateSnapshot(now *time.Time, loc *time.Location) Coor
 	lastCheck := core.CopyPointer(c.intake.lastCheck)
 	return CoordinatorStateSnapshot{
 		GloballyPaused: c.globallyPaused,
-		Checking:       c.intake.checking,
+		Checking:       c.intake.isChecking(),
 		LastCheck:      lastCheck,
 		Counts:         core.RunSummaryCounts(c.book.runs, moment, loc),
 		Notices:        append([]Notice(nil), c.book.notices...),
@@ -63,7 +63,7 @@ func (c *Coordinator) ReadStateSnapshot(now *time.Time, loc *time.Location) Coor
 			AfkToCheck: len(c.autopilot.Unreviewed()),
 			Library:    c.libraryNavigation(),
 		},
-		ClockLabel:   core.ClockLampLabel(c.globallyPaused, c.intake.checking, moment),
+		ClockLabel:   core.ClockLampLabel(c.globallyPaused, c.intake.isChecking(), moment),
 		ClockTooltip: core.ClockLampTooltip(c.globallyPaused, c.intake.lastCheck, moment),
 	}
 }

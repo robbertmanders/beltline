@@ -13,8 +13,8 @@ import (
 	"github.com/robbertmanders/beltline/daemon/internal/wire/jsonx"
 )
 
-// Tick is one pass over everything, called by the daemon's two-second loop
-// . It recovers erasures, overrules, run pauses and park stops,
+// Tick is one pass over everything in one sequence; the daemon runs the same
+// parts as lanes instead (see TickLane). It recovers erasures, overrules, run pauses and park stops,
 // polls the assistant, and, unless paused, polls triggers, fires schedules,
 // and advances sessions, watches, ticket watches and AFK decisions.
 // Lock: exported entry point; takes c.mu. Suspends: at each await
@@ -150,32 +150,28 @@ func (c *Coordinator) liveSessions(ctx context.Context) []string {
 	return names
 }
 
-// kick ticks in the background.
-// Lock: runs with c.mu held; the spawned tick takes it. Spawns: c.Spawn(tick).
+// kick wakes every lane once the daemon runs them, and else ticks in the background.
+// Lanes that have nothing due pass cheaply.
+// Lock: runs with c.mu held; the spawned tick takes it. Spawns: c.Spawn(tick) before StartLanes.
 func (c *Coordinator) kick() {
+	if c.laneWakes != nil {
+		for _, lane := range AllLanes {
+			c.wakeLane(lane)
+		}
+		return
+	}
 	c.Spawn(func(ctx context.Context) { c.Tick(ctx) })
 }
 
 // tick is Tick with c.mu held. Its calls into the parts run
 // with the lock held: each part suspends itself at its own slow calls.
 func (c *Coordinator) tick(ctx context.Context) {
-	if c.ticking {
+	if c.ticking || len(c.runningLanes) > 0 {
 		return
 	}
 	c.ticking = true
 	defer func() { c.ticking = false }()
-	c.recoverErasures(ctx)
-	c.recoverOverrules(ctx)
-	c.recoverRunPauses(ctx)
-	c.recoverParkStops(ctx)
-	// Edits to the belts and agents on disk are loaded whether or not a conversation runs, and whether or not the coordinator is paused.
-	c.library.reconcileFiles()
-	// A running conversation is probed; otherwise only the library's files are looked at, cheaply.
-	if c.assistant.running {
-		c.assistant.Reconcile(ctx)
-	} else {
-		c.assistant.noticeChanges(false)
-	}
+	c.tickUpkeep(ctx)
 	// Paused means paused: nothing is picked up, fired, watched or started.
 	if c.globallyPaused {
 		return
@@ -189,4 +185,22 @@ func (c *Coordinator) tick(ctx context.Context) {
 	c.sessions.startQueued(ctx)
 	c.sessions.startContinuations(ctx)
 	c.sessions.stopStaleContinues(ctx)
+}
+
+// tickUpkeep is what a tick does whether or not the coordinator is paused: recovery,
+// the library's files and the assistant.
+// Lock: runs with c.mu held. Suspends: the recoveries and assistant.Reconcile.
+func (c *Coordinator) tickUpkeep(ctx context.Context) {
+	c.recoverErasures(ctx)
+	c.recoverOverrules(ctx)
+	c.recoverRunPauses(ctx)
+	c.recoverParkStops(ctx)
+	// Edits to the belts and agents on disk are loaded whether or not a conversation runs, and whether or not the coordinator is paused.
+	c.library.reconcileFiles()
+	// A running conversation is probed; otherwise only the library's files are looked at, cheaply.
+	if c.assistant.running {
+		c.assistant.Reconcile(ctx)
+	} else {
+		c.assistant.noticeChanges(false)
+	}
 }
