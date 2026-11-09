@@ -26,8 +26,9 @@ type Intake struct {
 	admission func() core.ModelAdmission
 	// currentModelWarning returns the model warning for settings, or nil.
 	currentModelWarning func(settings core.SessionSettings, name string) *string
-	// checking is set while a trigger check runs. Write it with setChecking.
-	checking bool
+	// checks counts the trigger checks running: a tick's and a check now's can overlap.
+	// Write it with setChecking.
+	checks int
 	// lastCheck is when the last trigger check finished. Write it with setLastCheck.
 	lastCheck *time.Time
 	// globallyPaused: while the app's one global pause is on, nothing joins a belt:
@@ -48,12 +49,19 @@ type Intake struct {
 	sources map[core.TriggerKind]Source
 }
 
-// setChecking records whether a trigger check runs. The state projection reads it, so the write
+// setChecking records that a trigger check began or ended. The state projection reads it, so the write
 // bumps the coordinator's state revision. Lock: runs with c.mu held.
 func (i *Intake) setChecking(checking bool) {
-	i.checking = checking
+	if checking {
+		i.checks++
+	} else if i.checks > 0 {
+		i.checks--
+	}
 	i.c.stateRevision++
 }
+
+// isChecking reports whether any trigger check runs. Lock: runs with c.mu held.
+func (i *Intake) isChecking() bool { return i.checks > 0 }
 
 // setLastCheck records when the last trigger check finished (see setChecking). Lock: runs with c.mu held.
 func (i *Intake) setLastCheck(at time.Time) {

@@ -102,3 +102,42 @@ func TestCancellationWaitsForTheActiveTickToFinish(t *testing.T) {
 		t.Fatal("loop returned while its tick was still active")
 	}
 }
+
+// TestAWakeEndsTheSleepAndAWakeDuringATickIsKept
+func TestAWakeEndsTheSleepAndAWakeDuringATickIsKept(t *testing.T) {
+	t.Parallel()
+	done := make(chan struct{})
+	wake := make(chan struct{}, 1)
+	ticks := 0
+	loop := TickLoop{
+		Interval: time.Hour,
+		Wake:     wake,
+		Tick: func() {
+			ticks++
+			if ticks == 1 {
+				wake <- struct{}{}
+				return
+			}
+			close(done)
+		},
+	}
+	loop.Run(done)
+	if ticks != 2 {
+		t.Fatalf("ticks %d, want 2", ticks)
+	}
+}
+
+// TestTimedTickReportsOnlySlowPasses
+func TestTimedTickReportsOnlySlowPasses(t *testing.T) {
+	t.Parallel()
+	clock := time.Unix(1_000, 0)
+	took := time.Second
+	var reports []time.Duration
+	tick := timedTick(func() { clock = clock.Add(took) }, func() time.Time { return clock }, func(d time.Duration) { reports = append(reports, d) })
+	tick()
+	took = slowTick
+	tick()
+	if len(reports) != 1 || reports[0] != slowTick {
+		t.Fatalf("reports %v, want [%v]", reports, slowTick)
+	}
+}

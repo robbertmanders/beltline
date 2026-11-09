@@ -94,8 +94,12 @@ type Coordinator struct {
 	libraryRepoRevision uint64
 	libraryReposMemo    projectionMemo[[3]uint64]
 
-	// ticking guards Tick against re-entry.
+	// ticking guards Tick against re-entry, and against the lanes.
 	ticking bool
+	// runningLanes holds the lanes with a pass in progress.
+	runningLanes map[Lane]struct{}
+	// laneWakes are the lanes' wake signals, nil until StartLanes.
+	laneWakes map[Lane]chan struct{}
 	// effects are the stop and cleanup effects still running, by run, so erasure
 	// can wait for Drop.
 	effects map[string][]*EffectTask
