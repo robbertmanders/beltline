@@ -9,7 +9,7 @@ import { useRefetchWhen } from "../api/useRefetchWhen";
 import type { Agent, AgentAction, AgentDetailResponse, AgentDraftResponse, AgentPresentation, AgentRecordResponse, AgentsResponse, Backend, LibraryBrowser as LibraryBrowserData } from "../api/wire.gen";
 import { useCommand } from "../api/useCommand";
 import { useRuntime } from "../app/runtime";
-import { LibraryBrowser, LibraryDetailHeader } from "../components/LibraryBrowser";
+import { LibraryBrowser } from "../components/LibraryBrowser";
 import { useElementWidth } from "../components/useElementWidth";
 import { AgentEditor } from "./AgentEditor";
 import { AssistantOpenButton, AssistantSidebar } from "../components/AssistantSidebar";
@@ -245,7 +245,6 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
       busy={newCommand.pending || listQuery.isFetching} assistantButton={assistantButton}
       drafts={Object.entries(drafts).map(([id, agent]) => ({ id, name: agent.name.trim() || "Unnamed agent", onOpen: () => selectAgent(id) }))}
       scrollKey="agents" /> : <div className="library-detail agents-editor-column">
-      <LibraryDetailHeader backLabel="Back to Agents" onBack={back} />
         <h1 className="screen-reader-only">Agents</h1>
         {listQuery.isPending && !listQuery.data && <p className="loading-state" role="status">Loading agents…</p>}
         {listQuery.isError && listQuery.data && <p className="stale-error" role="status">Showing the last loaded library; refresh failed.</p>}

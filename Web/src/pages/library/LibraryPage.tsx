@@ -47,14 +47,13 @@ export function LibraryPage() {
   });
 
   const open = (next: Kind, repo: LibraryRepoRef, id: string) => setParams({ tab: next, repository: repo.repository, path: repo.path, id });
-  const back = () => setParams({ tab: kind });
 
   if (openRepo && openID) return <article className="library-page library-detail">
     <h1 className="screen-reader-only">Library</h1>
     {kind === "belt"
-      ? <LibraryBeltView key={`${openRepo.repository}\n${openRepo.path}\n${openID}`} repo={openRepo} id={openID} onBack={back}
+      ? <LibraryBeltView key={`${openRepo.repository}\n${openRepo.path}\n${openID}`} repo={openRepo} id={openID}
         onOpenAgent={agent => open("agent", openRepo, agent)} />
-      : <LibraryAgentView key={`${openRepo.repository}\n${openRepo.path}\n${openID}`} repo={openRepo} id={openID} onBack={back}
+      : <LibraryAgentView key={`${openRepo.repository}\n${openRepo.path}\n${openID}`} repo={openRepo} id={openID}
         onOpenBelt={belt => open("belt", openRepo, belt)} />}
   </article>;
 

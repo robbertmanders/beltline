@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LibraryBrowser, LibraryDetailHeader, type LibraryBrowserProps } from "./LibraryBrowser";
+import { LibraryBrowser, type LibraryBrowserProps } from "./LibraryBrowser";
 import type { LibraryBrowser as Browser } from "../api/wire.gen";
 
 const connection = vi.hoisted(() => ({ canRead: true, connection: "connected" }));
@@ -96,12 +96,5 @@ describe("Library browser", () => {
     expect(screen.queryByText("Showing the last loaded library; refresh failed.")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Retry command" }));
     expect(onRetryCommand).toHaveBeenCalledOnce();
-  });
-
-  it("offers an explicit back action on detail pages", async () => {
-    const onBack = vi.fn();
-    render(<LibraryDetailHeader backLabel="Back to Agents" onBack={onBack} />);
-    await userEvent.click(screen.getByRole("button", { name: "Back to Agents" }));
-    expect(onBack).toHaveBeenCalledOnce();
   });
 });

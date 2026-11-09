@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
+import { history } from "../test/daemon";
 import { AppSocket } from "../test/setup";
 import { listGolden, posts, renderAgents, resetAgentsEnvironment, stubAgents } from "./agentsTestKit";
 import { json } from "../test/response";
@@ -45,7 +46,7 @@ describe("Agents library", () => {
     const dirtyShare = screen.getByRole("button", { name: "Share…" }) as HTMLButtonElement;
     expect(dirtyShare.disabled).toBe(true);
     expect(dirtyShare.title).toBe("Save changes before sharing");
-    await user.click(screen.getByRole("button", { name: /Back to Agents/ }));
+    await history(user, "Go to agents");
     const newAgent = await screen.findByRole("button", { name: /New agent/ });
     await waitFor(() => expect(newAgent.hasAttribute("disabled")).toBe(false));
     await user.click(newAgent);
@@ -71,7 +72,7 @@ describe("Agents library", () => {
     await waitFor(() => expect(requests.some(request => request.path.includes("search=spec") && request.path.includes("filter=archived"))).toBe(true));
     await user.click(await screen.findByRole("button", { name: /Open Build/ }));
     await screen.findByLabelText("Brief");
-    await user.click(screen.getByRole("button", { name: /Back to Agents/ }));
+    await history(user, "Back");
     expect((await screen.findByLabelText("Search agents") as HTMLInputElement).value).toBe("spec");
     expect(within(screen.getByRole("group", { name: "Agents filter" })).getByRole("button", { name: /Archived/ }).getAttribute("aria-pressed")).toBe("true");
   });
@@ -85,7 +86,7 @@ describe("Agents library", () => {
     await user.click(await screen.findByRole("button", { name: /New agent/ }));
     const name = await screen.findByLabelText("Name");
     fireEvent.change(name, { target: { value: "Persistent draft" } });
-    await user.click(screen.getByRole("button", { name: /Back to Agents/ }));
+    await history(user, "Go to agents");
     await user.click(await screen.findByRole("button", { name: /Persistent draft/ }));
     expect((await screen.findByLabelText("Name") as HTMLInputElement).value).toBe("Persistent draft");
     expect(posts(requests).filter(request => request.path === "/api/v1/agents/new")).toHaveLength(1);

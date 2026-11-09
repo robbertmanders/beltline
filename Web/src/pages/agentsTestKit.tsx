@@ -6,7 +6,7 @@ import { vi } from "vitest";
 import { AppRoutes } from "../app/App";
 import { RuntimeProvider } from "../app/runtime";
 import { AppSocket } from "../test/setup";
-import { stubDaemon } from "../test/daemon";
+import { History, stubDaemon } from "../test/daemon";
 import { AgentDraftsProvider } from "../state/agentDrafts";
 import { json } from "../test/response";
 import { golden } from "../test/golden";
@@ -132,7 +132,7 @@ export function stubAgents(options: StubOptions = {}) {
 }
 
 export function renderAgents(queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: true, staleTime: 0 }, mutations: { retry: false } } }), route = "/agents?agent=triage") {
-  const result = render(<QueryClientProvider client={queryClient}><AgentDraftsProvider><RuntimeProvider><MemoryRouter initialEntries={[route]}><AppRoutes /></MemoryRouter></RuntimeProvider></AgentDraftsProvider></QueryClientProvider>);
+  const result = render(<QueryClientProvider client={queryClient}><AgentDraftsProvider><RuntimeProvider><MemoryRouter initialEntries={[route]}><AppRoutes /><History /></MemoryRouter></RuntimeProvider></AgentDraftsProvider></QueryClientProvider>);
   return { ...result, queryClient };
 }
 

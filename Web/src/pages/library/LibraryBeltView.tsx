@@ -5,7 +5,6 @@ import { apiQueryKey, resourcesForPath } from "../../api/resources";
 import { libraryBeltPath, type LibraryRepoRef } from "../../api/libraryCommands";
 import type { LibraryBeltDetail } from "../../api/wire.gen";
 import { useRuntime } from "../../app/runtime";
-import { LibraryDetailHeader } from "../../components/LibraryBrowser";
 import { Tag } from "../../components/Paper";
 import { ErrorProblems } from "../../components/ProblemList";
 import { DraftEditorProvider, type DraftEditorValue } from "../belts/draftEditor";
@@ -29,10 +28,9 @@ export function libraryItemQuery(repo: LibraryRepoRef, id: string, stage?: strin
  * form, without anything a shared belt does not carry (repositories, base branches, pause, AFK, archive, share). The
  * belt and the editor's context, with the agents it pins, are the daemon's read of the repository.
  */
-export function LibraryBeltView({ repo, id, onBack, onOpenAgent }: {
+export function LibraryBeltView({ repo, id, onOpenAgent }: {
   repo: LibraryRepoRef;
   id: string;
-  onBack: () => void;
   onOpenAgent: (id: string) => void;
 }) {
   const runtime = useRuntime();
@@ -51,9 +49,7 @@ export function LibraryBeltView({ repo, id, onBack, onOpenAgent }: {
   const controls = useLibraryItem(repo, detail?.item);
   const source = `${repo.repository}${repo.path ? ` / ${repo.path}` : ""}`;
 
-  const back = <LibraryDetailHeader backLabel="Back to Library" onBack={onBack} />;
   if (!detail) return <section className="belt-editor library-belt" aria-label="Library belt">
-    {back}
     {read.isPending && <p className="loading-state" role="status">Loading the belt…</p>}
     {read.error && <ErrorProblems error={read.error} />}
   </section>;
@@ -86,7 +82,6 @@ export function LibraryBeltView({ repo, id, onBack, onOpenAgent }: {
   const selected = stage !== null ? stageById(stage) : undefined;
 
   return <section className="belt-editor library-belt" aria-label="Library belt" data-belt={belt.id}>
-    {back}
     <header className="belt-editor-header">
       <div className="belt-editor-title">
         <Tag>{`Belt · v${belt.version} · ${source}`}</Tag>

@@ -132,7 +132,3 @@ export function LibraryResourceCard({ card, kind, onOpen, source }: { card: Libr
     <span className="c r"><span className={`flag ${card.statusTone === "good" ? "f" : card.statusTone === "problem" ? "o" : "f"}`}>{card.status}</span></span>
   </li>;
 }
-
-export function LibraryDetailHeader({ backLabel, onBack, children }: { backLabel: string; onBack: () => void; children?: ReactNode }) {
-  return <nav className="crumb library-detail-navigation" aria-label="Where you are"><button type="button" className="library-back" aria-label={backLabel} onClick={onBack}><Icon name="back" />{backLabel.replace(/^Back to /, "")}</button>{children}</nav>;
-}

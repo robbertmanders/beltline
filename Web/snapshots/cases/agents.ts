@@ -161,7 +161,6 @@ export const agentsCases: SnapshotCase[] = [
     fixtures: [{ kind: "ensure-agent-archived", id: "review", archived: true }],
     steps: [
       { kind: "click", target: { selector: '.library-resource-card .row-hit[aria-label="Open Review"]' } },
-      { kind: "click", target: { role: "button", name: "Back to Agents" } },
       { kind: "click", target: { role: "link", name: "Belts" } },
       { kind: "click", target: { role: "link", name: "Agents" } }
     ],

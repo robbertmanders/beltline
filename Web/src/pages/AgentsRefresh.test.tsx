@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
-import { libraryChanged } from "../test/daemon";
+import { history, libraryChanged } from "../test/daemon";
 import { agentSaves, configure, detailFor, listGolden, renderAgents, resetAgentsEnvironment, stubAgents } from "./agentsTestKit";
 
 beforeEach(resetAgentsEnvironment);
@@ -13,7 +13,7 @@ describe("saved agent refresh", () => {
     renderAgents();
     await screen.findByLabelText("Brief");
     configure(list, "triage", "Triage, configured");
-    fireEvent.click(screen.getByRole("button", { name: /Back to Agents/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Go to agents" }));
     fireEvent.click(await screen.findByRole("button", { name: "Open Triage, configured" }));
     await waitFor(() => expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Triage, configured"));
     expect(requests.filter(request => request.method === "GET" && request.path === "/api/v1/agents/triage").length).toBeGreaterThanOrEqual(2);
@@ -43,7 +43,7 @@ describe("saved agent refresh", () => {
     libraryChanged(2);
     await waitFor(() => expect(requests.filter(request => request.path === "/api/v1/agents/triage").length).toBeGreaterThanOrEqual(2));
     expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Local name");
-    await user.click(screen.getByRole("button", { name: /Back to Agents/ }));
+    await history(user, "Go to agents");
     await user.click(await screen.findByRole("button", { name: "Local name Draft" }));
     expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Local name");
     await user.click(screen.getByRole("button", { name: "Discard" }));
