@@ -184,7 +184,7 @@ export const agentsCases: SnapshotCase[] = [
     readiness: "shell",
     steps: [
       { kind: "click", target: { role: "button", name: "New agent" } },
-      { kind: "wait", target: { role: "textbox", name: "Id" }, state: "visible" },
+      { kind: "wait", target: { role: "textbox", name: "Name" }, state: "visible" },
       { kind: "fill", target: { role: "textbox", name: "Name" }, value: "Buffer" }
     ],
     readyMarker: editorReady,
@@ -197,7 +197,7 @@ export const agentsCases: SnapshotCase[] = [
     readiness: "shell",
     steps: [
       { kind: "click", target: { role: "button", name: "New agent" } },
-      { kind: "wait", target: { role: "textbox", name: "Id" }, state: "visible" },
+      { kind: "wait", target: { role: "textbox", name: "Name" }, state: "visible" },
       { kind: "fill", target: { role: "textbox", name: "Name" }, value: " " },
       { kind: "click", target: { role: "button", name: "Save" } },
       { kind: "wait", target: { selector: ".agent-command-error" }, state: "visible" }

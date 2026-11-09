@@ -74,6 +74,8 @@ type StageLinePresentationAgentChoice struct {
 	ID      string `json:"id"`
 	Version int    `json:"version"`
 	Name    string `json:"name"`
+	// Detail tells this agent from another of the same name: its repository, or its id.
+	Detail string `json:"detail,omitzero"`
 }
 
 // StageLineOf is the stage line of a belt's draft: its blocks, fork boxes and where
@@ -231,11 +233,12 @@ func stageLineTrigger(belt Belt) StageLinePresentationTrigger {
 func stageLineAgentChoices(belt Belt, agents []AgentRecord) []StageLinePresentationAgentChoice {
 	inputs := belt.MenuInputs()
 	choices := []StageLinePresentationAgentChoice{}
+	details := agentChoiceDetails(agents)
 	for _, record := range agents {
 		if record.Archived || !InputsSubset(record.Agent.Workspace.Needs(), inputs) {
 			continue
 		}
-		choices = append(choices, StageLinePresentationAgentChoice{ID: record.Agent.ID, Version: record.Agent.Version, Name: record.Agent.Name})
+		choices = append(choices, StageLinePresentationAgentChoice{ID: record.Agent.ID, Version: record.Agent.Version, Name: record.Agent.Name, Detail: details[record.Agent.ID]})
 	}
 	return choices
 }

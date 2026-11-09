@@ -49,7 +49,7 @@ describe("Agents library", () => {
     const newAgent = await screen.findByRole("button", { name: /New agent/ });
     await waitFor(() => expect(newAgent.hasAttribute("disabled")).toBe(false));
     await user.click(newAgent);
-    await screen.findByLabelText("Id");
+    await screen.findByLabelText("Name");
     expect((screen.getByRole("button", { name: "Share…" }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: "Share…" }) as HTMLButtonElement).title).toBe("Save this agent before sharing it.");
     expect(posts(requests).filter(request => request.path.endsWith("/library/share"))).toHaveLength(0);
@@ -149,16 +149,14 @@ describe("Agents library", () => {
     expect(posts(requests).some(request => request.path === "/api/v1/agents/draft/switch-runner")).toBe(false);
   });
 
-  it("opens an unsaved agent from the daemon with an editable id and a new row", async () => {
+  it("opens an unsaved agent from the daemon with no id field and a new row", async () => {
     const user = userEvent.setup();
     const { requests } = stubAgents();
     renderAgents(undefined, "/agents");
     const newButton = await screen.findByRole("button", { name: /New agent/ });
     await user.click(newButton);
-    expect(await screen.findByLabelText("Id")).toBeTruthy();
-    expect((screen.getByLabelText("Id") as HTMLInputElement).value).toBe("agent-1");
-    fireEvent.change(screen.getByLabelText("Id"), { target: { value: "user-agent-id" } });
-    expect((screen.getByLabelText("Id") as HTMLInputElement).value).toBe("user-agent-id");
+    expect(await screen.findByLabelText("Name")).toBeTruthy();
+    expect(screen.queryByLabelText("Id")).toBeNull();
     expect(posts(requests).some(request => request.path === "/api/v1/agents/new")).toBe(true);
   });
 
@@ -260,7 +258,7 @@ describe("agent card layout", () => {
     unmount();
     renderAgents(undefined, "/agents");
     await user.click(await screen.findByRole("button", { name: /New agent/ }));
-    await screen.findByLabelText("Id");
+    await screen.findByLabelText("Name");
     expect(screen.queryByRole("button", { name: "Open folder" })).toBeNull();
   });
 });

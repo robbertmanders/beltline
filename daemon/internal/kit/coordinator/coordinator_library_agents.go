@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 )
@@ -360,12 +361,11 @@ func (l *Library) ArchivingAgent(id string, archived bool) (core.AgentRecord, er
 // NewAgent returns a new agent that is not saved yet, starting from the agent template.
 // Lock: runs with c.mu held.
 func (l *Library) NewAgent() core.Agent {
+	// A first save renames the draft, so its key is what shows that a number has been used.
 	n := 1
-	for {
-		candidate := "agent-" + strconv.Itoa(n)
-		if l.agentIndex(candidate) < 0 {
-			break
-		}
+	for l.agentIndex("agent-"+strconv.Itoa(n)) >= 0 || slices.ContainsFunc(l.agents, func(record core.AgentRecord) bool {
+		return record.Agent.Key == "agent"+strconv.Itoa(n)
+	}) {
 		n++
 	}
 	agent := core.AgentTemplate()
@@ -374,6 +374,13 @@ func (l *Library) NewAgent() core.Agent {
 	agent.Name = "New agent"
 	agent.Key = "agent" + strconv.Itoa(n)
 	return agent
+}
+
+// savedAgentID is the id an agent's first save gives it.
+// Lock: runs with c.mu held.
+func (l *Library) savedAgentID(agent core.Agent) string {
+	return core.LibrarySavedID(agent.ID, agent.Name, agent.Version, l.c.clock.Now().Format(time.RFC3339Nano),
+		func(candidate string) bool { return l.agentIndex(candidate) >= 0 })
 }
 
 // agentIndex is the index of the agent record with id, or -1.

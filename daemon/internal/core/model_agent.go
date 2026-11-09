@@ -37,6 +37,8 @@ type Agent struct {
 	Brief    string         `json:"brief"`
 	// Origin is the library repository this agent was installed from; nil for your own.
 	Origin *LibraryOrigin `json:"origin,omitzero"`
+	// OriginID is the id Origin's repository has for this agent, when its id here had to differ.
+	OriginID string `json:"originId,omitzero"`
 }
 
 // AgentArgs are the parameters of NewAgent. Pointer fields whose default

@@ -103,6 +103,9 @@ func libraryBeltEntry(state LibraryBeltState, agentOf func(*AgentRef) *Agent) Li
 	icon := StageLookTrigger(firstKind)
 	tint := TintGrey
 	detail := fmt.Sprintf("%d %s", len(belt.Stages), pluralWord(len(belt.Stages), "stage", "stages"))
+	if belt.Origin != nil {
+		detail += " · " + belt.Origin.Repository
+	}
 	card := LibraryCard{
 		ID: belt.ID, Name: belt.Name, Version: belt.Version, Summary: belt.Summary(),
 		Detail: detail, Status: status, StatusTone: tone, Icon: &icon, Tint: &tint, Stages: looks,
@@ -133,6 +136,9 @@ func libraryAgentEntry(state LibraryAgentState) LibraryBrowserProjectionEntry {
 		model = "default model"
 	}
 	detail := agent.Runner.Label() + " · " + model + " · " + usage
+	if agent.Origin != nil {
+		detail += " · " + agent.Origin.Repository
+	}
 	archived := state.Record.Archived
 	category := "used"
 	switch {

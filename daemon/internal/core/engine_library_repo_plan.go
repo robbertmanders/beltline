@@ -19,25 +19,26 @@ type LibraryFile struct {
 
 // LibraryInstallFiles are the files installing item kind and id from origin writes:
 // its latest version with its origin, and each agent version it pins that the
-// library lacks. An item that is installed writes nothing; a conflict is refused.
-func LibraryInstallFiles(origin LibraryOrigin, kind, id string, repoFiles, localFiles map[string][]byte) ([]LibraryFile, error) {
+// library lacks, and the id it has here. An item that is installed writes nothing and
+// has no id returned; a conflict is refused.
+func LibraryInstallFiles(origin LibraryOrigin, kind, id string, repoFiles, localFiles map[string][]byte) (string, []LibraryFile, error) {
 	items, _ := LibraryRepoItems(origin, repoFiles, localFiles)
 	item, found := libraryFind(items, kind, id)
 	if !found {
-		return nil, NewFailure(fmt.Sprintf("%s %s is not in %s.", kind, id, origin.Repository))
+		return "", nil, NewFailure(fmt.Sprintf("%s %s is not in %s.", kind, id, origin.Repository))
 	}
 	switch item.State {
 	case LibraryItemConflict:
-		return nil, NewFailure(*item.Reason)
+		return "", nil, NewFailure(*item.Reason)
 	case LibraryItemInstalled:
-		return nil, nil
+		return "", nil, nil
 	}
 	repoBelts, repoAgents, _ := libraryCheckRead(repoFiles)
-	_, localAgents, _ := libraryCheckRead(localFiles)
+	localBelts, localAgents, _ := libraryCheckRead(localFiles)
+	mapping := libraryMapIDs(origin, repoBelts, repoAgents, localBelts, localAgents)
 	if kind == "agent" {
-		agent := repoAgents[id][item.Version]
-		agent.Origin = &origin
-		return []LibraryFile{{Path: libraryVersionPath("agents", id, item.Version, "md"), Data: []byte(AgentFileWrite(agent))}}, nil
+		agent := libraryAgentInLibrary(repoAgents[id][item.Version], origin, mapping.agents.of(id), mapping.agents)
+		return agent.ID, []LibraryFile{{Path: libraryVersionPath("agents", agent.ID, item.Version, "md"), Data: []byte(AgentFileWrite(agent))}}, nil
 	}
 	belt := repoBelts[id][item.Version]
 	var files []LibraryFile
@@ -46,22 +47,30 @@ func LibraryInstallFiles(origin LibraryOrigin, kind, id string, repoFiles, local
 			continue
 		}
 		ref := *stage.Agent
-		if _, have := localAgents[ref.ID][ref.Version]; have {
+		localID := mapping.agents.of(ref.ID)
+		// An id the repository doesn't hold says nothing about a local agent of that id.
+		if _, have := localAgents[localID][ref.Version]; have && len(repoAgents[ref.ID]) > 0 {
 			continue
 		}
 		agent, ok := repoAgents[ref.ID][ref.Version]
 		if !ok {
-			return nil, NewFailure(fmt.Sprintf("%s v%d uses %s v%d, which %s does not hold.", id, item.Version, ref.ID, ref.Version, origin.Repository))
+			return "", nil, NewFailure(fmt.Sprintf("%s v%d uses %s v%d, which %s does not hold.", id, item.Version, ref.ID, ref.Version, origin.Repository))
 		}
-		agent.Origin = &origin
-		files = append(files, LibraryFile{Path: libraryVersionPath("agents", ref.ID, ref.Version, "md"), Data: []byte(AgentFileWrite(agent))})
+		agent = libraryAgentInLibrary(agent, origin, localID, mapping.agents)
+		files = append(files, LibraryFile{Path: libraryVersionPath("agents", localID, ref.Version, "md"), Data: []byte(AgentFileWrite(agent))})
 	}
-	belt.Origin = &origin
+	localID := mapping.belts.of(id)
+	belt.OriginID = ""
+	if localID != id {
+		belt.OriginID = id
+	}
+	belt.ID, belt.Origin = localID, &origin
+	belt.Stages = libraryMapPins(belt.Stages, mapping.agents)
 	data, err := jsonx.MarshalStorage(belt)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
-	return append(files, LibraryFile{Path: libraryVersionPath("belts", id, item.Version, "json"), Data: data}), nil
+	return localID, append(files, LibraryFile{Path: libraryVersionPath("belts", localID, item.Version, "json"), Data: data}), nil
 }
 
 // LibraryShareFiles are the files sharing item kind and id from this library to
@@ -69,25 +78,39 @@ func LibraryInstallFiles(origin LibraryOrigin, kind, id string, repoFiles, local
 // the agent versions a belt pins. A belt sheds what belongs to one library: its
 // repositories and base branch, its AFK mode and its origin. A version the
 // repository already holds with the same content is not written; with other
-// content it is refused, as a shared version must not change.
+// content it is refused, as a shared version must not change. An item is refused too
+// when the repository holds something unrelated under the id it would go to.
 func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFiles map[string][]byte) ([]LibraryFile, error) {
 	localBelts, localAgents, _ := libraryCheckRead(localFiles)
 	repoBelts, repoAgents, _ := libraryCheckRead(repoFiles)
+	mapping := libraryMapIDs(origin, repoBelts, repoAgents, localBelts, localAgents)
+	agentsToRepo := mapping.agentsToRepo
+	sameAgent := func(local, repo Agent) bool {
+		return libraryAgentText(libraryAgentInRepo(local, origin, agentsToRepo)) == libraryAgentText(repo)
+	}
 	var files []LibraryFile
 	if kind == "agent" {
 		versions := localAgents[id]
 		if len(versions) == 0 {
 			return nil, NewFailure(fmt.Sprintf("%s is not in your library.", id))
 		}
-		agent := versions[libraryNewest(versions)]
+		agent := libraryAgentInRepo(versions[libraryNewest(versions)], origin, agentsToRepo)
 		agent.Origin = nil
+		if err := libraryShareIDFree(origin, "agent", id, agent.ID, len(repoAgents[agent.ID]) > 0, librarySharesAVersion(versions, repoAgents[agent.ID], sameAgent), mapping.agents); err != nil {
+			return nil, err
+		}
 		return libraryShareAgents(files, origin, []Agent{agent}, repoAgents)
 	}
 	versions := localBelts[id]
 	if len(versions) == 0 {
 		return nil, NewFailure(fmt.Sprintf("%s is not in your library.", id))
 	}
+	sameBelt := func(local, repo Belt) bool {
+		return libraryBeltShared(libraryBeltInRepo(local, origin, agentsToRepo)) == libraryBeltShared(repo)
+	}
 	belt := versions[libraryNewest(versions)]
+	pinned := belt.Stages
+	belt = libraryBeltInRepo(belt, origin, agentsToRepo)
 	belt.Origin = nil
 	belt.Base = ""
 	belt.RepositoryBases = nil
@@ -95,8 +118,12 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 	for index := range belt.Triggers {
 		belt.Triggers[index].Repos = nil
 	}
+	if err := libraryShareIDFree(origin, "belt", id, belt.ID, len(repoBelts[belt.ID]) > 0, librarySharesAVersion(versions, repoBelts[belt.ID], sameBelt), mapping.belts); err != nil {
+		return nil, err
+	}
 	var pins []Agent
-	for _, stage := range belt.Stages {
+	pinnedAs := map[string]string{}
+	for _, stage := range pinned {
 		if stage.Agent == nil {
 			continue
 		}
@@ -105,7 +132,15 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 		if !ok {
 			return nil, NewFailure(fmt.Sprintf("%s v%d uses %s v%d, which is not in your library.", id, belt.Version, ref.ID, ref.Version))
 		}
+		agent = libraryAgentInRepo(agent, origin, agentsToRepo)
 		agent.Origin = nil
+		if err := libraryShareIDFree(origin, "agent", ref.ID, agent.ID, len(repoAgents[agent.ID]) > 0, librarySharesAVersion(localAgents[ref.ID], repoAgents[agent.ID], sameAgent), mapping.agents); err != nil {
+			return nil, err
+		}
+		if other, ok := pinnedAs[agent.ID]; ok && other != ref.ID {
+			return nil, NewFailure(fmt.Sprintf("%s pins both %s and %s, which are the same id, %s, in %s.", id, other, ref.ID, agent.ID, origin.Repository))
+		}
+		pinnedAs[agent.ID] = ref.ID
 		pins = append(pins, agent)
 	}
 	files, err := libraryShareBelt(files, origin, belt, repoBelts)
@@ -113,6 +148,16 @@ func LibraryShareFiles(origin LibraryOrigin, kind, id string, localFiles, repoFi
 		return nil, err
 	}
 	return libraryShareAgents(files, origin, pins, repoAgents)
+}
+
+// libraryShareIDFree refuses to share local item localID as repoID when the repository holds repoID for
+// something unrelated, which would add a version to an item that isn't this one. sharesVersion says the
+// repository holds one of the item's versions, as it does after an earlier share of an item from elsewhere.
+func libraryShareIDFree(origin LibraryOrigin, kind, localID, repoID string, held, sharesVersion bool, ids libraryIDs) error {
+	if held && !sharesVersion && ids.of(repoID) != localID {
+		return NewFailure(fmt.Sprintf("%s already uses the id %s for a different %s, so %s can't be shared there.", origin.Repository, repoID, kind, localID))
+	}
+	return nil
 }
 
 // libraryShareBelt adds the belt's file to files unless the repository holds it already.

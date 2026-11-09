@@ -174,7 +174,7 @@ export function AgentsPage({ onShare = () => undefined }: { onShare?: (id: strin
         const latestDraft = latestDrafts.current[requestKey];
         if (latestDraft === submittedAgent) discardDraft(requestKey);
         else if (latestDraft) {
-          putDraft(record.agent.id, { ...latestDraft, version: record.agent.version });
+          putDraft(record.agent.id, { ...latestDraft, id: record.agent.id, version: record.agent.version });
           if (requestKey !== record.agent.id) discardDraft(requestKey);
         }
         if (latestAgentKey.current !== requestKey) return;

@@ -54,8 +54,25 @@ func TestANewAgentWithVersionZeroStillSaves(t *testing.T) {
 	if saved.Agent.Version != 1 {
 		t.Errorf("saved version = %d, want 1", saved.Agent.Version)
 	}
-	if record := c.LatestAgent(draft.ID); record == nil || record.Agent.Version != 1 {
+	if !strings.HasPrefix(saved.Agent.ID, "new-agent-") {
+		t.Errorf("saved id = %q, want one from the name", saved.Agent.ID)
+	}
+	if record := c.LatestAgent(saved.Agent.ID); record == nil || record.Agent.Version != 1 {
 		t.Errorf("latest agent = %+v", record)
+	}
+}
+
+func TestANewAgentDraftTakesTheNextNumberAfterASave(t *testing.T) {
+	t.Parallel()
+	h := newLibraryHarness(t, liveTestBelt("agent-library", "Agent library belt", "acme/app"))
+	c := h.Coord()
+	first := c.NewAgentDraft()
+	first.Brief = "Write the thing."
+	if _, err := c.SaveAgentCommand(first); err != nil {
+		t.Fatal(err)
+	}
+	if second := c.NewAgentDraft(); second.Key == first.Key || second.ID == first.ID {
+		t.Errorf("second draft %s (key %s) repeats the first, %s (key %s)", second.ID, second.Key, first.ID, first.Key)
 	}
 }
 
