@@ -42,7 +42,7 @@ A **shared** repository holds a team's belts and agents. The Library page lists 
 
 - **Install** writes an item's version, and the agent versions it uses, into your library, with the repository recorded as its origin. When your library already uses the item's id for something else, the item is kept as a separate copy under an id of its own, such as `build-7k2m`; updates go to that copy, and a share sends it back under the repository's id. A shared belt names no repositories, so a belt new to your library is installed paused: open it, add your repositories (and the label, query or schedule you want), save and resume it.
 - **Update** takes a newer version the same way. **Compare** shows the repository's files beside yours, and **Open yours** opens your copy in Belts or Agents.
-- **Share…**, on a belt's or agent's page, sends your item to a shared repository as a pull request, or as a direct push when that repository's setting says so.
+- **Share…**, on a belt's or agent's page, sends your item to a shared repository as a pull request, or as a direct push when that repository's setting says so. A share is refused when the repository already uses the item's id for something else, as it would add a version to an item that isn't yours.
 
 To move an old factory or marketplace repository to this layout, run `scripts/migrate-library-repo.sh <path-to-a-clone>` in a clone of this repository and commit what it copies.
 

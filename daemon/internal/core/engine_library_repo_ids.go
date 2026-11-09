@@ -44,20 +44,41 @@ func libraryMapIDs(origin LibraryOrigin, repoBelts libraryBelts, repoAgents libr
 	}
 	agents := libraryMapKind(origin, repoAgents, localAgents,
 		func(agent Agent) (*LibraryOrigin, string) { return agent.Origin, agent.OriginID },
+		libraryOtherOriginTargets(origin, localAgents),
 		func(local, repo Agent) bool {
 			return libraryAgentText(libraryAgentInRepo(local, origin, toRepo)) == libraryAgentText(repo)
 		})
 	belts := libraryMapKind(origin, repoBelts, localBelts,
 		func(belt Belt) (*LibraryOrigin, string) { return belt.Origin, belt.OriginID },
+		nil,
 		func(local, repo Belt) bool {
 			return libraryBeltShared(libraryBeltInRepo(local, origin, toRepo)) == libraryBeltShared(repo)
 		})
 	return libraryIDMapping{belts: belts, agents: agents, agentsToRepo: toRepo}
 }
 
-// libraryMapKind maps one kind's repository ids to local ones. same says whether a local version is
-// the repository's version of that number, which counts an item installed before origins were kept.
-func libraryMapKind[T any](origin LibraryOrigin, repo, local map[string]map[int]T, provenance func(T) (*LibraryOrigin, string), same func(local, repo T) bool) libraryIDs {
+// libraryOtherOriginTargets are the agent ids that agents installed from other repositories go to. Such
+// an id means that repository's agent, so this repository's agent must not take it, even while it is free.
+func libraryOtherOriginTargets(origin LibraryOrigin, localAgents libraryAgents) map[string]struct{} {
+	targets := map[string]struct{}{}
+	for _, versions := range localAgents {
+		agent := versions[libraryNewest(versions)]
+		if agent.Origin == nil || *agent.Origin == origin {
+			continue
+		}
+		for _, outcome := range agent.Outcomes {
+			for _, target := range outcome.To {
+				targets[target] = struct{}{}
+			}
+		}
+	}
+	return targets
+}
+
+// libraryMapKind maps one kind's repository ids to local ones. An item with no origin is the
+// repository's when same says one of its versions is the repository's version of that number, which
+// counts an item shared from here or installed before origins were kept. reserved ids are not given out.
+func libraryMapKind[T any](origin LibraryOrigin, repo, local map[string]map[int]T, provenance func(T) (*LibraryOrigin, string), reserved map[string]struct{}, same func(local, repo T) bool) libraryIDs {
 	ids := libraryIDs{}
 	used := map[string]struct{}{}
 	repoIDs := slices.Sorted(maps.Keys(repo))
@@ -79,12 +100,12 @@ func libraryMapKind[T any](origin LibraryOrigin, repo, local map[string]map[int]
 		if _, mapped := ids[id]; mapped || len(versions) == 0 {
 			continue
 		}
-		newest := libraryNewest(versions)
-		if held, ok := repo[id][newest]; ok && same(versions[newest], held) {
-			if _, taken := used[id]; !taken {
-				ids[id] = id
-				used[id] = struct{}{}
-			}
+		if from, _ := provenance(versions[libraryNewest(versions)]); from != nil {
+			continue
+		}
+		if _, taken := used[id]; !taken && librarySharesAVersion(versions, repo[id], same) {
+			ids[id] = id
+			used[id] = struct{}{}
 		}
 	}
 	for _, id := range repoIDs {
@@ -93,7 +114,8 @@ func libraryMapKind[T any](origin LibraryOrigin, repo, local map[string]map[int]
 		}
 		taken := func(candidate string) bool {
 			_, assigned := used[candidate]
-			return assigned || len(local[candidate]) > 0
+			_, kept := reserved[candidate]
+			return assigned || kept || len(local[candidate]) > 0
 		}
 		localID := id
 		if taken(id) {
@@ -105,41 +127,49 @@ func libraryMapKind[T any](origin LibraryOrigin, repo, local map[string]map[int]
 	return ids
 }
 
-// LibraryLocalID is the id item kind and id of origin's repository has, or would get, in this library.
-func LibraryLocalID(origin LibraryOrigin, kind, id string, repoFiles, localFiles map[string][]byte) string {
-	mapping := libraryMapFiles(origin, repoFiles, localFiles)
-	if kind == "agent" {
-		return mapping.agents.of(id)
+// librarySharesAVersion says whether some version local has is the same as repo's of that number.
+func librarySharesAVersion[T any](local, repo map[int]T, same func(local, repo T) bool) bool {
+	for version, ours := range local {
+		if held, ok := repo[version]; ok && same(ours, held) {
+			return true
+		}
 	}
-	return mapping.belts.of(id)
+	return false
 }
 
-// LibraryLocalPath is the path in this library of a file at path in origin's repository.
-func LibraryLocalPath(origin LibraryOrigin, path string, repoFiles, localFiles map[string][]byte) string {
-	parts := strings.Split(path, "/")
-	if len(parts) != 3 {
-		return path
+// LibraryRepoID is the id origin's repository has for a local item with id, installed from from under originID.
+func LibraryRepoID(origin LibraryOrigin, id string, from *LibraryOrigin, originID string) string {
+	if from != nil && *from == origin && originID != "" {
+		return originID
 	}
-	kind := "belt"
-	if parts[0] == "agents" {
-		kind = "agent"
-	}
-	parts[1] = LibraryLocalID(origin, kind, parts[1], repoFiles, localFiles)
-	return strings.Join(parts, "/")
+	return id
 }
 
-// libraryMapFiles is libraryMapIDs over a repository's and this library's files.
-func libraryMapFiles(origin LibraryOrigin, repoFiles, localFiles map[string][]byte) libraryIDMapping {
+// LibraryLocalPaths maps each file path in origin's repository to its path in this library.
+func LibraryLocalPaths(origin LibraryOrigin, paths []string, repoFiles, localFiles map[string][]byte) map[string]string {
 	repoBelts, repoAgents, _ := libraryCheckRead(repoFiles)
 	localBelts, localAgents, _ := libraryCheckRead(localFiles)
-	return libraryMapIDs(origin, repoBelts, repoAgents, localBelts, localAgents)
+	mapping := libraryMapIDs(origin, repoBelts, repoAgents, localBelts, localAgents)
+	local := make(map[string]string, len(paths))
+	for _, path := range paths {
+		local[path] = path
+		parts := strings.Split(path, "/")
+		if len(parts) != 3 {
+			continue
+		}
+		ids := mapping.belts
+		if parts[0] == "agents" {
+			ids = mapping.agents
+		}
+		parts[1] = ids.of(parts[1])
+		local[path] = strings.Join(parts, "/")
+	}
+	return local
 }
 
 // libraryAgentInRepo is a local agent as origin's repository holds it.
 func libraryAgentInRepo(agent Agent, origin LibraryOrigin, agentsToRepo libraryIDs) Agent {
-	if agent.Origin != nil && *agent.Origin == origin && agent.OriginID != "" {
-		agent.ID = agent.OriginID
-	}
+	agent.ID = LibraryRepoID(origin, agent.ID, agent.Origin, agent.OriginID)
 	agent.OriginID = ""
 	agent.Outcomes = libraryMapOutcomes(agent.Outcomes, agentsToRepo)
 	return agent
@@ -158,9 +188,7 @@ func libraryAgentInLibrary(agent Agent, origin LibraryOrigin, localID string, ag
 
 // libraryBeltInRepo is a local belt as origin's repository holds it.
 func libraryBeltInRepo(belt Belt, origin LibraryOrigin, agentsToRepo libraryIDs) Belt {
-	if belt.Origin != nil && *belt.Origin == origin && belt.OriginID != "" {
-		belt.ID = belt.OriginID
-	}
+	belt.ID = LibraryRepoID(origin, belt.ID, belt.Origin, belt.OriginID)
 	belt.OriginID = ""
 	belt.Stages = libraryMapPins(belt.Stages, agentsToRepo)
 	return belt

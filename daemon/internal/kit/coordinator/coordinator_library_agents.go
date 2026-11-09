@@ -361,12 +361,11 @@ func (l *Library) ArchivingAgent(id string, archived bool) (core.AgentRecord, er
 // NewAgent returns a new agent that is not saved yet, starting from the agent template.
 // Lock: runs with c.mu held.
 func (l *Library) NewAgent() core.Agent {
+	// A first save renames the draft, so its key is what shows that a number has been used.
 	n := 1
-	for {
-		candidate := "agent-" + strconv.Itoa(n)
-		if l.agentIndex(candidate) < 0 {
-			break
-		}
+	for l.agentIndex("agent-"+strconv.Itoa(n)) >= 0 || slices.ContainsFunc(l.agents, func(record core.AgentRecord) bool {
+		return record.Agent.Key == "agent"+strconv.Itoa(n)
+	}) {
 		n++
 	}
 	agent := core.AgentTemplate()

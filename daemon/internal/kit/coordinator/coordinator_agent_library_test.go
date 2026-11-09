@@ -62,6 +62,20 @@ func TestANewAgentWithVersionZeroStillSaves(t *testing.T) {
 	}
 }
 
+func TestANewAgentDraftTakesTheNextNumberAfterASave(t *testing.T) {
+	t.Parallel()
+	h := newLibraryHarness(t, liveTestBelt("agent-library", "Agent library belt", "acme/app"))
+	c := h.Coord()
+	first := c.NewAgentDraft()
+	first.Brief = "Write the thing."
+	if _, err := c.SaveAgentCommand(first); err != nil {
+		t.Fatal(err)
+	}
+	if second := c.NewAgentDraft(); second.Key == first.Key || second.ID == first.ID {
+		t.Errorf("second draft %s (key %s) repeats the first, %s (key %s)", second.ID, second.Key, first.ID, first.Key)
+	}
+}
+
 func TestRunsAtOnceAreBoundedToSix(t *testing.T) {
 	t.Parallel()
 	h := newLibraryHarness(t, liveTestBelt("agent-library", "Agent library belt", "acme/app"))

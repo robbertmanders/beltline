@@ -38,9 +38,15 @@ func agentChoiceDetails(records []AgentRecord) map[string]string {
 		if len(agents) < 2 {
 			continue
 		}
+		fromRepository := map[string]int{}
+		for _, agent := range agents {
+			if agent.Origin != nil {
+				fromRepository[agent.Origin.Repository]++
+			}
+		}
 		for _, agent := range agents {
 			details[agent.ID] = agent.ID
-			if agent.Origin != nil {
+			if agent.Origin != nil && fromRepository[agent.Origin.Repository] == 1 {
 				details[agent.ID] = agent.Origin.Repository
 			}
 		}

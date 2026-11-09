@@ -372,11 +372,10 @@ func (c *Coordinator) InstallLibraryItem(ctx context.Context, origin core.Librar
 	}
 	repoFiles := store.LibraryFilesRead(store.Paths{Root: filepath.Join(clone.Dir, origin.Path)})
 	c.library.reconcileFiles()
-	files, err := core.LibraryInstallFiles(origin, kind, id, repoFiles, store.LibraryFilesRead(c.paths))
+	localID, files, err := core.LibraryInstallFiles(origin, kind, id, repoFiles, store.LibraryFilesRead(c.paths))
 	if err != nil {
 		return nil, err
 	}
-	localID := core.LibraryLocalID(origin, kind, id, repoFiles, store.LibraryFilesRead(c.paths))
 	isNewBelt := kind == "belt" && c.library.Belt(localID) == nil
 	if err := c.storage.LibraryWriteFiles(files); err != nil {
 		return nil, err
@@ -428,9 +427,9 @@ func (c *Coordinator) ShareLibraryItem(ctx context.Context, origin core.LibraryO
 	if len(files) == 0 {
 		return LibraryShareResult{}, nil
 	}
-	version := c.libraryItemVersion(kind, id)
-	title := core.LibraryShareTitle(kind, id, version)
-	branch := core.LibraryShareBranch(kind, id, version)
+	repoID, version := c.libraryItemInRepo(origin, kind, id)
+	title := core.LibraryShareTitle(kind, repoID, version)
+	branch := core.LibraryShareBranch(kind, repoID, version)
 	var result LibraryShareResult
 	c.Suspend(func() { result, err = c.publishShare(ctx, clone, origin, repo, files, title, branch) })
 	if err != nil {
@@ -482,19 +481,19 @@ func (c *Coordinator) publishShare(ctx context.Context, clone library.Clone, ori
 	return result, nil
 }
 
-// libraryItemVersion is the saved version of an item: the belt's or the agent's latest.
+// libraryItemInRepo is the id origin's repository has for an item and the item's latest saved version.
 // Lock: runs with c.mu held.
-func (c *Coordinator) libraryItemVersion(kind, id string) int {
+func (c *Coordinator) libraryItemInRepo(origin core.LibraryOrigin, kind, id string) (string, int) {
 	if kind == "agent" {
 		if record := c.library.LatestAgent(id); record != nil {
-			return record.Agent.Version
+			return core.LibraryRepoID(origin, id, record.Agent.Origin, record.Agent.OriginID), record.Agent.Version
 		}
-		return 0
+		return id, 0
 	}
 	if record := c.library.Belt(id); record != nil {
-		return record.Belt.Version
+		return core.LibraryRepoID(origin, id, record.Belt.Origin, record.Belt.OriginID), record.Belt.Version
 	}
-	return 0
+	return id, 0
 }
 
 // LibraryItemCompare is the files of an item in a shared repository beside this library's copies of
@@ -507,14 +506,16 @@ func (c *Coordinator) LibraryItemCompare(origin core.LibraryOrigin, kind, id str
 	}
 	repoFiles := store.LibraryFilesRead(store.Paths{Root: filepath.Join(c.libraryRepos.Dir(origin.Repository), origin.Path)})
 	local := store.LibraryFilesRead(c.paths)
+	paths := core.LibraryItemPaths(kind, id, repoFiles)
+	localPaths := core.LibraryLocalPaths(origin, paths, repoFiles, local)
 	var files []LibraryItemFile
-	for _, path := range core.LibraryItemPaths(kind, id, repoFiles) {
+	for _, path := range paths {
 		file := LibraryItemFile{Path: path}
 		if text, ok := repoFiles[path]; ok {
 			s := string(text)
 			file.Repo = &s
 		}
-		if text, ok := local[core.LibraryLocalPath(origin, path, repoFiles, local)]; ok {
+		if text, ok := local[localPaths[path]]; ok {
 			s := string(text)
 			file.Local = &s
 		}

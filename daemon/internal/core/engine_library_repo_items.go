@@ -85,11 +85,10 @@ func libraryBeltStanding(origin LibraryOrigin, belt Belt, latest int, localBelts
 	}
 	newest := libraryNewest(versions)
 	localBelt := versions[newest]
-	fromOrigin := localBelt.Origin != nil && *localBelt.Origin == origin
 	switch {
 	case newest < latest:
 		return LibraryItemUpdate, ""
-	case newest == latest && fromOrigin && libraryBeltText(libraryBeltInRepo(localBelt, origin, mapping.agentsToRepo)) != libraryBeltText(belt):
+	case newest == latest && libraryBeltShared(libraryBeltInRepo(localBelt, origin, mapping.agentsToRepo)) != libraryBeltShared(belt):
 		return LibraryItemConflict, libraryChangedReason(localBelt.ID, latest)
 	}
 	return LibraryItemInstalled, ""
@@ -102,11 +101,10 @@ func libraryAgentStanding(origin LibraryOrigin, agent Agent, latest int, version
 	}
 	newest := libraryNewest(versions)
 	localAgent := versions[newest]
-	fromOrigin := localAgent.Origin != nil && *localAgent.Origin == origin
 	switch {
 	case newest < latest:
 		return LibraryItemUpdate, ""
-	case newest == latest && fromOrigin && libraryAgentText(libraryAgentInRepo(localAgent, origin, mapping.agentsToRepo)) != libraryAgentText(agent):
+	case newest == latest && libraryAgentText(libraryAgentInRepo(localAgent, origin, mapping.agentsToRepo)) != libraryAgentText(agent):
 		return LibraryItemConflict, libraryChangedReason(localAgent.ID, latest)
 	}
 	return LibraryItemInstalled, ""
