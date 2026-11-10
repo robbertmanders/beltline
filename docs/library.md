@@ -23,6 +23,8 @@ agents/<id>/v<n>.md
 
 Beltline keeps a clone of each in the data folder (`library-repos/`) and syncs it to its default branch when you refresh it, install from it, back up or share. Git runs with your own `git` and `gh` sign-ins, and nothing else is sent anywhere.
 
+Every belt and agent file in a library repository must be a regular file. Clones are checked out with `core.symlinks=false`, so a symbolic link arrives as a plain file holding its target and isn't read as a belt or agent. Beltline reads, writes and removes library files only inside the clone, so a link committed to the repository, or a folder set in Settings that is a link, can't lead it anywhere else on your machine.
+
 ## The examples library
 
 Beltline ships no belts or agents of its own: a fresh install starts with an empty library. The examples are in a shared library repository, [`robbertmanders/beltline-examples`](https://github.com/robbertmanders/beltline-examples), which **Settings → Library repositories** lists from the start. Nothing is installed from it until you choose to: open **Library**, refresh it, and install the belts and agents you want. It holds a belt for each trigger (GitHub issues, review requests, Jira tickets, an epic in waves, tasks you start and a schedule) and the agents they use. Beltline only reads it: **Share…** never offers it, and a share to it is refused.

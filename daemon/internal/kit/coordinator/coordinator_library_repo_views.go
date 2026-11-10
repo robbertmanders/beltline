@@ -4,8 +4,6 @@
 package coordinator
 
 import (
-	"path/filepath"
-
 	"github.com/robbertmanders/beltline/daemon/internal/core"
 	"github.com/robbertmanders/beltline/daemon/internal/integrations/store"
 )
@@ -79,7 +77,7 @@ func (c *Coordinator) LibraryAgent(origin core.LibraryOrigin, id string) (detail
 // libraryRepoContents reads a shared repository's clone against the library's files local.
 // Lock: runs with c.mu held.
 func (c *Coordinator) libraryRepoContents(origin core.LibraryOrigin, local map[string][]byte) core.LibraryRepoContents {
-	files := store.LibraryFilesRead(store.Paths{Root: filepath.Join(c.libraryRepos.Dir(origin.Repository), origin.Path)})
+	files := store.LibraryRepoFilesRead(c.libraryRepos.Dir(origin.Repository), origin.Path)
 	contents, _ := core.LibraryRepoContentsRead(origin, files, local)
 	return contents
 }

@@ -92,7 +92,7 @@ func (c *Coordinator) libraryRepoStates() []LibraryRepoState {
 		}
 		clone := c.libraryRepos.Dir(repo.Repository)
 		synced := libraryCloned(clone)
-		repoFiles := store.LibraryFilesRead(store.Paths{Root: filepath.Join(clone, repo.Path)})
+		repoFiles := store.LibraryRepoFilesRead(clone, repo.Path)
 		if repo.Role == core.LibraryRoleBackup {
 			changed := c.changedSinceBackup(repo)
 			state.ChangedSinceBackup = &changed
@@ -270,7 +270,7 @@ func (c *Coordinator) BackupLibrary(ctx context.Context, origin core.LibraryOrig
 	var commit string
 	var changed bool
 	c.Suspend(func() {
-		err = library.Mirror(filepath.Join(clone.Dir, origin.Path), backup)
+		err = library.Mirror(clone.Dir, origin.Path, backup)
 		if err == nil {
 			commit, changed, err = c.libraryRepos.Commit(ctx, clone.Dir, "Back up Beltline library")
 		}
@@ -324,7 +324,7 @@ func (c *Coordinator) RestoreLibrary(ctx context.Context, origin core.LibraryOri
 	if err != nil {
 		return "", err
 	}
-	backup := core.LibraryBackupFiles(store.LibraryFilesRead(store.Paths{Root: filepath.Join(clone.Dir, origin.Path)}))
+	backup := core.LibraryBackupFiles(store.LibraryRepoFilesRead(clone.Dir, origin.Path))
 	if len(backup) == 0 {
 		return "", core.NewFailure(fmt.Sprintf("%s holds no belts or agents to restore.", origin.Repository))
 	}
@@ -370,7 +370,7 @@ func (c *Coordinator) InstallLibraryItem(ctx context.Context, origin core.Librar
 	if err != nil {
 		return nil, err
 	}
-	repoFiles := store.LibraryFilesRead(store.Paths{Root: filepath.Join(clone.Dir, origin.Path)})
+	repoFiles := store.LibraryRepoFilesRead(clone.Dir, origin.Path)
 	c.library.reconcileFiles()
 	localID, files, err := core.LibraryInstallFiles(origin, kind, id, repoFiles, store.LibraryFilesRead(c.paths))
 	if err != nil {
@@ -420,7 +420,7 @@ func (c *Coordinator) ShareLibraryItem(ctx context.Context, origin core.LibraryO
 	if err != nil {
 		return LibraryShareResult{}, err
 	}
-	files, err := core.LibraryShareFiles(origin, kind, id, store.LibraryFilesRead(c.paths), store.LibraryFilesRead(store.Paths{Root: filepath.Join(clone.Dir, origin.Path)}))
+	files, err := core.LibraryShareFiles(origin, kind, id, store.LibraryFilesRead(c.paths), store.LibraryRepoFilesRead(clone.Dir, origin.Path))
 	if err != nil {
 		return LibraryShareResult{}, err
 	}
@@ -449,14 +449,13 @@ func (c *Coordinator) publishShare(ctx context.Context, clone library.Clone, ori
 			result, err = LibraryShareResult{}, resetErr
 		}
 	}()
-	dir := filepath.Join(clone.Dir, origin.Path)
 	pullRequest := repo.Publish == core.LibraryPublishPullRequest
 	if pullRequest {
 		if err := c.libraryRepos.Branch(ctx, clone.Dir, branch); err != nil {
 			return LibraryShareResult{}, err
 		}
 	}
-	if err := library.Write(dir, files); err != nil {
+	if err := library.Write(clone.Dir, origin.Path, files); err != nil {
 		return LibraryShareResult{}, err
 	}
 	commit, changed, err := c.libraryRepos.Commit(ctx, clone.Dir, title)
@@ -504,7 +503,7 @@ func (c *Coordinator) LibraryItemCompare(origin core.LibraryOrigin, kind, id str
 	if _, err := c.configuredRepo(origin, core.LibraryRoleShared); err != nil {
 		return nil, err
 	}
-	repoFiles := store.LibraryFilesRead(store.Paths{Root: filepath.Join(c.libraryRepos.Dir(origin.Repository), origin.Path)})
+	repoFiles := store.LibraryRepoFilesRead(c.libraryRepos.Dir(origin.Repository), origin.Path)
 	local := store.LibraryFilesRead(c.paths)
 	paths := core.LibraryItemPaths(kind, id, repoFiles)
 	localPaths := core.LibraryLocalPaths(origin, paths, repoFiles, local)
