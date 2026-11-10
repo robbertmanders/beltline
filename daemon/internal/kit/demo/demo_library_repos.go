@@ -116,7 +116,7 @@ func demoRepoCommit(root, repository string, files map[string][]byte) error {
 	if err := git("init", "-q", "-b", "main", work); err != nil {
 		return err
 	}
-	if err := library.Mirror(work, files); err != nil {
+	if err := library.Mirror(work, "", files); err != nil {
 		return err
 	}
 	for _, args := range [][]string{

@@ -73,10 +73,10 @@ func TestLibraryCommandsRunUnderTheirLimits(t *testing.T) {
 		line  string
 		limit time.Duration
 	}{
-		{"git -C " + clone + " -c user.name=Beltline -c user.email=b@localhost fetch -q origin", shell.TransferLimit},
-		{"git -C " + clone + " push -q origin HEAD:refs/heads/x", shell.TransferLimit},
-		{"git -C " + clone + " rev-parse HEAD", shell.CommandLimit},
-		{"gh repo clone acme/library " + clone, shell.TransferLimit},
+		{"git -C " + clone + " -c core.symlinks=false -c user.name=Beltline -c user.email=b@localhost fetch -q origin", shell.TransferLimit},
+		{"git -C " + clone + " -c core.symlinks=false push -q origin HEAD:refs/heads/x", shell.TransferLimit},
+		{"git -C " + clone + " -c core.symlinks=false rev-parse HEAD", shell.CommandLimit},
+		{"gh repo clone acme/library " + clone + " -- -c core.symlinks=false", shell.TransferLimit},
 		{"gh pr create --repo acme/library --head beltline/x --base main --title Title --body Body", shell.CommandLimit},
 	}
 	calls := rec.Calls()

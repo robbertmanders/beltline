@@ -99,14 +99,16 @@ func (s Storage) libraryPutBack(saved string, moved []string, written []core.Lib
 	return errors.Join(errs...)
 }
 
-// LibraryWriteFiles writes library files, by their paths under the data folder, atomically.
+// LibraryWriteFiles writes library files, by their paths under the data folder, atomically, and only
+// inside it (WriteFileAtomicIn).
 func (s Storage) LibraryWriteFiles(files []core.LibraryFile) error {
+	root, err := os.OpenRoot(s.Paths.Root)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = root.Close() }()
 	for _, file := range files {
-		target := filepath.Join(s.Paths.Root, file.Path)
-		if err := os.MkdirAll(filepath.Dir(target), 0o777); err != nil {
-			return err
-		}
-		if err := WriteFileAtomic(target, file.Data); err != nil {
+		if err := WriteFileAtomicIn(root, file.Path, file.Data); err != nil {
 			return err
 		}
 	}

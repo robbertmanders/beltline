@@ -75,9 +75,9 @@ func (r Repos) clone(ctx context.Context, repository, dir string) error {
 		return err
 	}
 	if r.URL != nil {
-		return r.git(ctx, r.Root, "clone", "-q", r.URL(repository), dir)
+		return r.git(ctx, r.Root, "clone", "-q", "-c", noSymlinks, r.URL(repository), dir)
 	}
-	result := shell.Bounded(ctx, r.Runner, "gh", []string{"repo", "clone", repository, dir}, "", nil)
+	result := shell.Bounded(ctx, r.Runner, "gh", []string{"repo", "clone", repository, dir, "--", "-c", noSymlinks}, "", nil)
 	if !result.OK() {
 		return core.NewFailure(fmt.Sprintf("Could not clone %s: %s", repository, result.MessageFor("gh repo clone")))
 	}
@@ -206,9 +206,14 @@ func (r Repos) OpenPullRequest(ctx context.Context, repository, branch, base, ti
 	return lines[len(lines)-1], nil
 }
 
+// noSymlinks is the git setting that checks a link in a clone out as a plain file holding its target, so
+// no link in someone else's repository points anywhere on this machine. It is set when a clone is made
+// and on every command in one, which covers clones made before it.
+const noSymlinks = "core.symlinks=false"
+
 // run runs git with args in dir, bounded as git commands are.
 func (r Repos) run(ctx context.Context, dir string, args ...string) shell.Result {
-	return shell.Bounded(ctx, r.Runner, "git", append([]string{"-C", dir}, args...), "", nil)
+	return shell.Bounded(ctx, r.Runner, "git", append([]string{"-C", dir, "-c", noSymlinks}, args...), "", nil)
 }
 
 // probe runs git with args in dir for a read whose failure is an answer, such as a
@@ -235,35 +240,64 @@ func gitFailure(args []string, result shell.Result) error {
 	return core.NewFailure(fmt.Sprintf("git %s failed: %s", shell.GitSubcommand(args), result.Message()))
 }
 
-// Write puts files, by their paths under dir, into the clone.
-func Write(dir string, files []core.LibraryFile) error {
-	for _, file := range files {
-		target := filepath.Join(dir, file.Path)
-		if err := os.MkdirAll(filepath.Dir(target), 0o777); err != nil {
-			return err
-		}
-		if err := store.WriteFileAtomic(target, file.Data); err != nil {
-			return err
+// Write puts files, by their paths under the folder sub of the clone, into the clone. A clone holds
+// someone else's content, so the writes stay inside it: a folder on the way, sub included, that is a
+// link leading out of the clone is an error, and a file that is a link is replaced, not written through.
+func Write(clone, sub string, files []core.LibraryFile) error {
+	folder, err := openLibraryFolder(clone, sub)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = folder.Close() }()
+	return writeIn(folder, files)
+}
+
+// Mirror makes the library files in the folder sub of the clone (its belts and agents, keyed by their
+// paths) hold exactly files: it writes each one and removes the others, staying inside the clone as
+// Write does. Only regular files are removed; a link is not a library file and is left alone.
+func Mirror(clone, sub string, files map[string][]byte) error {
+	folder, err := openLibraryFolder(clone, sub)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = folder.Close() }()
+	var list []core.LibraryFile
+	for _, path := range slices.Sorted(maps.Keys(files)) {
+		list = append(list, core.LibraryFile{Path: path, Data: files[path]})
+	}
+	if err := writeIn(folder, list); err != nil {
+		return err
+	}
+	for path := range store.LibraryFilesReadIn(folder) {
+		if _, keep := files[path]; !keep {
+			if err := folder.Remove(path); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
-// Mirror makes the library files under dir (its belts and agents, keyed by their
-// paths) hold exactly files: it writes each one and removes the others.
-func Mirror(dir string, files map[string][]byte) error {
-	var list []core.LibraryFile
-	for _, path := range slices.Sorted(maps.Keys(files)) {
-		list = append(list, core.LibraryFile{Path: path, Data: files[path]})
+// openLibraryFolder opens the folder sub of the clone as a root of its own, making it when it is
+// missing. A sub that leads out of the clone, through a link, is an error.
+func openLibraryFolder(clone, sub string) (*os.Root, error) {
+	root, err := os.OpenRoot(clone)
+	if err != nil {
+		return nil, err
 	}
-	if err := Write(dir, list); err != nil {
-		return err
+	defer func() { _ = root.Close() }()
+	sub = filepath.Clean(sub)
+	if err := root.MkdirAll(sub, 0o777); err != nil {
+		return nil, err
 	}
-	for path := range store.LibraryFilesRead(store.Paths{Root: dir}) {
-		if _, keep := files[path]; !keep {
-			if err := os.Remove(filepath.Join(dir, path)); err != nil {
-				return err
-			}
+	return root.OpenRoot(sub)
+}
+
+// writeIn writes each file atomically at its path in folder.
+func writeIn(folder *os.Root, files []core.LibraryFile) error {
+	for _, file := range files {
+		if err := store.WriteFileAtomicIn(folder, file.Path, file.Data); err != nil {
+			return err
 		}
 	}
 	return nil

@@ -50,6 +50,7 @@ When a run is in AFK mode, a run that stops for you (an approval, a held agent's
 - **Loopback only.** It listens on IPv4 `127.0.0.1`, at port 7331 or the next free port above it, never on another interface.
 - **Exact Host and Origin.** Every request must name `127.0.0.1:<port>` as its `Host`, and any `Origin` must be exactly `http://127.0.0.1:<port>`. Anything else gets 403. This stops DNS-rebinding attacks and other websites from calling the API from your browser.
 - **A token for the API.** `/api` needs the daemon's token, as `Authorization: Bearer <token>` or the `beltline_auth` cookie. Each daemon start makes a fresh random token and publishes it, with the port, in `<data folder>/daemon.json`, mode `0600`, so only your user can read it. `GET /auth?token=` checks the token in constant time and sets the cookie (`HttpOnly`, `SameSite=Strict`, `Path=/api`) before redirecting to `/` with `Referrer-Policy: no-referrer`. `beltlined open` makes that request for you. The URL with the token can stay in the browser's history until the daemon restarts.
+- **The cookie and other local servers.** Browsers don't tie cookies to a port, so your browser also sends `beltline_auth` to any other web server on `127.0.0.1` that you open, such as a development server, and that server can read it. With it, that server could call Beltline's API until the daemon restarts. Run development servers you don't trust on `localhost` or in a container rather than on `127.0.0.1`, or restart Beltline after you've used one.
 - **Terminals.** `GET /api/v1/terminals?session=` attaches a tmux session over a WebSocket, with the same Host, Origin and token checks. It is read-only unless the session is one you continued or the configuration assistant's. On a read-only session the daemon drops your input instead of trusting the browser to withhold it.
 - **HTML artifacts.** Agents can write `.html` artifacts. They are served from `/artifacts/…`, outside `/api` and without the cookie, through a link signed with HMAC-SHA256 that expires after 60 seconds. They come with `Content-Security-Policy: sandbox allow-scripts` (an opaque origin with no access to the app or its cookie), `X-Content-Type-Options: nosniff` and `no-store`. Files are opened below the attempt folder with `openat` and `O_NOFOLLOW`, so a symbolic link can't lead out of it. An artifact's scripts can still run and reach the network when you open it.
 - **Other processes on your machine.** Any process running as your user can read `daemon.json` and so call the API. Beltline doesn't defend against software already running as you.
@@ -60,7 +61,7 @@ Everything lives in the data folder, `~/Library/Application Support/Beltline/` o
 
 - belts, agents and settings
 - runs, including each session's brief, output and transcript
-- clones of the library repositories
+- clones of the library repositories (checked out with symbolic links as plain files; library files are read and written only inside each clone)
 - `daemon.json` (port and token, `0600`)
 - `beltlined.log`, which holds lifecycle and notification lines but no tokens; it moves aside to `beltlined.log.1` past 5 MB
 
@@ -76,5 +77,6 @@ These files carry the checks above, with tests next to them:
 - `server_authentication.go` and `server_auth_route.go`: the token and the cookie
 - `terminal_route.go` and `terminal_pty_bridge.go`: terminals, with `terminal_security_test.go`
 - `routes/routes_artifact_routes.go` and `routes/routes_artifact_link_signer.go`: artifacts
-- `daemon/internal/integrations/store`: the confined artifact reads
+- `daemon/internal/integrations/store`: the confined artifact and library reads
+- `daemon/internal/integrations/library`: library writes that stay inside each clone, with `library_repos_symlink_test.go`
 - `daemon/internal/integrations/runner`: the agent flags
