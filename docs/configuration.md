@@ -11,7 +11,7 @@ nav_order: 11
 
 ## The data folder
 
-Everything Beltline keeps lives in its data folder: `~/Library/Application Support/Beltline/` on macOS, `$XDG_DATA_HOME/Beltline/` on Linux (`~/.local/share/Beltline/` when `XDG_DATA_HOME` is unset), or the folder `BELTLINE_DATA_DIR` names. That includes belts, agents, settings, runs, specs, clones of library repositories, and every session's brief, output and log. One daemon owns a data folder at a time. It locks `daemon.lock` in the folder (`flock`, recording its pid) before it reads or writes anything else, and keeps the lock until it stops. A second `beltlined` on the same folder exits and names the owner's pid.
+Everything Beltline keeps lives in its data folder: `~/Library/Application Support/Beltline/` on macOS, `$XDG_DATA_HOME/Beltline/` on Linux (`~/.local/share/Beltline/` when `XDG_DATA_HOME` is unset), or the folder `BELTLINE_DATA_DIR` names. That includes belts, agents, settings, runs, specs, clones of library repositories, and every session's brief, output and log. One daemon owns a data folder at a time. It locks `daemon.lock` in the folder (`flock`, recording its pid) before it reads or writes anything else, and keeps the lock until it stops. Once it holds the lock it sets the folder's mode to `0700`, so only you can enter it; point `BELTLINE_DATA_DIR` at a folder of its own, not one you share. A second `beltlined` on the same folder exits and names the owner's pid.
 
 While it runs, `daemon.json` (mode 0600) holds the port and a fresh token, and `beltlined.log` keeps lifecycle and notification messages. The log moves aside to `beltlined.log.1` past 5 MB. Display choices such as folds, column widths and open sidebars are kept in the browser.
 

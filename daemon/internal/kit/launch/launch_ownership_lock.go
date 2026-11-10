@@ -72,10 +72,11 @@ func OwnershipLockFile(folder string) string {
 
 // OwnershipLockAcquire takes folder, creating it when needed, and records pid in
 // its lock file. A folder another launch holds, in this process or another, is
-// refused at once with the pid that launch recorded.
+// refused at once with the pid that launch recorded. Once held, the folder is made
+// private to its owner (DataFolderMode), whatever mode it was made with before.
 // Lock: none; it takes the OS lock on the folder's file.
 func OwnershipLockAcquire(folder string, pid int32) (*OwnershipLock, error) {
-	if err := os.MkdirAll(folder, 0o755); err != nil {
+	if err := os.MkdirAll(folder, DataFolderMode); err != nil {
 		return nil, LaunchFailure{Kind: LaunchFailureIO, Folder: folder,
 			Message: "Could not create the data folder: " + err.Error()}
 	}
@@ -104,8 +105,18 @@ func OwnershipLockAcquire(folder string, pid int32) (*OwnershipLock, error) {
 		return nil, ownershipLockRecordFailure(fd, folder, path, err)
 	}
 	_ = syscall.Fsync(fd)
+	// Runs hold issue text, agent output and transcripts, and the checkouts hold private code: only the
+	// owner may enter the folder, so the modes of what is inside it don't matter to other users.
+	if err := os.Chmod(folder, DataFolderMode); err != nil {
+		_ = syscall.Close(fd)
+		return nil, LaunchFailure{Kind: LaunchFailureIO, Folder: folder,
+			Message: fmt.Sprintf("Could not make the data folder private to you (chmod 700): %s", err.Error())}
+	}
 	return &OwnershipLock{Folder: folder, descriptor: fd}, nil
 }
+
+// DataFolderMode is the data folder's mode: readable, writable and enterable by its owner only.
+const DataFolderMode os.FileMode = 0o700
 
 // ownershipLockRecordFailure closes the descriptor and reports that the pid could not be recorded.
 func ownershipLockRecordFailure(fd int, folder, path string, err error) error {

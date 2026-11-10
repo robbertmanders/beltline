@@ -56,7 +56,7 @@ When a run is in AFK mode, a run that stops for you (an approval, a held agent's
 
 ## What is written to disk
 
-Everything lives in the data folder, `~/Library/Application Support/Beltline/` on macOS and `~/.local/share/Beltline/` on Linux by default:
+Everything lives in the data folder, `~/Library/Application Support/Beltline/` on macOS and `~/.local/share/Beltline/` on Linux by default. Each time the daemon takes the folder it sets its mode to `0700`, so other users on the machine can't enter it, whatever the files inside were written with:
 
 - belts, agents and settings
 - runs, including each session's brief, output and transcript

@@ -229,3 +229,29 @@ func TestChildProcessesDoNotInheritTheLock(t *testing.T) {
 		return lockProbe(t, folder) == "free"
 	})
 }
+
+func TestTheDataFolderIsPrivateToItsOwner(t *testing.T) {
+	t.Parallel()
+	fresh := filepath.Join(t.TempDir(), "fresh")
+	shared := filepath.Join(t.TempDir(), "shared")
+	if err := os.Mkdir(shared, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(shared, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, folder := range []string{fresh, shared} {
+		lock, err := OwnershipLockAcquire(folder, int32(os.Getpid()))
+		if err != nil {
+			t.Fatalf("acquire %s: %v", folder, err)
+		}
+		lock.Release()
+		info, err := os.Stat(folder)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := info.Mode().Perm(); got != 0o700 {
+			t.Errorf("%s mode = %04o, want 0700", folder, got)
+		}
+	}
+}
