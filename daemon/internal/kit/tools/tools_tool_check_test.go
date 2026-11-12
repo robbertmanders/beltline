@@ -249,3 +249,23 @@ func TestInstallHintsNameHomebrewOnMacOSAndThePackageManagerOnLinux(t *testing.T
 		}
 	}
 }
+
+func TestTheMissingACLIHintNamesHomebrewOnMacOSAndTheInstallPageElsewhere(t *testing.T) {
+	t.Parallel()
+	for _, c := range []struct{ goos, want string }{
+		{"darwin", "not installed: brew tap atlassian/homebrew-acli && brew install acli"},
+		{"linux", "not installed: see https://developer.atlassian.com/cloud/acli/guides/install-acli/"},
+	} {
+		if got := acliInstallHint(c.goos); got != c.want {
+			t.Errorf("acliInstallHint(%s) = %q, want %q", c.goos, got, c.want)
+		}
+	}
+}
+
+func TestTheMissingACLIRowCarriesThePlatformHint(t *testing.T) {
+	t.Parallel()
+	rows := Run(context.Background(), toolRecorder(map[string]shell.Result{"acli": {Status: 127}}), func() bool { return false })
+	if got, want := rowNamed(rows, "Atlassian CLI").Detail, acliInstallHint(runtime.GOOS); got != want {
+		t.Errorf("acli detail = %q, want %q", got, want)
+	}
+}
